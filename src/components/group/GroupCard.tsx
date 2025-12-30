@@ -40,7 +40,7 @@ export default function GroupCard({
               </S.OwnerBadge>
             )}
           </S.GroupNameRow>
-          <S.MemberCount>{memberCount}/4명</S.MemberCount>
+          <S.MemberCount>{memberCount}명</S.MemberCount>
         </S.GroupInfo>
 
         <S.RightSection>

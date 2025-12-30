@@ -137,7 +137,9 @@ export default function GroupSettingsPage({ params }: SettingsPageProps) {
   }, [groupId, router]);
 
   /* 프로필 아바타 선택 */
-  const handleProfileAvatarSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleProfileAvatarSelect = (
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
@@ -228,7 +230,9 @@ export default function GroupSettingsPage({ params }: SettingsPageProps) {
 
   /* 가입 요청 승인 */
   const handleApproveRequest = async (requestId: string) => {
-    const { approveJoinRequest, getGroupMembersWithDetails } = await import("@/lib/mock/services");
+    const { approveJoinRequest, getGroupMembersWithDetails } = await import(
+      "@/lib/mock/services"
+    );
     const success = approveJoinRequest(requestId);
     if (success) {
       setJoinRequests((prev) => prev.filter((r) => r.id !== requestId));
@@ -255,7 +259,9 @@ export default function GroupSettingsPage({ params }: SettingsPageProps) {
 
   /* 멤버 강퇴 실행 */
   const handleRemoveMember = async () => {
-    const { removeMember, getGroupMembersWithDetails } = await import("@/lib/mock/services");
+    const { removeMember, getGroupMembersWithDetails } = await import(
+      "@/lib/mock/services"
+    );
     const success = removeMember(groupId, removeMemberDialog.memberId);
     if (success) {
       const memberList = getGroupMembersWithDetails(groupId);
@@ -311,7 +317,9 @@ export default function GroupSettingsPage({ params }: SettingsPageProps) {
           <TabsContent value="profile">
             <S.TabContent>
               <S.IconSection>
-                <S.IconPreview onClick={() => profileAvatarInputRef.current?.click()}>
+                <S.IconPreview
+                  onClick={() => profileAvatarInputRef.current?.click()}
+                >
                   {myAvatarPreview ? (
                     <S.IconImage src={myAvatarPreview} alt="내 프로필" />
                   ) : (
@@ -340,7 +348,10 @@ export default function GroupSettingsPage({ params }: SettingsPageProps) {
                 />
               </S.Section>
 
-              <S.SaveButton onClick={handleSaveProfile} disabled={isSavingProfile}>
+              <S.SaveButton
+                onClick={handleSaveProfile}
+                disabled={isSavingProfile}
+              >
                 {isSavingProfile ? (
                   <Loader2 size={18} className="animate-spin" />
                 ) : (
@@ -354,7 +365,11 @@ export default function GroupSettingsPage({ params }: SettingsPageProps) {
                 <S.SectionTitle>초대 코드</S.SectionTitle>
                 <S.InviteCodeCard>
                   <S.InviteCodeText>{inviteCode}</S.InviteCodeText>
-                  <S.CopyButton variant="outline" size="sm" onClick={handleCopyInviteCode}>
+                  <S.CopyButton
+                    variant="outline"
+                    size="sm"
+                    onClick={handleCopyInviteCode}
+                  >
                     {codeCopied ? <Check size={16} /> : <Copy size={16} />}
                     {codeCopied ? "복사됨" : "복사"}
                   </S.CopyButton>
@@ -371,7 +386,9 @@ export default function GroupSettingsPage({ params }: SettingsPageProps) {
                 <S.SectionHeader>그룹 정보</S.SectionHeader>
 
                 <S.IconSection>
-                  <S.IconPreview onClick={() => groupIconInputRef.current?.click()}>
+                  <S.IconPreview
+                    onClick={() => groupIconInputRef.current?.click()}
+                  >
                     {groupIconPreview ? (
                       <S.IconImage src={groupIconPreview} alt="그룹 아이콘" />
                     ) : (
@@ -400,7 +417,10 @@ export default function GroupSettingsPage({ params }: SettingsPageProps) {
                   />
                 </S.Section>
 
-                <S.SaveButton onClick={handleSaveGroup} disabled={isSavingGroup}>
+                <S.SaveButton
+                  onClick={handleSaveGroup}
+                  disabled={isSavingGroup}
+                >
                   {isSavingGroup ? (
                     <Loader2 size={18} className="animate-spin" />
                   ) : (
@@ -413,7 +433,7 @@ export default function GroupSettingsPage({ params }: SettingsPageProps) {
                 {/* 멤버 관리 */}
                 <S.SectionHeader>
                   멤버 관리
-                  <S.MemberCount>{members.length}/4</S.MemberCount>
+                  <S.MemberCount>{members.length}/4명</S.MemberCount>
                 </S.SectionHeader>
 
                 <MemberList
@@ -440,7 +460,9 @@ export default function GroupSettingsPage({ params }: SettingsPageProps) {
                       onReject={handleRejectRequest}
                     />
                   ) : (
-                    <S.EmptyRequests>대기 중인 가입 요청이 없습니다</S.EmptyRequests>
+                    <S.EmptyRequests>
+                      대기 중인 가입 요청이 없습니다
+                    </S.EmptyRequests>
                   )}
                 </S.JoinRequestSection>
 
@@ -450,8 +472,8 @@ export default function GroupSettingsPage({ params }: SettingsPageProps) {
                 <S.DangerZone>
                   <S.DangerTitle>위험 구역</S.DangerTitle>
                   <S.DangerDescription>
-                    그룹을 삭제하면 모든 다이어리와 멤버 정보가 영구적으로 삭제됩니다.
-                    이 작업은 되돌릴 수 없습니다.
+                    그룹을 삭제하면 모든 다이어리와 멤버 정보가 영구적으로
+                    삭제됩니다. 이 작업은 되돌릴 수 없습니다.
                   </S.DangerDescription>
                   <S.DeleteButton
                     variant="destructive"
@@ -477,7 +499,9 @@ export default function GroupSettingsPage({ params }: SettingsPageProps) {
       {/* 멤버 강퇴 확인 다이얼로그 */}
       <ConfirmDialog
         open={removeMemberDialog.open}
-        onOpenChange={(open) => setRemoveMemberDialog((prev) => ({ ...prev, open }))}
+        onOpenChange={(open) =>
+          setRemoveMemberDialog((prev) => ({ ...prev, open }))
+        }
         title="멤버 강퇴"
         description={`${removeMemberDialog.nickname}님을 그룹에서 강퇴하시겠습니까?`}
         confirmText="강퇴"
