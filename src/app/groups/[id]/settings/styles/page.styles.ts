@@ -28,15 +28,8 @@ export const SectionTitle = styled.h2`
   color: var(--foreground);
 `;
 
-export const IconUploadArea = styled.div`
-  /* 아이콘 업로드 영역 */
-  display: flex;
-  align-items: center;
-  gap: 16px;
-`;
-
 export const IconPreview = styled.div`
-  /* 아이콘 미리보기 */
+  /* 아이콘 미리보기 (클릭하여 변경) */
   width: 80px;
   height: 80px;
   border-radius: 20px;
@@ -47,10 +40,9 @@ export const IconPreview = styled.div`
   overflow: hidden;
   position: relative;
   cursor: pointer;
-  transition: opacity 0.2s;
 
-  &:hover {
-    opacity: 0.8;
+  &:hover > div:last-of-type {
+    opacity: 1;
   }
 `;
 
@@ -68,9 +60,17 @@ export const IconPlaceholder = styled.div`
   color: var(--muted-foreground);
 `;
 
-export const IconUploadButton = styled(Button)`
-  /* 아이콘 업로드 버튼 */
-  flex: 1;
+export const IconOverlay = styled.div`
+  /* 아이콘 호버 오버레이 */
+  position: absolute;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  opacity: 0;
+  transition: opacity 0.2s;
 `;
 
 export const HiddenInput = styled.input`

@@ -178,30 +178,24 @@ export default function GroupSettingsPage({ params }: SettingsPageProps) {
         {/* 그룹 아이콘 */}
         <S.Section>
           <S.SectionTitle>그룹 아이콘</S.SectionTitle>
-          <S.IconUploadArea>
-            <S.IconPreview onClick={() => fileInputRef.current?.click()}>
-              {iconPreview ? (
-                <S.IconImage src={iconPreview} alt="그룹 아이콘" />
-              ) : (
-                <S.IconPlaceholder>
-                  {groupName.charAt(0).toUpperCase() || "G"}
-                </S.IconPlaceholder>
-              )}
-            </S.IconPreview>
-            <S.IconUploadButton
-              variant="outline"
-              onClick={() => fileInputRef.current?.click()}
-            >
-              <Camera size={18} />
-              아이콘 변경
-            </S.IconUploadButton>
+          <S.IconPreview onClick={() => fileInputRef.current?.click()}>
+            {iconPreview ? (
+              <S.IconImage src={iconPreview} alt="그룹 아이콘" />
+            ) : (
+              <S.IconPlaceholder>
+                {groupName.charAt(0).toUpperCase() || "G"}
+              </S.IconPlaceholder>
+            )}
+            <S.IconOverlay>
+              <Camera size={24} />
+            </S.IconOverlay>
             <S.HiddenInput
               ref={fileInputRef}
               type="file"
               accept="image/*"
               onChange={handleIconSelect}
             />
-          </S.IconUploadArea>
+          </S.IconPreview>
         </S.Section>
 
         {/* 그룹 이름 */}
