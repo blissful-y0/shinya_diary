@@ -179,6 +179,7 @@ export const SubmitButton = styled(Button)`
   display: flex;
   align-items: center;
   justify-content: center;
+  margin-bottom: 4px;
 `;
 
 export const EditInputContainer = styled.div`
