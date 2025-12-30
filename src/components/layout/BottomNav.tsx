@@ -3,18 +3,17 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import styled from "styled-components";
-import { Home, Users, PenSquare, User } from "lucide-react";
+import { Home, Users, User } from "lucide-react";
 
 /* =============================================
    하단 네비게이션 바
-   - 홈, 그룹, 글쓰기, 프로필 메뉴
+   - 홈, 그룹, 프로필 메뉴
    - 현재 경로에 따라 활성화 상태 표시
    ============================================= */
 
 const NAV_ITEMS = [
   { href: "/", icon: Home, label: "홈" },
   { href: "/groups", icon: Users, label: "그룹" },
-  { href: "/write", icon: PenSquare, label: "글쓰기" },
   { href: "/profile", icon: User, label: "프로필" },
 ];
 

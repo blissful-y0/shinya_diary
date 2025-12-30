@@ -72,17 +72,21 @@ export interface Database {
           id: string;
           group_id: string;
           user_id: string;
+          nickname: string | null;
+          avatar_url: string | null;
           joined_at: string;
         };
         Insert: {
           id?: string;
           group_id: string;
           user_id: string;
+          nickname?: string | null;
+          avatar_url?: string | null;
           joined_at?: string;
         };
         Update: {
-          group_id?: string;
-          user_id?: string;
+          nickname?: string | null;
+          avatar_url?: string | null;
         };
       };
       diaries: {
