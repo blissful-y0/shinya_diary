@@ -1,17 +1,23 @@
 "use client";
 
-import { use, useState } from "react";
+import { use, useState, useEffect, useRef } from "react";
+import { useRouter } from "next/navigation";
 import styled from "styled-components";
 import MobileLayout from "@/components/layout/MobileLayout";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { ImagePlus, Sticker, Send } from "lucide-react";
+import { ImagePlus, X, Send, Loader2 } from "lucide-react";
+import { createClient } from "@/lib/supabase/client";
+import { createDiary, getMyDiary } from "@/lib/supabase/queries/diary";
+import { uploadDiaryImage } from "@/utils/storageUploader";
+import { isValidImageFile } from "@/utils/imageConverter";
+import { formatDateISO } from "@/utils/date";
 
 /* =============================================
    다이어리 작성 페이지
    - 이미지 업로드 (WebP 변환)
-   - 스티커 데코레이션
    - 텍스트 입력
+   - 저장 기능
    ============================================= */
 
 interface WritePageProps {
@@ -19,45 +25,188 @@ interface WritePageProps {
 }
 
 export default function WritePage({ params }: WritePageProps) {
-  const { id } = use(params);
+  const { id: groupId } = use(params);
+  const router = useRouter();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
   const [content, setContent] = useState("");
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState("");
+  const [userId, setUserId] = useState<string | null>(null);
+  const [existingDiary, setExistingDiary] = useState(false);
+
+  /* 현재 사용자 정보 및 기존 다이어리 확인 */
+  useEffect(() => {
+    const init = async () => {
+      const supabase = createClient();
+      const { data } = await supabase.auth.getUser();
+
+      if (data.user) {
+        setUserId(data.user.id);
+
+        /* 오늘 이미 작성한 다이어리가 있는지 확인 */
+        const today = formatDateISO(new Date());
+        const diary = await getMyDiary(groupId, data.user.id, today);
+
+        if (diary) {
+          setExistingDiary(true);
+          setContent(diary.content || "");
+          if (diary.image_url) {
+            setImagePreview(diary.image_url);
+          }
+        }
+      }
+    };
+
+    init();
+  }, [groupId]);
+
+  /* 이미지 선택 처리 */
+  const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!isValidImageFile(file)) {
+      alert("지원하지 않는 이미지 형식입니다.");
+      return;
+    }
+
+    setImageFile(file);
+
+    /* 미리보기 생성 */
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      setImagePreview(e.target?.result as string);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  /* 이미지 제거 */
+  const handleRemoveImage = () => {
+    setImageFile(null);
+    setImagePreview(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+  };
+
+  /* 다이어리 제출 */
+  const handleSubmit = async () => {
+    if (!userId) {
+      alert("로그인이 필요합니다.");
+      return;
+    }
+
+    if (!content.trim() && !imageFile && !imagePreview) {
+      alert("내용 또는 이미지를 입력해주세요.");
+      return;
+    }
+
+    setIsSubmitting(true);
+    let imageUrl: string | undefined;
+
+    try {
+      /* 이미지 업로드 */
+      if (imageFile) {
+        setUploadProgress("이미지 업로드 중...");
+        const result = await uploadDiaryImage(imageFile, userId, undefined, (p) => {
+          setUploadProgress(p.message);
+        });
+
+        if (!result.success) {
+          throw new Error(result.error);
+        }
+
+        imageUrl = result.url;
+      }
+
+      /* 다이어리 저장 */
+      setUploadProgress("저장 중...");
+      const today = formatDateISO(new Date());
+      const result = await createDiary({
+        groupId,
+        userId,
+        content: content.trim() || undefined,
+        imageUrl: imageUrl || (imagePreview && !imageFile ? imagePreview : undefined),
+        date: today,
+      });
+
+      if (!result.success) {
+        throw new Error(result.error);
+      }
+
+      /* 성공 - 그룹 피드로 이동 */
+      router.push(`/groups/${groupId}`);
+      router.refresh();
+    } catch (error) {
+      console.error("다이어리 저장 실패:", error);
+      alert("저장에 실패했습니다. 다시 시도해주세요.");
+    } finally {
+      setIsSubmitting(false);
+      setUploadProgress("");
+    }
+  };
+
+  const canSubmit = (content.trim() || imageFile || imagePreview) && !isSubmitting;
 
   /* 제출 버튼 */
   const headerRight = (
-    <SubmitButton disabled={!content.trim()}>
-      <Send size={18} />
+    <SubmitButton onClick={handleSubmit} disabled={!canSubmit}>
+      {isSubmitting ? (
+        <Loader2 size={18} className="animate-spin" />
+      ) : (
+        <Send size={18} />
+      )}
     </SubmitButton>
   );
 
   return (
     <MobileLayout
-      headerTitle="오늘의 일기"
-      headerBackHref={`/groups/${id}`}
+      headerTitle={existingDiary ? "일기 수정" : "오늘의 일기"}
+      headerBackHref={`/groups/${groupId}`}
       headerRight={headerRight}
       showNav={false}
     >
       <Container>
         {/* 이미지 업로드 영역 */}
-        <ImageUploadArea>
-          <UploadPlaceholder>
-            <ImagePlus size={32} />
-            <UploadText>사진을 추가해보세요</UploadText>
-          </UploadPlaceholder>
+        <ImageUploadArea onClick={() => fileInputRef.current?.click()}>
+          {imagePreview ? (
+            <ImagePreviewContainer>
+              <PreviewImage src={imagePreview} alt="미리보기" />
+              <RemoveImageButton
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleRemoveImage();
+                }}
+              >
+                <X size={20} />
+              </RemoveImageButton>
+            </ImagePreviewContainer>
+          ) : (
+            <UploadPlaceholder>
+              <ImagePlus size={32} />
+              <UploadText>사진을 추가해보세요</UploadText>
+            </UploadPlaceholder>
+          )}
+          <HiddenInput
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            onChange={handleImageSelect}
+          />
         </ImageUploadArea>
 
-        {/* 스티커 툴바 */}
-        <StickerToolbar>
-          <ToolbarButton>
-            <Sticker size={20} />
-            스티커
-          </ToolbarButton>
-        </StickerToolbar>
+        {/* 업로드 진행 상태 */}
+        {uploadProgress && <ProgressText>{uploadProgress}</ProgressText>}
 
         {/* 텍스트 입력 */}
         <ContentTextarea
           placeholder="오늘 하루는 어땠나요?"
           value={content}
           onChange={(e) => setContent(e.target.value)}
+          disabled={isSubmitting}
         />
       </Container>
     </MobileLayout>
@@ -94,9 +243,44 @@ const ImageUploadArea = styled.div`
   overflow: hidden;
   cursor: pointer;
   transition: background-color 0.2s;
+  position: relative;
 
   &:hover {
     background-color: var(--accent);
+  }
+`;
+
+const ImagePreviewContainer = styled.div`
+  /* 이미지 미리보기 컨테이너 */
+  width: 100%;
+  height: 100%;
+  position: relative;
+`;
+
+const PreviewImage = styled.img`
+  /* 미리보기 이미지 */
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+`;
+
+const RemoveImageButton = styled.button`
+  /* 이미지 제거 버튼 */
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background-color: rgba(0, 0, 0, 0.6);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.2s;
+
+  &:hover {
+    background-color: rgba(0, 0, 0, 0.8);
   }
 `;
 
@@ -116,31 +300,16 @@ const UploadText = styled.span`
   font-size: 14px;
 `;
 
-const StickerToolbar = styled.div`
-  /* 스티커 툴바 */
-  display: flex;
-  gap: 8px;
-  overflow-x: auto;
-  padding: 4px 0;
-
-  /* 스크롤바 숨김 */
-  &::-webkit-scrollbar {
-    display: none;
-  }
-  -ms-overflow-style: none;
-  scrollbar-width: none;
+const HiddenInput = styled.input`
+  /* 숨겨진 파일 입력 */
+  display: none;
 `;
 
-const ToolbarButton = styled(Button)`
-  /* 툴바 버튼 */
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  height: 36px;
-  padding: 0 16px;
-  border-radius: 18px;
-  font-size: 13px;
-  white-space: nowrap;
+const ProgressText = styled.p`
+  /* 진행 상태 텍스트 */
+  text-align: center;
+  font-size: 14px;
+  color: var(--primary);
 `;
 
 const ContentTextarea = styled(Textarea)`
@@ -160,5 +329,9 @@ const ContentTextarea = styled(Textarea)`
 
   &::placeholder {
     color: var(--muted-foreground);
+  }
+
+  &:disabled {
+    opacity: 0.7;
   }
 `;
