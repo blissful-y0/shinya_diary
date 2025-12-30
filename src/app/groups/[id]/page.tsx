@@ -5,74 +5,166 @@ import styled from "styled-components";
 import MobileLayout from "@/components/layout/MobileLayout";
 import DateSelector from "@/components/diary/DateSelector";
 import DiaryCard from "@/components/diary/DiaryCard";
+import JoinRequestList from "@/components/group/JoinRequestList";
 import { Button } from "@/components/ui/button";
-import { Settings, PenSquare, Lock, Loader2 } from "lucide-react";
+import { Settings, PenSquare, Lock, Loader2, Copy, Check } from "lucide-react";
 import Link from "next/link";
-import { createClient } from "@/lib/supabase/client";
-import {
-  getDiariesByDate,
-  checkTodayDiary,
-  type DiaryWithAuthor,
-} from "@/lib/supabase/queries/diary";
 import { formatDateISO, isToday } from "@/utils/date";
 
 /* =============================================
    그룹 상세 페이지 (피드)
    - 날짜별 다이어리 피드
    - Read-after-Write 잠금 로직 적용
+   - 방장: 가입 요청 관리
    ============================================= */
 
 interface GroupDetailPageProps {
   params: Promise<{ id: string }>;
 }
 
+interface JoinRequest {
+  id: string;
+  user: {
+    nickname: string | null;
+    avatar_url: string | null;
+  };
+  created_at: string;
+}
+
 export default function GroupDetailPage({ params }: GroupDetailPageProps) {
   const { id: groupId } = use(params);
   const [selectedDate, setSelectedDate] = useState(new Date());
-  const [diaries, setDiaries] = useState<DiaryWithAuthor[]>([]);
+  const [diaries, setDiaries] = useState<
+    {
+      id: string;
+      nickname: string;
+      avatarUrl: string | null;
+      imageUrl: string | null;
+      content: string | null;
+      createdAt: string;
+      isOwn: boolean;
+    }[]
+  >([]);
   const [hasWrittenToday, setHasWrittenToday] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-  const [userId, setUserId] = useState<string | null>(null);
+  const [isOwner, setIsOwner] = useState(false);
+  const [joinRequests, setJoinRequests] = useState<JoinRequest[]>([]);
+  const [groupName, setGroupName] = useState("");
+  const [inviteCode, setInviteCode] = useState("");
+  const [showInviteCode, setShowInviteCode] = useState(false);
+  const [codeCopied, setCodeCopied] = useState(false);
 
-  /* 현재 사용자 정보 가져오기 */
-  useEffect(() => {
-    const supabase = createClient();
-    supabase.auth.getUser().then(({ data }) => {
-      setUserId(data.user?.id || null);
-    });
-  }, []);
-
-  /* 다이어리 목록 로드 */
-  const loadDiaries = useCallback(async () => {
-    if (!userId) return;
-
+  /* 그룹 정보 및 다이어리 목록 로드 */
+  const loadData = useCallback(async () => {
     setIsLoading(true);
+
+    const {
+      getGroup,
+      isGroupOwner,
+      getJoinRequests,
+      getDiariesByDate,
+      checkTodayDiary,
+      getCurrentUser,
+    } = await import("@/lib/mock/services");
+
+    /* 그룹 정보 */
+    const group = getGroup(groupId);
+    if (group) {
+      setGroupName(group.name);
+      setInviteCode(group.invite_code);
+    }
+
+    /* 방장 여부 확인 */
+    const ownerStatus = isGroupOwner(groupId);
+    setIsOwner(ownerStatus);
+
+    /* 방장이면 가입 요청 목록 조회 */
+    if (ownerStatus) {
+      const requests = getJoinRequests(groupId);
+      setJoinRequests(
+        requests.map((r) => ({
+          id: r.id,
+          user: {
+            nickname: r.user.nickname,
+            avatar_url: r.user.avatar_url,
+          },
+          created_at: r.created_at,
+        }))
+      );
+    }
+
+    /* 날짜별 다이어리 조회 */
     const dateStr = formatDateISO(selectedDate);
+    const currentUser = getCurrentUser();
 
     /* 오늘 날짜인 경우 작성 여부 확인 */
     if (isToday(selectedDate)) {
-      const written = await checkTodayDiary(groupId, userId, dateStr);
+      const written = checkTodayDiary(groupId, dateStr);
       setHasWrittenToday(written);
     } else {
-      /* 과거 날짜는 항상 볼 수 있음 (해당 날짜에 작성한 경우) */
       setHasWrittenToday(true);
     }
 
-    /* 다이어리 목록 조회 */
-    const data = await getDiariesByDate(groupId, dateStr);
-    setDiaries(data);
+    /* 다이어리 목록 */
+    const diaryData = getDiariesByDate(groupId, dateStr);
+    setDiaries(
+      diaryData.map((d) => ({
+        id: d.id,
+        nickname: d.author.nickname,
+        avatarUrl: d.author.avatar_url,
+        imageUrl: d.image_url,
+        content: d.content,
+        createdAt: d.created_at,
+        isOwn: d.user_id === currentUser.id,
+      }))
+    );
+
     setIsLoading(false);
-  }, [groupId, userId, selectedDate]);
+  }, [groupId, selectedDate]);
 
   useEffect(() => {
-    if (userId) {
-      loadDiaries();
+    loadData();
+  }, [loadData]);
+
+  /* 가입 요청 승인 */
+  const handleApproveRequest = async (requestId: string) => {
+    const { approveJoinRequest } = await import("@/lib/mock/services");
+    const success = approveJoinRequest(requestId);
+    if (success) {
+      setJoinRequests((prev) => prev.filter((r) => r.id !== requestId));
     }
-  }, [userId, loadDiaries]);
+  };
+
+  /* 가입 요청 거절 */
+  const handleRejectRequest = async (requestId: string) => {
+    const { rejectJoinRequest } = await import("@/lib/mock/services");
+    const success = rejectJoinRequest(requestId);
+    if (success) {
+      setJoinRequests((prev) => prev.filter((r) => r.id !== requestId));
+    }
+  };
+
+  /* 다이어리 삭제 */
+  const handleDeleteDiary = async (diaryId: string) => {
+    if (!confirm("일기를 삭제하시겠습니까?")) return;
+
+    const { deleteDiary } = await import("@/lib/mock/services");
+    const success = deleteDiary(diaryId);
+    if (success) {
+      setDiaries((prev) => prev.filter((d) => d.id !== diaryId));
+    }
+  };
+
+  /* 초대 코드 복사 */
+  const handleCopyInviteCode = async () => {
+    await navigator.clipboard.writeText(inviteCode);
+    setCodeCopied(true);
+    setTimeout(() => setCodeCopied(false), 2000);
+  };
 
   /* 설정 버튼 */
   const headerRight = (
-    <SettingsButton>
+    <SettingsButton onClick={() => setShowInviteCode(!showInviteCode)}>
       <Settings size={20} />
     </SettingsButton>
   );
@@ -81,10 +173,23 @@ export default function GroupDetailPage({ params }: GroupDetailPageProps) {
 
   return (
     <MobileLayout
-      headerTitle="우리의 일기장"
+      headerTitle={groupName || "그룹"}
       headerBackHref="/groups"
       headerRight={headerRight}
     >
+      {/* 초대 코드 표시 (토글) */}
+      {showInviteCode && (
+        <InviteCodeBanner>
+          <InviteCodeLabel>초대 코드</InviteCodeLabel>
+          <InviteCodeRow>
+            <InviteCodeText>{inviteCode}</InviteCodeText>
+            <CopyButton onClick={handleCopyInviteCode}>
+              {codeCopied ? <Check size={16} /> : <Copy size={16} />}
+            </CopyButton>
+          </InviteCodeRow>
+        </InviteCodeBanner>
+      )}
+
       {/* 날짜 선택 */}
       <DateSelector
         selectedDate={selectedDate}
@@ -92,6 +197,15 @@ export default function GroupDetailPage({ params }: GroupDetailPageProps) {
       />
 
       <Container>
+        {/* 방장: 가입 요청 목록 */}
+        {isOwner && joinRequests.length > 0 && (
+          <JoinRequestList
+            requests={joinRequests}
+            onApprove={handleApproveRequest}
+            onReject={handleRejectRequest}
+          />
+        )}
+
         {/* 오늘이고 아직 작성 안 한 경우: 글쓰기 유도 */}
         {isToday(selectedDate) && !hasWrittenToday && (
           <WriteStatusCard>
@@ -132,11 +246,17 @@ export default function GroupDetailPage({ params }: GroupDetailPageProps) {
               diaries.map((diary) => (
                 <DiaryCard
                   key={diary.id}
-                  nickname={diary.author.nickname}
-                  avatarUrl={diary.author.avatar_url}
-                  imageUrl={diary.image_url}
+                  id={diary.id}
+                  nickname={diary.nickname}
+                  avatarUrl={diary.avatarUrl}
+                  imageUrl={diary.imageUrl}
                   content={diary.content}
-                  createdAt={diary.created_at}
+                  createdAt={diary.createdAt}
+                  isOwn={diary.isOwn}
+                  onEdit={() =>
+                    (window.location.href = `/groups/${groupId}/write?edit=${diary.id}`)
+                  }
+                  onDelete={() => handleDeleteDiary(diary.id)}
                 />
               ))
             ) : (
@@ -174,6 +294,54 @@ const SettingsButton = styled.button`
   height: 40px;
   border-radius: 50%;
   color: var(--foreground);
+  transition: background-color 0.2s;
+
+  &:hover {
+    background-color: var(--accent);
+  }
+`;
+
+const InviteCodeBanner = styled.div`
+  /* 초대 코드 배너 */
+  background-color: var(--muted);
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--border);
+`;
+
+const InviteCodeLabel = styled.span`
+  /* 초대 코드 레이블 */
+  font-size: 13px;
+  color: var(--muted-foreground);
+`;
+
+const InviteCodeRow = styled.div`
+  /* 초대 코드 행 */
+  display: flex;
+  align-items: center;
+  gap: 8px;
+`;
+
+const InviteCodeText = styled.span`
+  /* 초대 코드 텍스트 */
+  font-size: 16px;
+  font-weight: 700;
+  font-family: monospace;
+  letter-spacing: 1px;
+  color: var(--foreground);
+`;
+
+const CopyButton = styled.button`
+  /* 복사 버튼 */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  color: var(--muted-foreground);
   transition: background-color 0.2s;
 
   &:hover {

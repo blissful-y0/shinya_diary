@@ -1,23 +1,20 @@
 "use client";
 
 import { use, useState, useEffect, useRef } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import styled from "styled-components";
 import MobileLayout from "@/components/layout/MobileLayout";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { ImagePlus, X, Send, Loader2 } from "lucide-react";
-import { createClient } from "@/lib/supabase/client";
-import { createDiary, getMyDiary } from "@/lib/supabase/queries/diary";
-import { uploadDiaryImage } from "@/utils/storageUploader";
 import { isValidImageFile } from "@/utils/imageConverter";
 import { formatDateISO } from "@/utils/date";
 
 /* =============================================
-   다이어리 작성 페이지
-   - 이미지 업로드 (WebP 변환)
+   다이어리 작성/수정 페이지
+   - 이미지 업로드 (Mock: 로컬 미리보기만)
    - 텍스트 입력
-   - 저장 기능
+   - 저장/수정 기능
    ============================================= */
 
 interface WritePageProps {
@@ -27,6 +24,8 @@ interface WritePageProps {
 export default function WritePage({ params }: WritePageProps) {
   const { id: groupId } = use(params);
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const editDiaryId = searchParams.get("edit");
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [content, setContent] = useState("");
@@ -34,34 +33,49 @@ export default function WritePage({ params }: WritePageProps) {
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [uploadProgress, setUploadProgress] = useState("");
-  const [userId, setUserId] = useState<string | null>(null);
-  const [existingDiary, setExistingDiary] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
 
-  /* 현재 사용자 정보 및 기존 다이어리 확인 */
+  /* 수정 모드: 기존 다이어리 로드 */
   useEffect(() => {
     const init = async () => {
-      const supabase = createClient();
-      const { data } = await supabase.auth.getUser();
+      const {
+        getMyDiary,
+        checkTodayDiary,
+        getCurrentUser,
+      } = await import("@/lib/mock/services");
 
-      if (data.user) {
-        setUserId(data.user.id);
+      const today = formatDateISO(new Date());
 
-        /* 오늘 이미 작성한 다이어리가 있는지 확인 */
-        const today = formatDateISO(new Date());
-        const diary = await getMyDiary(groupId, data.user.id, today);
-
+      /* 수정 모드인 경우 */
+      if (editDiaryId) {
+        /* Mock에서는 특정 ID로 조회할 수 없으므로 오늘 다이어리 로드 */
+        const diary = getMyDiary(groupId, today);
         if (diary) {
-          setExistingDiary(true);
+          setIsEditing(true);
           setContent(diary.content || "");
           if (diary.image_url) {
             setImagePreview(diary.image_url);
+          }
+        }
+      } else {
+        /* 신규 작성: 오늘 이미 작성했는지 확인 */
+        const hasWritten = checkTodayDiary(groupId, today);
+        if (hasWritten) {
+          /* 이미 작성한 경우 수정 모드로 전환 */
+          const diary = getMyDiary(groupId, today);
+          if (diary) {
+            setIsEditing(true);
+            setContent(diary.content || "");
+            if (diary.image_url) {
+              setImagePreview(diary.image_url);
+            }
           }
         }
       }
     };
 
     init();
-  }, [groupId]);
+  }, [groupId, editDiaryId]);
 
   /* 이미지 선택 처리 */
   const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -94,52 +108,46 @@ export default function WritePage({ params }: WritePageProps) {
 
   /* 다이어리 제출 */
   const handleSubmit = async () => {
-    if (!userId) {
-      alert("로그인이 필요합니다.");
-      return;
-    }
-
     if (!content.trim() && !imageFile && !imagePreview) {
       alert("내용 또는 이미지를 입력해주세요.");
       return;
     }
 
     setIsSubmitting(true);
-    let imageUrl: string | undefined;
 
     try {
-      /* 이미지 업로드 */
-      if (imageFile) {
-        setUploadProgress("이미지 업로드 중...");
-        const result = await uploadDiaryImage(imageFile, userId, undefined, (p) => {
-          setUploadProgress(p.message);
-        });
+      const { createDiary, updateDiary, getMyDiary } = await import(
+        "@/lib/mock/services"
+      );
 
-        if (!result.success) {
-          throw new Error(result.error);
-        }
-
-        imageUrl = result.url;
-      }
-
-      /* 다이어리 저장 */
-      setUploadProgress("저장 중...");
       const today = formatDateISO(new Date());
-      const result = await createDiary({
-        groupId,
-        userId,
-        content: content.trim() || undefined,
-        imageUrl: imageUrl || (imagePreview && !imageFile ? imagePreview : undefined),
-        date: today,
-      });
 
-      if (!result.success) {
-        throw new Error(result.error);
+      if (isEditing) {
+        /* 수정 */
+        setUploadProgress("수정 중...");
+        const diary = getMyDiary(groupId, today);
+        if (diary) {
+          updateDiary(diary.id, {
+            content: content.trim() || undefined,
+            imageUrl: imagePreview || undefined,
+          });
+        }
+      } else {
+        /* 신규 생성 */
+        setUploadProgress("저장 중...");
+        createDiary({
+          groupId,
+          content: content.trim() || undefined,
+          imageUrl: imagePreview || undefined,
+          date: today,
+        });
       }
+
+      /* Mock: 약간의 지연 시뮬레이션 */
+      await new Promise((resolve) => setTimeout(resolve, 300));
 
       /* 성공 - 그룹 피드로 이동 */
       router.push(`/groups/${groupId}`);
-      router.refresh();
     } catch (error) {
       console.error("다이어리 저장 실패:", error);
       alert("저장에 실패했습니다. 다시 시도해주세요.");
@@ -164,7 +172,7 @@ export default function WritePage({ params }: WritePageProps) {
 
   return (
     <MobileLayout
-      headerTitle={existingDiary ? "일기 수정" : "오늘의 일기"}
+      headerTitle={isEditing ? "일기 수정" : "오늘의 일기"}
       headerBackHref={`/groups/${groupId}`}
       headerRight={headerRight}
       showNav={false}
