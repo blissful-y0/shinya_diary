@@ -1,8 +1,8 @@
 "use client";
 
-import styled from "styled-components";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import { formatDateKorean, isSameDay, isToday } from "@/utils/date";
+import { formatDateKorean, isToday } from "@/utils/date";
+import * as S from "./DateSelector.styles";
 
 /* =============================================
    날짜 선택 컴포넌트
@@ -39,77 +39,23 @@ export default function DateSelector({
   const canGoNext = !isToday(selectedDate);
 
   return (
-    <Container>
-      <NavButton onClick={handlePrevDay} aria-label="이전 날짜">
+    <S.Container>
+      <S.NavButton onClick={handlePrevDay} aria-label="이전 날짜">
         <ChevronLeft size={20} />
-      </NavButton>
+      </S.NavButton>
 
-      <DateDisplay>
-        <DateText>{formatDateKorean(selectedDate)}</DateText>
-        {isToday(selectedDate) && <TodayBadge>오늘</TodayBadge>}
-      </DateDisplay>
+      <S.DateDisplay>
+        <S.DateText>{formatDateKorean(selectedDate)}</S.DateText>
+        {isToday(selectedDate) && <S.TodayBadge>오늘</S.TodayBadge>}
+      </S.DateDisplay>
 
-      <NavButton
+      <S.NavButton
         onClick={handleNextDay}
         disabled={!canGoNext}
         aria-label="다음 날짜"
       >
         <ChevronRight size={20} />
-      </NavButton>
-    </Container>
+      </S.NavButton>
+    </S.Container>
   );
 }
-
-/* 스타일 컴포넌트 - 계층 구조 */
-const Container = styled.div`
-  /* 컨테이너 */
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 12px 16px;
-  background-color: var(--card);
-  border-bottom: 1px solid var(--border);
-`;
-
-const NavButton = styled.button<{ disabled?: boolean }>`
-  /* 네비게이션 버튼 */
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  color: ${({ disabled }) =>
-    disabled ? "var(--muted-foreground)" : "var(--foreground)"};
-  opacity: ${({ disabled }) => (disabled ? 0.4 : 1)};
-  cursor: ${({ disabled }) => (disabled ? "not-allowed" : "pointer")};
-  transition: background-color 0.2s;
-
-  &:hover:not(:disabled) {
-    background-color: var(--accent);
-  }
-`;
-
-const DateDisplay = styled.div`
-  /* 날짜 표시 영역 */
-  display: flex;
-  align-items: center;
-  gap: 8px;
-`;
-
-const DateText = styled.span`
-  /* 날짜 텍스트 */
-  font-size: 16px;
-  font-weight: 600;
-  color: var(--foreground);
-`;
-
-const TodayBadge = styled.span`
-  /* 오늘 뱃지 */
-  padding: 2px 8px;
-  font-size: 11px;
-  font-weight: 600;
-  color: white;
-  background-color: var(--primary);
-  border-radius: 10px;
-`;

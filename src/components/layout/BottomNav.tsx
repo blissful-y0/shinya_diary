@@ -1,9 +1,8 @@
 "use client";
 
-import Link from "next/link";
 import { usePathname } from "next/navigation";
-import styled from "styled-components";
 import { Home, Users, User } from "lucide-react";
+import * as S from "./BottomNav.styles";
 
 /* =============================================
    하단 네비게이션 바
@@ -21,8 +20,8 @@ export default function BottomNav() {
   const pathname = usePathname();
 
   return (
-    <NavContainer>
-      <NavContent>
+    <S.NavContainer>
+      <S.NavContent>
         {NAV_ITEMS.map((item) => {
           const isActive =
             item.href === "/"
@@ -30,70 +29,15 @@ export default function BottomNav() {
               : pathname.startsWith(item.href);
 
           return (
-            <NavItem key={item.href} href={item.href} $active={isActive}>
-              <IconWrapper>
+            <S.NavItem key={item.href} href={item.href} $active={isActive}>
+              <S.IconWrapper>
                 <item.icon size={24} strokeWidth={isActive ? 2.5 : 2} />
-              </IconWrapper>
-              <NavLabel>{item.label}</NavLabel>
-            </NavItem>
+              </S.IconWrapper>
+              <S.NavLabel>{item.label}</S.NavLabel>
+            </S.NavItem>
           );
         })}
-      </NavContent>
-    </NavContainer>
+      </S.NavContent>
+    </S.NavContainer>
   );
 }
-
-/* 스타일 컴포넌트 - 계층 구조 */
-const NavContainer = styled.nav`
-  /* 고정 하단 네비게이션 */
-  position: fixed;
-  bottom: 0;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 100%;
-  max-width: 480px;
-  background-color: var(--background);
-  border-top: 1px solid var(--border);
-  padding-bottom: env(safe-area-inset-bottom, 0px);
-  z-index: 100;
-`;
-
-const NavContent = styled.div`
-  /* 네비게이션 내부 레이아웃 */
-  display: flex;
-  justify-content: space-around;
-  align-items: center;
-  height: 64px;
-`;
-
-const NavItem = styled(Link)<{ $active: boolean }>`
-  /* 네비게이션 아이템 */
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  flex: 1;
-  height: 100%;
-  color: ${({ $active }) =>
-    $active ? "var(--primary)" : "var(--muted-foreground)"};
-  text-decoration: none;
-  transition: color 0.2s;
-
-  &:active {
-    transform: scale(0.95);
-  }
-`;
-
-const IconWrapper = styled.div`
-  /* 아이콘 래퍼 */
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-bottom: 2px;
-`;
-
-const NavLabel = styled.span`
-  /* 네비게이션 레이블 */
-  font-size: 11px;
-  font-weight: 500;
-`;

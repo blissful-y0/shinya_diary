@@ -1,17 +1,15 @@
 "use client";
 
 import { useState } from "react";
-import styled from "styled-components";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Loader2, Users, CheckCircle } from "lucide-react";
+import * as S from "./JoinGroupModal.styles";
 
 /* =============================================
    초대 코드로 그룹 참여 모달
@@ -129,10 +127,10 @@ export default function JoinGroupModal({
 
         {step === "input" && (
           /* 초대 코드 입력 */
-          <FormContent>
-            <FormField>
+          <S.FormContent>
+            <S.FormField>
               <Label htmlFor="inviteCode">초대 코드</Label>
-              <CodeInput
+              <S.CodeInput
                 id="inviteCode"
                 placeholder="초대 코드 8자리"
                 value={inviteCode}
@@ -140,14 +138,14 @@ export default function JoinGroupModal({
                 maxLength={8}
                 disabled={isLoading}
               />
-              {error && <ErrorText>{error}</ErrorText>}
-            </FormField>
+              {error && <S.ErrorText>{error}</S.ErrorText>}
+            </S.FormField>
 
-            <ButtonGroup>
-              <CancelButton variant="outline" onClick={handleClose}>
+            <S.ButtonGroup>
+              <S.CancelButton variant="outline" onClick={handleClose}>
                 취소
-              </CancelButton>
-              <SearchButton
+              </S.CancelButton>
+              <S.SearchButton
                 onClick={handleSearch}
                 disabled={inviteCode.length < 8 || isLoading}
               >
@@ -159,35 +157,35 @@ export default function JoinGroupModal({
                 ) : (
                   "확인"
                 )}
-              </SearchButton>
-            </ButtonGroup>
-          </FormContent>
+              </S.SearchButton>
+            </S.ButtonGroup>
+          </S.FormContent>
         )}
 
         {step === "confirm" && foundGroup && (
           /* 그룹 정보 확인 */
-          <ConfirmContent>
-            <GroupInfo>
-              <GroupIcon>
+          <S.ConfirmContent>
+            <S.GroupInfo>
+              <S.GroupIcon>
                 <Users size={32} />
-              </GroupIcon>
-              <GroupName>{foundGroup.name}</GroupName>
-              <MemberCount>{foundGroup.memberCount}/4명</MemberCount>
-            </GroupInfo>
+              </S.GroupIcon>
+              <S.GroupName>{foundGroup.name}</S.GroupName>
+              <S.MemberCount>{foundGroup.memberCount}/4명</S.MemberCount>
+            </S.GroupInfo>
 
-            <InfoText>
+            <S.InfoText>
               이 그룹에 가입 요청을 보내시겠습니까?
               <br />
               방장의 승인 후 참여할 수 있습니다.
-            </InfoText>
+            </S.InfoText>
 
-            {error && <ErrorText>{error}</ErrorText>}
+            {error && <S.ErrorText>{error}</S.ErrorText>}
 
-            <ButtonGroup>
-              <CancelButton variant="outline" onClick={() => setStep("input")}>
+            <S.ButtonGroup>
+              <S.CancelButton variant="outline" onClick={() => setStep("input")}>
                 뒤로
-              </CancelButton>
-              <RequestButton onClick={handleRequestJoin} disabled={isLoading}>
+              </S.CancelButton>
+              <S.RequestButton onClick={handleRequestJoin} disabled={isLoading}>
                 {isLoading ? (
                   <>
                     <Loader2 size={16} className="animate-spin" />
@@ -196,153 +194,27 @@ export default function JoinGroupModal({
                 ) : (
                   "가입 요청"
                 )}
-              </RequestButton>
-            </ButtonGroup>
-          </ConfirmContent>
+              </S.RequestButton>
+            </S.ButtonGroup>
+          </S.ConfirmContent>
         )}
 
         {step === "success" && (
           /* 성공 화면 */
-          <SuccessContent>
-            <SuccessIcon>
+          <S.SuccessContent>
+            <S.SuccessIcon>
               <CheckCircle size={48} />
-            </SuccessIcon>
-            <SuccessTitle>가입 요청을 보냈습니다!</SuccessTitle>
-            <SuccessText>
+            </S.SuccessIcon>
+            <S.SuccessTitle>가입 요청을 보냈습니다!</S.SuccessTitle>
+            <S.SuccessText>
               방장이 요청을 승인하면
               <br />
               그룹에 참여할 수 있습니다.
-            </SuccessText>
-            <CompleteButton onClick={handleComplete}>확인</CompleteButton>
-          </SuccessContent>
+            </S.SuccessText>
+            <S.CompleteButton onClick={handleComplete}>확인</S.CompleteButton>
+          </S.SuccessContent>
         )}
       </DialogContent>
     </Dialog>
   );
 }
-
-/* 스타일 컴포넌트 */
-const FormContent = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-  padding-top: 8px;
-`;
-
-const FormField = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-`;
-
-const CodeInput = styled(Input)`
-  font-size: 20px;
-  font-family: monospace;
-  letter-spacing: 4px;
-  text-align: center;
-  text-transform: uppercase;
-`;
-
-const ErrorText = styled.span`
-  font-size: 13px;
-  color: var(--destructive);
-`;
-
-const ButtonGroup = styled.div`
-  display: flex;
-  gap: 12px;
-`;
-
-const CancelButton = styled(Button)`
-  flex: 1;
-`;
-
-const SearchButton = styled(Button)`
-  flex: 1;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-`;
-
-const ConfirmContent = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-  padding-top: 8px;
-`;
-
-const GroupInfo = styled.div`
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 8px;
-  padding: 20px;
-  background-color: var(--muted);
-  border-radius: 12px;
-`;
-
-const GroupIcon = styled.div`
-  width: 64px;
-  height: 64px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background-color: var(--background);
-  border-radius: 16px;
-  color: var(--primary);
-`;
-
-const GroupName = styled.h3`
-  font-size: 18px;
-  font-weight: 600;
-  color: var(--foreground);
-`;
-
-const MemberCount = styled.span`
-  font-size: 14px;
-  color: var(--muted-foreground);
-`;
-
-const InfoText = styled.p`
-  text-align: center;
-  font-size: 14px;
-  color: var(--muted-foreground);
-  line-height: 1.6;
-`;
-
-const RequestButton = styled(Button)`
-  flex: 1;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-`;
-
-const SuccessContent = styled.div`
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 16px;
-  padding: 20px 0;
-`;
-
-const SuccessIcon = styled.div`
-  color: var(--primary);
-`;
-
-const SuccessTitle = styled.h3`
-  font-size: 18px;
-  font-weight: 600;
-  color: var(--foreground);
-`;
-
-const SuccessText = styled.p`
-  text-align: center;
-  font-size: 14px;
-  color: var(--muted-foreground);
-  line-height: 1.6;
-`;
-
-const CompleteButton = styled(Button)`
-  width: 100%;
-  margin-top: 8px;
-`;

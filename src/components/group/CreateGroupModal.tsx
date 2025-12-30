@@ -1,17 +1,16 @@
 "use client";
 
 import { useState } from "react";
-import styled from "styled-components";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Loader2 } from "lucide-react";
+import * as S from "./CreateGroupModal.styles";
 
 /* =============================================
    그룹 생성 모달
@@ -95,32 +94,26 @@ export default function CreateGroupModal({
 
         {createdGroup ? (
           /* 생성 완료 화면 */
-          <CompletedContent>
-            <SuccessMessage>
-              그룹이 생성되었습니다!
-            </SuccessMessage>
+          <S.CompletedContent>
+            <S.SuccessMessage>그룹이 생성되었습니다!</S.SuccessMessage>
 
-            <InviteCodeSection>
-              <InviteCodeLabel>초대 코드</InviteCodeLabel>
-              <InviteCodeBox>
-                <InviteCode>{createdGroup.inviteCode}</InviteCode>
-                <CopyButton variant="outline" size="sm" onClick={handleCopyCode}>
+            <S.InviteCodeSection>
+              <S.InviteCodeLabel>초대 코드</S.InviteCodeLabel>
+              <S.InviteCodeBox>
+                <S.InviteCode>{createdGroup.inviteCode}</S.InviteCode>
+                <S.CopyButton variant="outline" size="sm" onClick={handleCopyCode}>
                   복사
-                </CopyButton>
-              </InviteCodeBox>
-              <InviteCodeHint>
-                친구들에게 이 코드를 공유하세요
-              </InviteCodeHint>
-            </InviteCodeSection>
+                </S.CopyButton>
+              </S.InviteCodeBox>
+              <S.InviteCodeHint>친구들에게 이 코드를 공유하세요</S.InviteCodeHint>
+            </S.InviteCodeSection>
 
-            <CompleteButton onClick={handleComplete}>
-              확인
-            </CompleteButton>
-          </CompletedContent>
+            <S.CompleteButton onClick={handleComplete}>확인</S.CompleteButton>
+          </S.CompletedContent>
         ) : (
           /* 입력 화면 */
-          <FormContent>
-            <FormField>
+          <S.FormContent>
+            <S.FormField>
               <Label htmlFor="groupName">그룹 이름</Label>
               <Input
                 id="groupName"
@@ -130,14 +123,14 @@ export default function CreateGroupModal({
                 maxLength={20}
                 disabled={isCreating}
               />
-              <CharCount>{groupName.length}/20</CharCount>
-            </FormField>
+              <S.CharCount>{groupName.length}/20</S.CharCount>
+            </S.FormField>
 
-            <ButtonGroup>
-              <CancelButton variant="outline" onClick={handleClose}>
+            <S.ButtonGroup>
+              <S.CancelButton variant="outline" onClick={handleClose}>
                 취소
-              </CancelButton>
-              <CreateButton
+              </S.CancelButton>
+              <S.CreateButton
                 onClick={handleCreate}
                 disabled={!groupName.trim() || isCreating}
               >
@@ -149,103 +142,11 @@ export default function CreateGroupModal({
                 ) : (
                   "만들기"
                 )}
-              </CreateButton>
-            </ButtonGroup>
-          </FormContent>
+              </S.CreateButton>
+            </S.ButtonGroup>
+          </S.FormContent>
         )}
       </DialogContent>
     </Dialog>
   );
 }
-
-/* 스타일 컴포넌트 */
-const FormContent = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-  padding-top: 8px;
-`;
-
-const FormField = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-`;
-
-const CharCount = styled.span`
-  font-size: 12px;
-  color: var(--muted-foreground);
-  text-align: right;
-`;
-
-const ButtonGroup = styled.div`
-  display: flex;
-  gap: 12px;
-`;
-
-const CancelButton = styled(Button)`
-  flex: 1;
-`;
-
-const CreateButton = styled(Button)`
-  flex: 1;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-`;
-
-const CompletedContent = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-  padding-top: 8px;
-`;
-
-const SuccessMessage = styled.p`
-  text-align: center;
-  font-size: 16px;
-  color: var(--foreground);
-`;
-
-const InviteCodeSection = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-`;
-
-const InviteCodeLabel = styled.span`
-  font-size: 14px;
-  font-weight: 500;
-  color: var(--foreground);
-`;
-
-const InviteCodeBox = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 12px 16px;
-  background-color: var(--muted);
-  border-radius: 8px;
-`;
-
-const InviteCode = styled.span`
-  flex: 1;
-  font-size: 20px;
-  font-weight: 700;
-  font-family: monospace;
-  letter-spacing: 2px;
-  color: var(--foreground);
-`;
-
-const CopyButton = styled(Button)`
-  flex-shrink: 0;
-`;
-
-const InviteCodeHint = styled.span`
-  font-size: 12px;
-  color: var(--muted-foreground);
-`;
-
-const CompleteButton = styled(Button)`
-  width: 100%;
-`;

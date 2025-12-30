@@ -1,15 +1,14 @@
 "use client";
 
 import { use, useState, useEffect, useCallback } from "react";
-import styled from "styled-components";
 import MobileLayout from "@/components/layout/MobileLayout";
 import DateSelector from "@/components/diary/DateSelector";
 import DiaryCard from "@/components/diary/DiaryCard";
 import JoinRequestList from "@/components/group/JoinRequestList";
-import { Button } from "@/components/ui/button";
 import { Settings, PenSquare, Lock, Loader2, Copy, Check } from "lucide-react";
 import Link from "next/link";
 import { formatDateISO, isToday } from "@/utils/date";
+import * as S from "./styles/page.styles";
 
 /* =============================================
    그룹 상세 페이지 (피드)
@@ -164,9 +163,9 @@ export default function GroupDetailPage({ params }: GroupDetailPageProps) {
 
   /* 설정 버튼 */
   const headerRight = (
-    <SettingsButton onClick={() => setShowInviteCode(!showInviteCode)}>
+    <S.SettingsButton onClick={() => setShowInviteCode(!showInviteCode)}>
       <Settings size={20} />
-    </SettingsButton>
+    </S.SettingsButton>
   );
 
   const showLocked = isToday(selectedDate) && !hasWrittenToday;
@@ -179,15 +178,15 @@ export default function GroupDetailPage({ params }: GroupDetailPageProps) {
     >
       {/* 초대 코드 표시 (토글) */}
       {showInviteCode && (
-        <InviteCodeBanner>
-          <InviteCodeLabel>초대 코드</InviteCodeLabel>
-          <InviteCodeRow>
-            <InviteCodeText>{inviteCode}</InviteCodeText>
-            <CopyButton onClick={handleCopyInviteCode}>
+        <S.InviteCodeBanner>
+          <S.InviteCodeLabel>초대 코드</S.InviteCodeLabel>
+          <S.InviteCodeRow>
+            <S.InviteCodeText>{inviteCode}</S.InviteCodeText>
+            <S.CopyButton onClick={handleCopyInviteCode}>
               {codeCopied ? <Check size={16} /> : <Copy size={16} />}
-            </CopyButton>
-          </InviteCodeRow>
-        </InviteCodeBanner>
+            </S.CopyButton>
+          </S.InviteCodeRow>
+        </S.InviteCodeBanner>
       )}
 
       {/* 날짜 선택 */}
@@ -196,7 +195,7 @@ export default function GroupDetailPage({ params }: GroupDetailPageProps) {
         onDateChange={setSelectedDate}
       />
 
-      <Container>
+      <S.Container>
         {/* 방장: 가입 요청 목록 */}
         {isOwner && joinRequests.length > 0 && (
           <JoinRequestList
@@ -208,39 +207,39 @@ export default function GroupDetailPage({ params }: GroupDetailPageProps) {
 
         {/* 오늘이고 아직 작성 안 한 경우: 글쓰기 유도 */}
         {isToday(selectedDate) && !hasWrittenToday && (
-          <WriteStatusCard>
-            <WriteStatusText>
+          <S.WriteStatusCard>
+            <S.WriteStatusText>
               오늘의 일기를 작성하면
               <br />
               친구들의 일기를 볼 수 있어요!
-            </WriteStatusText>
-            <WriteButton asChild>
+            </S.WriteStatusText>
+            <S.WriteButton asChild>
               <Link href={`/groups/${groupId}/write`}>
                 <PenSquare size={18} />
                 오늘의 일기 쓰기
               </Link>
-            </WriteButton>
-          </WriteStatusCard>
+            </S.WriteButton>
+          </S.WriteStatusCard>
         )}
 
         {/* 로딩 상태 */}
         {isLoading && (
-          <LoadingContainer>
+          <S.LoadingContainer>
             <Loader2 size={32} className="animate-spin" />
-          </LoadingContainer>
+          </S.LoadingContainer>
         )}
 
         {/* 피드 섹션 */}
         {!isLoading && (
-          <FeedSection>
+          <S.FeedSection>
             {showLocked ? (
               /* 잠긴 상태 */
-              <LockedFeed>
-                <LockedIcon>
+              <S.LockedFeed>
+                <S.LockedIcon>
                   <Lock size={32} />
-                </LockedIcon>
-                <LockedText>일기를 작성하면 잠금이 해제됩니다</LockedText>
-              </LockedFeed>
+                </S.LockedIcon>
+                <S.LockedText>일기를 작성하면 잠금이 해제됩니다</S.LockedText>
+              </S.LockedFeed>
             ) : diaries.length > 0 ? (
               /* 다이어리 목록 */
               diaries.map((diary) => (
@@ -261,178 +260,17 @@ export default function GroupDetailPage({ params }: GroupDetailPageProps) {
               ))
             ) : (
               /* 빈 상태 */
-              <EmptyState>
-                <EmptyText>
+              <S.EmptyState>
+                <S.EmptyText>
                   {isToday(selectedDate)
                     ? "아직 오늘 작성된 일기가 없어요."
                     : "이 날짜에 작성된 일기가 없어요."}
-                </EmptyText>
-              </EmptyState>
+                </S.EmptyText>
+              </S.EmptyState>
             )}
-          </FeedSection>
+          </S.FeedSection>
         )}
-      </Container>
+      </S.Container>
     </MobileLayout>
   );
 }
-
-/* 스타일 컴포넌트 - 계층 구조 */
-const Container = styled.div`
-  /* 페이지 컨테이너 */
-  padding: 16px;
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-`;
-
-const SettingsButton = styled.button`
-  /* 설정 버튼 */
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  color: var(--foreground);
-  transition: background-color 0.2s;
-
-  &:hover {
-    background-color: var(--accent);
-  }
-`;
-
-const InviteCodeBanner = styled.div`
-  /* 초대 코드 배너 */
-  background-color: var(--muted);
-  padding: 12px 16px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  border-bottom: 1px solid var(--border);
-`;
-
-const InviteCodeLabel = styled.span`
-  /* 초대 코드 레이블 */
-  font-size: 13px;
-  color: var(--muted-foreground);
-`;
-
-const InviteCodeRow = styled.div`
-  /* 초대 코드 행 */
-  display: flex;
-  align-items: center;
-  gap: 8px;
-`;
-
-const InviteCodeText = styled.span`
-  /* 초대 코드 텍스트 */
-  font-size: 16px;
-  font-weight: 700;
-  font-family: monospace;
-  letter-spacing: 1px;
-  color: var(--foreground);
-`;
-
-const CopyButton = styled.button`
-  /* 복사 버튼 */
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 32px;
-  height: 32px;
-  border-radius: 8px;
-  color: var(--muted-foreground);
-  transition: background-color 0.2s;
-
-  &:hover {
-    background-color: var(--accent);
-  }
-`;
-
-const WriteStatusCard = styled.div`
-  /* 글쓰기 상태 카드 */
-  background: linear-gradient(135deg, #7c9eb2 0%, #a8c5d8 100%);
-  border-radius: 16px;
-  padding: 24px;
-  text-align: center;
-  color: white;
-`;
-
-const WriteStatusText = styled.p`
-  /* 상태 텍스트 */
-  font-size: 15px;
-  line-height: 1.6;
-  margin-bottom: 16px;
-  opacity: 0.95;
-`;
-
-const WriteButton = styled(Button)`
-  /* 글쓰기 버튼 */
-  background-color: white;
-  color: #5a7a8a;
-  font-weight: 600;
-  height: 44px;
-  padding: 0 24px;
-  border-radius: 22px;
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-
-  &:hover {
-    background-color: rgba(255, 255, 255, 0.9);
-  }
-`;
-
-const LoadingContainer = styled.div`
-  /* 로딩 컨테이너 */
-  display: flex;
-  justify-content: center;
-  padding: 48px 0;
-  color: var(--muted-foreground);
-`;
-
-const FeedSection = styled.section`
-  /* 피드 섹션 */
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-`;
-
-const LockedFeed = styled.div`
-  /* 잠긴 피드 */
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 48px 24px;
-  background-color: var(--muted);
-  border-radius: 12px;
-`;
-
-const LockedIcon = styled.div`
-  /* 잠금 아이콘 */
-  color: var(--muted-foreground);
-  margin-bottom: 12px;
-`;
-
-const LockedText = styled.p`
-  /* 잠금 텍스트 */
-  font-size: 14px;
-  color: var(--muted-foreground);
-`;
-
-const EmptyState = styled.div`
-  /* 빈 상태 */
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 48px 24px;
-  text-align: center;
-`;
-
-const EmptyText = styled.p`
-  /* 빈 상태 텍스트 */
-  font-size: 14px;
-  color: var(--muted-foreground);
-`;

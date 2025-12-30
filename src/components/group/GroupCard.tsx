@@ -1,8 +1,7 @@
 "use client";
 
-import Link from "next/link";
-import styled from "styled-components";
 import { Users, Crown, ChevronRight } from "lucide-react";
+import * as S from "./GroupCard.styles";
 
 /* =============================================
    그룹 카드 컴포넌트
@@ -26,113 +25,29 @@ export default function GroupCard({
   hasPendingRequests,
 }: GroupCardProps) {
   return (
-    <CardLink href={`/groups/${id}`}>
-      <CardContent>
-        <GroupIcon>
+    <S.CardLink href={`/groups/${id}`}>
+      <S.CardContent>
+        <S.GroupIcon>
           <Users size={24} />
-        </GroupIcon>
+        </S.GroupIcon>
 
-        <GroupInfo>
-          <GroupNameRow>
-            <GroupName>{name}</GroupName>
+        <S.GroupInfo>
+          <S.GroupNameRow>
+            <S.GroupName>{name}</S.GroupName>
             {isOwner && (
-              <OwnerBadge>
+              <S.OwnerBadge>
                 <Crown size={12} />
-              </OwnerBadge>
+              </S.OwnerBadge>
             )}
-          </GroupNameRow>
-          <MemberCount>{memberCount}/4명</MemberCount>
-        </GroupInfo>
+          </S.GroupNameRow>
+          <S.MemberCount>{memberCount}/4명</S.MemberCount>
+        </S.GroupInfo>
 
-        <RightSection>
-          {hasPendingRequests && <PendingDot />}
+        <S.RightSection>
+          {hasPendingRequests && <S.PendingDot />}
           <ChevronRight size={20} />
-        </RightSection>
-      </CardContent>
-    </CardLink>
+        </S.RightSection>
+      </S.CardContent>
+    </S.CardLink>
   );
 }
-
-/* 스타일 컴포넌트 */
-const CardLink = styled(Link)`
-  display: block;
-  background-color: var(--card);
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  transition: background-color 0.2s;
-
-  &:hover {
-    background-color: var(--accent);
-  }
-
-  &:active {
-    transform: scale(0.99);
-  }
-`;
-
-const CardContent = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  padding: 16px;
-`;
-
-const GroupIcon = styled.div`
-  width: 48px;
-  height: 48px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background-color: var(--muted);
-  border-radius: 12px;
-  color: var(--muted-foreground);
-`;
-
-const GroupInfo = styled.div`
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-`;
-
-const GroupNameRow = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 8px;
-`;
-
-const GroupName = styled.span`
-  font-size: 16px;
-  font-weight: 600;
-  color: var(--foreground);
-`;
-
-const OwnerBadge = styled.span`
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 20px;
-  height: 20px;
-  background-color: var(--primary);
-  color: white;
-  border-radius: 50%;
-`;
-
-const MemberCount = styled.span`
-  font-size: 13px;
-  color: var(--muted-foreground);
-`;
-
-const RightSection = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  color: var(--muted-foreground);
-`;
-
-const PendingDot = styled.div`
-  width: 8px;
-  height: 8px;
-  background-color: var(--destructive);
-  border-radius: 50%;
-`;

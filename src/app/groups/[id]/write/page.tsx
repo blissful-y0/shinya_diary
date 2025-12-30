@@ -2,13 +2,11 @@
 
 import { use, useState, useEffect, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import styled from "styled-components";
 import MobileLayout from "@/components/layout/MobileLayout";
-import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
 import { ImagePlus, X, Send, Loader2 } from "lucide-react";
 import { isValidImageFile } from "@/utils/imageConverter";
 import { formatDateISO } from "@/utils/date";
+import * as S from "./styles/page.styles";
 
 /* =============================================
    다이어리 작성/수정 페이지
@@ -161,13 +159,13 @@ export default function WritePage({ params }: WritePageProps) {
 
   /* 제출 버튼 */
   const headerRight = (
-    <SubmitButton onClick={handleSubmit} disabled={!canSubmit}>
+    <S.SubmitButton onClick={handleSubmit} disabled={!canSubmit}>
       {isSubmitting ? (
         <Loader2 size={18} className="animate-spin" />
       ) : (
         <Send size={18} />
       )}
-    </SubmitButton>
+    </S.SubmitButton>
   );
 
   return (
@@ -177,169 +175,46 @@ export default function WritePage({ params }: WritePageProps) {
       headerRight={headerRight}
       showNav={false}
     >
-      <Container>
+      <S.Container>
         {/* 이미지 업로드 영역 */}
-        <ImageUploadArea onClick={() => fileInputRef.current?.click()}>
+        <S.ImageUploadArea onClick={() => fileInputRef.current?.click()}>
           {imagePreview ? (
-            <ImagePreviewContainer>
-              <PreviewImage src={imagePreview} alt="미리보기" />
-              <RemoveImageButton
+            <S.ImagePreviewContainer>
+              <S.PreviewImage src={imagePreview} alt="미리보기" />
+              <S.RemoveImageButton
                 onClick={(e) => {
                   e.stopPropagation();
                   handleRemoveImage();
                 }}
               >
                 <X size={20} />
-              </RemoveImageButton>
-            </ImagePreviewContainer>
+              </S.RemoveImageButton>
+            </S.ImagePreviewContainer>
           ) : (
-            <UploadPlaceholder>
+            <S.UploadPlaceholder>
               <ImagePlus size={32} />
-              <UploadText>사진을 추가해보세요</UploadText>
-            </UploadPlaceholder>
+              <S.UploadText>사진을 추가해보세요</S.UploadText>
+            </S.UploadPlaceholder>
           )}
-          <HiddenInput
+          <S.HiddenInput
             ref={fileInputRef}
             type="file"
             accept="image/*"
             onChange={handleImageSelect}
           />
-        </ImageUploadArea>
+        </S.ImageUploadArea>
 
         {/* 업로드 진행 상태 */}
-        {uploadProgress && <ProgressText>{uploadProgress}</ProgressText>}
+        {uploadProgress && <S.ProgressText>{uploadProgress}</S.ProgressText>}
 
         {/* 텍스트 입력 */}
-        <ContentTextarea
+        <S.ContentTextarea
           placeholder="오늘 하루는 어땠나요?"
           value={content}
           onChange={(e) => setContent(e.target.value)}
           disabled={isSubmitting}
         />
-      </Container>
+      </S.Container>
     </MobileLayout>
   );
 }
-
-/* 스타일 컴포넌트 - 계층 구조 */
-const Container = styled.div`
-  /* 페이지 컨테이너 */
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-  padding: 16px;
-  gap: 16px;
-`;
-
-const SubmitButton = styled(Button)`
-  /* 제출 버튼 */
-  width: 40px;
-  height: 40px;
-  padding: 0;
-  border-radius: 50%;
-
-  &:disabled {
-    opacity: 0.5;
-  }
-`;
-
-const ImageUploadArea = styled.div`
-  /* 이미지 업로드 영역 */
-  aspect-ratio: 1;
-  background-color: var(--muted);
-  border-radius: 16px;
-  overflow: hidden;
-  cursor: pointer;
-  transition: background-color 0.2s;
-  position: relative;
-
-  &:hover {
-    background-color: var(--accent);
-  }
-`;
-
-const ImagePreviewContainer = styled.div`
-  /* 이미지 미리보기 컨테이너 */
-  width: 100%;
-  height: 100%;
-  position: relative;
-`;
-
-const PreviewImage = styled.img`
-  /* 미리보기 이미지 */
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-`;
-
-const RemoveImageButton = styled.button`
-  /* 이미지 제거 버튼 */
-  position: absolute;
-  top: 12px;
-  right: 12px;
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  background-color: rgba(0, 0, 0, 0.6);
-  color: white;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: background-color 0.2s;
-
-  &:hover {
-    background-color: rgba(0, 0, 0, 0.8);
-  }
-`;
-
-const UploadPlaceholder = styled.div`
-  /* 업로드 플레이스홀더 */
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  height: 100%;
-  color: var(--muted-foreground);
-  gap: 12px;
-`;
-
-const UploadText = styled.span`
-  /* 업로드 텍스트 */
-  font-size: 14px;
-`;
-
-const HiddenInput = styled.input`
-  /* 숨겨진 파일 입력 */
-  display: none;
-`;
-
-const ProgressText = styled.p`
-  /* 진행 상태 텍스트 */
-  text-align: center;
-  font-size: 14px;
-  color: var(--primary);
-`;
-
-const ContentTextarea = styled(Textarea)`
-  /* 내용 텍스트 영역 */
-  flex: 1;
-  min-height: 120px;
-  resize: none;
-  border: none;
-  background-color: transparent;
-  font-size: 16px;
-  line-height: 1.6;
-
-  &:focus {
-    outline: none;
-    box-shadow: none;
-  }
-
-  &::placeholder {
-    color: var(--muted-foreground);
-  }
-
-  &:disabled {
-    opacity: 0.7;
-  }
-`;

@@ -1,10 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import styled from "styled-components";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Button } from "@/components/ui/button";
 import { Check, X, Loader2 } from "lucide-react";
+import * as S from "./JoinRequestList.styles";
 
 /* =============================================
    가입 요청 목록 컴포넌트
@@ -50,12 +49,12 @@ export default function JoinRequestList({
   }
 
   return (
-    <Container>
-      <Title>가입 요청 ({requests.length})</Title>
-      <RequestList>
+    <S.Container>
+      <S.Title>가입 요청 ({requests.length})</S.Title>
+      <S.RequestList>
         {requests.map((request) => (
-          <RequestItem key={request.id}>
-            <UserInfo>
+          <S.RequestItem key={request.id}>
+            <S.UserInfo>
               <Avatar className="w-10 h-10">
                 <AvatarImage
                   src={request.user.avatar_url || ""}
@@ -65,98 +64,33 @@ export default function JoinRequestList({
                   {(request.user.nickname || "U").charAt(0).toUpperCase()}
                 </AvatarFallback>
               </Avatar>
-              <UserName>{request.user.nickname || "알 수 없음"}</UserName>
-            </UserInfo>
+              <S.UserName>{request.user.nickname || "알 수 없음"}</S.UserName>
+            </S.UserInfo>
 
-            <Actions>
+            <S.Actions>
               {loadingId === request.id ? (
                 <Loader2 size={20} className="animate-spin" />
               ) : (
                 <>
-                  <RejectButton
+                  <S.RejectButton
                     variant="outline"
                     size="sm"
                     onClick={() => handleReject(request.id)}
                   >
                     <X size={16} />
-                  </RejectButton>
-                  <ApproveButton
+                  </S.RejectButton>
+                  <S.ApproveButton
                     size="sm"
                     onClick={() => handleApprove(request.id)}
                   >
                     <Check size={16} />
-                  </ApproveButton>
+                  </S.ApproveButton>
                 </>
               )}
-            </Actions>
-          </RequestItem>
+            </S.Actions>
+          </S.RequestItem>
         ))}
-      </RequestList>
-    </Container>
+      </S.RequestList>
+    </S.Container>
   );
 }
-
-/* 스타일 컴포넌트 */
-const Container = styled.div`
-  background-color: var(--card);
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  overflow: hidden;
-`;
-
-const Title = styled.h3`
-  padding: 12px 16px;
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--foreground);
-  background-color: var(--muted);
-  border-bottom: 1px solid var(--border);
-`;
-
-const RequestList = styled.div`
-  display: flex;
-  flex-direction: column;
-`;
-
-const RequestItem = styled.div`
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 12px 16px;
-
-  &:not(:last-child) {
-    border-bottom: 1px solid var(--border);
-  }
-`;
-
-const UserInfo = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 12px;
-`;
-
-const UserName = styled.span`
-  font-size: 15px;
-  font-weight: 500;
-  color: var(--foreground);
-`;
-
-const Actions = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  color: var(--muted-foreground);
-`;
-
-const RejectButton = styled(Button)`
-  width: 32px;
-  height: 32px;
-  padding: 0;
-  color: var(--destructive);
-`;
-
-const ApproveButton = styled(Button)`
-  width: 32px;
-  height: 32px;
-  padding: 0;
-`;
