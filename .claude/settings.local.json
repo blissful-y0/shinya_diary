@@ -11,7 +11,11 @@
       "Bash(npx shadcn@latest init:*)",
       "Bash(npx shadcn@latest add:*)",
       "Bash(git commit -m \"$\\(cat <<''EOF''\nfeat: UI 프레임워크 및 모바일 레이아웃 구성\n\n- Tailwind CSS v4 + shadcn/ui 설정\n- styled-components SSR 레지스트리 추가\n- 모바일 최적화 레이아웃 컴포넌트 구현\n  - MobileLayout: 메인 컨테이너 \\(max 480px\\)\n  - Header: 뒤로가기/제목/액션 버튼\n  - BottomNav: 하단 네비게이션 바\n- shadcn/ui 기본 컴포넌트 추가\n  - Button, Input, Card, Dialog, Avatar, Textarea, Label\n- 페이지 라우트 구성\n  - / : 홈 \\(오늘의 다이어리\\)\n  - /login : Google OAuth 로그인\n  - /groups : 그룹 목록\n  - /groups/[id] : 그룹 피드 \\(Read-after-Write\\)\n  - /groups/[id]/write : 다이어리 작성\n  - /write : 빠른 글쓰기\n  - /profile : 프로필\n\n🤖 Generated with [Claude Code]\\(https://claude.com/claude-code\\)\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n\\)\")",
-      "Bash(git commit -m \"$\\(cat <<''EOF''\nfeat: 네비게이션 간소화 및 그룹별 멀티 프로필 지원\n\n- 하단 네비게이션에서 글쓰기 메뉴 제거 \\(홈, 그룹, 프로필만 유지\\)\n- /write 페이지 삭제\n- 그룹별 멀티 프로필 기능 추가\n  - group_members 테이블에 nickname, avatar_url 필드 추가\n  - 그룹 가입 시 기본 프로필 자동 복사\n  - 각 그룹에서 다른 닉네임/아바타 사용 가능\n\n🤖 Generated with [Claude Code]\\(https://claude.com/claude-code\\)\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n\\)\")"
+      "Bash(git commit -m \"$\\(cat <<''EOF''\nfeat: 네비게이션 간소화 및 그룹별 멀티 프로필 지원\n\n- 하단 네비게이션에서 글쓰기 메뉴 제거 \\(홈, 그룹, 프로필만 유지\\)\n- /write 페이지 삭제\n- 그룹별 멀티 프로필 기능 추가\n  - group_members 테이블에 nickname, avatar_url 필드 추가\n  - 그룹 가입 시 기본 프로필 자동 복사\n  - 각 그룹에서 다른 닉네임/아바타 사용 가능\n\n🤖 Generated with [Claude Code]\\(https://claude.com/claude-code\\)\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n\\)\")",
+      "Bash(git commit -m \"$\\(cat <<''EOF''\nfeat: 다이어리 작성/조회 기능 및 날짜별 분류 구현\n\n- 다이어리 카드 컴포넌트 \\(DiaryCard\\)\n  - 작성자 정보, 이미지, 내용 표시\n  - 상대적 시간 표시 \\(몇 분 전, 몇 시간 전\\)\n- 날짜 선택 컴포넌트 \\(DateSelector\\)\n  - 좌우 화살표로 날짜 이동\n  - 오늘 뱃지 표시\n- 그룹 피드 페이지 업데이트\n  - 날짜별 다이어리 필터링\n  - Read-after-Write 잠금 로직\n  - 로딩/빈 상태 처리\n- 다이어리 작성 페이지 구현\n  - 이미지 업로드 \\(WebP 변환\\)\n  - 텍스트 입력\n  - 기존 다이어리 수정 지원\n- Supabase 쿼리 함수 추가\n  - getDiariesByDate: 날짜별 다이어리 조회\n  - checkTodayDiary: 오늘 작성 여부 확인\n  - createDiary: 다이어리 생성\n- 날짜 유틸리티 함수 추가\n\n🤖 Generated with [Claude Code]\\(https://claude.com/claude-code\\)\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n\\)\")",
+      "Bash(git commit:*)",
+      "Bash(find:*)",
+      "Bash(wc:*)"
     ]
   }
 }

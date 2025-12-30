@@ -1,8 +1,11 @@
 "use client";
 
-import { useRef } from "react";
-import { ChevronLeft, ChevronRight, Calendar } from "lucide-react";
-import { formatDateKorean, formatDateISO, isToday } from "@/utils/date";
+import { useState } from "react";
+import { ChevronLeft, ChevronRight, Calendar as CalendarIcon } from "lucide-react";
+import { ko } from "date-fns/locale";
+import { formatDateKorean, isToday } from "@/utils/date";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
 import * as S from "./DateSelector.styles";
 
 /* =============================================
@@ -21,7 +24,7 @@ export default function DateSelector({
   selectedDate,
   onDateChange,
 }: DateSelectorProps) {
-  const dateInputRef = useRef<HTMLInputElement>(null);
+  const [isOpen, setIsOpen] = useState(false);
 
   /* 이전 날짜로 이동 */
   const handlePrevDay = () => {
@@ -41,20 +44,15 @@ export default function DateSelector({
   };
 
   /* 날짜 직접 선택 */
-  const handleDateSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newDate = new Date(e.target.value);
-    if (!isNaN(newDate.getTime()) && newDate <= new Date()) {
-      onDateChange(newDate);
+  const handleDateSelect = (date: Date | undefined) => {
+    if (date) {
+      onDateChange(date);
+      setIsOpen(false);
     }
   };
 
-  /* 날짜 입력창 열기 */
-  const openDatePicker = () => {
-    dateInputRef.current?.showPicker();
-  };
-
   const canGoNext = !isToday(selectedDate);
-  const todayStr = formatDateISO(new Date());
+  const today = new Date();
 
   return (
     <S.Container>
@@ -62,18 +60,25 @@ export default function DateSelector({
         <ChevronLeft size={20} />
       </S.NavButton>
 
-      <S.DateDisplay onClick={openDatePicker}>
-        <S.DateText>{formatDateKorean(selectedDate)}</S.DateText>
-        {isToday(selectedDate) && <S.TodayBadge>오늘</S.TodayBadge>}
-        <Calendar size={16} />
-        <S.HiddenDateInput
-          ref={dateInputRef}
-          type="date"
-          value={formatDateISO(selectedDate)}
-          max={todayStr}
-          onChange={handleDateSelect}
-        />
-      </S.DateDisplay>
+      <Popover open={isOpen} onOpenChange={setIsOpen}>
+        <PopoverTrigger asChild>
+          <S.DateDisplay>
+            <S.DateText>{formatDateKorean(selectedDate)}</S.DateText>
+            {isToday(selectedDate) && <S.TodayBadge>오늘</S.TodayBadge>}
+            <CalendarIcon size={16} />
+          </S.DateDisplay>
+        </PopoverTrigger>
+        <PopoverContent className="w-auto p-0" align="center">
+          <Calendar
+            mode="single"
+            selected={selectedDate}
+            onSelect={handleDateSelect}
+            disabled={(date) => date > today}
+            initialFocus
+            locale={ko}
+          />
+        </PopoverContent>
+      </Popover>
 
       <S.NavButton
         onClick={handleNextDay}

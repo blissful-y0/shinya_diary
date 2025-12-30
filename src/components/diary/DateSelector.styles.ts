@@ -68,11 +68,3 @@ export const TodayBadge = styled.span`
   border-radius: 10px;
 `;
 
-export const HiddenDateInput = styled.input`
-  /* 숨겨진 날짜 입력 */
-  position: absolute;
-  opacity: 0;
-  width: 0;
-  height: 0;
-  pointer-events: none;
-`;
