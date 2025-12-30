@@ -29,11 +29,21 @@ export const IconSection = styled.section`
   gap: 12px;
 `;
 
-export const SectionTitle = styled.h2`
-  /* 섹션 제목 */
-  font-size: 16px;
-  font-weight: 600;
+export const SectionHeader = styled.h2`
+  /* 섹션 헤더 (큰 제목) */
+  font-size: 18px;
+  font-weight: 700;
   color: var(--foreground);
+  padding-bottom: 8px;
+  border-bottom: 2px solid var(--primary);
+  margin-bottom: 8px;
+`;
+
+export const SectionTitle = styled.h3`
+  /* 섹션 제목 */
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--muted-foreground);
 `;
 
 export const IconPreview = styled.div`

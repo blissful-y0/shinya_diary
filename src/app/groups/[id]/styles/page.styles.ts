@@ -29,54 +29,6 @@ export const SettingsButton = styled.button`
   }
 `;
 
-export const InviteCodeBanner = styled.div`
-  /* 초대 코드 배너 */
-  background-color: var(--muted);
-  padding: 12px 16px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  border-bottom: 1px solid var(--border);
-`;
-
-export const InviteCodeLabel = styled.span`
-  /* 초대 코드 레이블 */
-  font-size: 13px;
-  color: var(--muted-foreground);
-`;
-
-export const InviteCodeRow = styled.div`
-  /* 초대 코드 행 */
-  display: flex;
-  align-items: center;
-  gap: 8px;
-`;
-
-export const InviteCodeText = styled.span`
-  /* 초대 코드 텍스트 */
-  font-size: 16px;
-  font-weight: 700;
-  font-family: monospace;
-  letter-spacing: 1px;
-  color: var(--foreground);
-`;
-
-export const CopyButton = styled.button`
-  /* 복사 버튼 */
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 32px;
-  height: 32px;
-  border-radius: 8px;
-  color: var(--muted-foreground);
-  transition: background-color 0.2s;
-
-  &:hover {
-    background-color: var(--accent);
-  }
-`;
-
 export const WriteStatusCard = styled.div`
   /* 글쓰기 상태 카드 */
   background: linear-gradient(135deg, #7c9eb2 0%, #a8c5d8 100%);

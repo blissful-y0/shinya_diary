@@ -214,6 +214,36 @@ export function isGroupMember(groupId: string): boolean {
   );
 }
 
+/* 내 그룹 프로필 조회 */
+export function getMyGroupProfile(groupId: string): GroupMember | null {
+  const userId = MOCK_CURRENT_USER.id;
+  return MOCK_GROUP_MEMBERS.find(
+    (m) => m.group_id === groupId && m.user_id === userId
+  ) || null;
+}
+
+/* 내 그룹 프로필 수정 */
+export function updateMyGroupProfile(
+  groupId: string,
+  params: { nickname?: string; avatarUrl?: string | null }
+): boolean {
+  const userId = MOCK_CURRENT_USER.id;
+  const member = MOCK_GROUP_MEMBERS.find(
+    (m) => m.group_id === groupId && m.user_id === userId
+  );
+
+  if (!member) return false;
+
+  if (params.nickname !== undefined) {
+    member.nickname = params.nickname || null;
+  }
+  if (params.avatarUrl !== undefined) {
+    member.avatar_url = params.avatarUrl;
+  }
+
+  return true;
+}
+
 /* =============================================
    다이어리 관련
    ============================================= */

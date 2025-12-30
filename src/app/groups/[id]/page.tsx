@@ -6,7 +6,7 @@ import Link from "next/link";
 import MobileLayout from "@/components/layout/MobileLayout";
 import DateSelector from "@/components/diary/DateSelector";
 import DiaryCard from "@/components/diary/DiaryCard";
-import { Settings, PenSquare, Lock, Loader2, Copy, Check } from "lucide-react";
+import { Settings, PenSquare, Lock, Loader2 } from "lucide-react";
 import { formatDateISO, isToday } from "@/utils/date";
 import * as S from "./styles/page.styles";
 
@@ -38,11 +38,7 @@ export default function GroupDetailPage({ params }: GroupDetailPageProps) {
   >([]);
   const [hasWrittenToday, setHasWrittenToday] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-  const [isOwner, setIsOwner] = useState(false);
   const [groupName, setGroupName] = useState("");
-  const [inviteCode, setInviteCode] = useState("");
-  const [showInviteCode, setShowInviteCode] = useState(false);
-  const [codeCopied, setCodeCopied] = useState(false);
 
   /* 그룹 정보 및 다이어리 목록 로드 */
   const loadData = useCallback(async () => {
@@ -50,7 +46,6 @@ export default function GroupDetailPage({ params }: GroupDetailPageProps) {
 
     const {
       getGroup,
-      isGroupOwner,
       isGroupMember,
       getDiariesByDate,
       checkTodayDiary,
@@ -67,12 +62,7 @@ export default function GroupDetailPage({ params }: GroupDetailPageProps) {
     const group = getGroup(groupId);
     if (group) {
       setGroupName(group.name);
-      setInviteCode(group.invite_code);
     }
-
-    /* 방장 여부 확인 */
-    const ownerStatus = isGroupOwner(groupId);
-    setIsOwner(ownerStatus);
 
     /* 날짜별 다이어리 조회 */
     const dateStr = formatDateISO(selectedDate);
@@ -118,26 +108,13 @@ export default function GroupDetailPage({ params }: GroupDetailPageProps) {
     }
   };
 
-  /* 초대 코드 복사 */
-  const handleCopyInviteCode = async () => {
-    await navigator.clipboard.writeText(inviteCode);
-    setCodeCopied(true);
-    setTimeout(() => setCodeCopied(false), 2000);
-  };
-
-  /* 헤더 우측 버튼 */
-  const headerRight = isOwner ? (
-    /* 방장: 설정 페이지로 이동 */
+  /* 헤더 우측 버튼 - 모든 멤버가 설정 페이지 접근 가능 */
+  const headerRight = (
     <Link href={`/groups/${groupId}/settings`}>
       <S.SettingsButton as="span">
         <Settings size={20} />
       </S.SettingsButton>
     </Link>
-  ) : (
-    /* 일반 멤버: 초대 코드 토글 */
-    <S.SettingsButton onClick={() => setShowInviteCode(!showInviteCode)}>
-      <Settings size={20} />
-    </S.SettingsButton>
   );
 
   const showLocked = isToday(selectedDate) && !hasWrittenToday;
@@ -148,19 +125,6 @@ export default function GroupDetailPage({ params }: GroupDetailPageProps) {
       headerBackHref="/groups"
       headerRight={headerRight}
     >
-      {/* 초대 코드 표시 (일반 멤버용 토글) */}
-      {!isOwner && showInviteCode && (
-        <S.InviteCodeBanner>
-          <S.InviteCodeLabel>초대 코드</S.InviteCodeLabel>
-          <S.InviteCodeRow>
-            <S.InviteCodeText>{inviteCode}</S.InviteCodeText>
-            <S.CopyButton onClick={handleCopyInviteCode}>
-              {codeCopied ? <Check size={16} /> : <Copy size={16} />}
-            </S.CopyButton>
-          </S.InviteCodeRow>
-        </S.InviteCodeBanner>
-      )}
-
       {/* 날짜 선택 */}
       <DateSelector
         selectedDate={selectedDate}

@@ -9,11 +9,9 @@ import { isValidImageFile } from "@/utils/imageConverter";
 import * as S from "./styles/page.styles";
 
 /* =============================================
-   그룹 설정 페이지 (방장 전용)
-   - 그룹 이름 변경
-   - 그룹 아이콘 변경
-   - 초대 코드 확인
-   - 가입 요청 관리
+   그룹 설정 페이지
+   - 내 그룹 프로필 (모든 멤버)
+   - 그룹 설정 (방장만)
    ============================================= */
 
 interface SettingsPageProps {
@@ -32,18 +30,27 @@ interface JoinRequest {
 export default function GroupSettingsPage({ params }: SettingsPageProps) {
   const { id: groupId } = use(params);
   const router = useRouter();
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const groupIconInputRef = useRef<HTMLInputElement>(null);
+  const profileAvatarInputRef = useRef<HTMLInputElement>(null);
 
+  /* 그룹 설정 (방장용) */
+  const [isOwner, setIsOwner] = useState(false);
   const [groupName, setGroupName] = useState("");
-  const [iconUrl, setIconUrl] = useState<string | null>(null);
-  const [iconPreview, setIconPreview] = useState<string | null>(null);
+  const [groupIconPreview, setGroupIconPreview] = useState<string | null>(null);
   const [inviteCode, setInviteCode] = useState("");
   const [joinRequests, setJoinRequests] = useState<JoinRequest[]>([]);
+
+  /* 내 그룹 프로필 */
+  const [myNickname, setMyNickname] = useState("");
+  const [myAvatarPreview, setMyAvatarPreview] = useState<string | null>(null);
+
+  /* 상태 */
   const [isLoading, setIsLoading] = useState(true);
-  const [isSaving, setIsSaving] = useState(false);
+  const [isSavingProfile, setIsSavingProfile] = useState(false);
+  const [isSavingGroup, setIsSavingGroup] = useState(false);
   const [codeCopied, setCodeCopied] = useState(false);
 
-  /* 그룹 정보 로드 */
+  /* 데이터 로드 */
   useEffect(() => {
     const loadData = async () => {
       setIsLoading(true);
@@ -52,6 +59,7 @@ export default function GroupSettingsPage({ params }: SettingsPageProps) {
         getGroup,
         isGroupOwner,
         isGroupMember,
+        getMyGroupProfile,
         getJoinRequests,
       } = await import("@/lib/mock/services");
 
@@ -61,33 +69,39 @@ export default function GroupSettingsPage({ params }: SettingsPageProps) {
         return;
       }
 
-      /* 방장 여부 확인 - 방장만 설정 페이지 접근 가능 */
-      if (!isGroupOwner(groupId)) {
-        router.replace(`/groups/${groupId}`);
-        return;
-      }
+      /* 방장 여부 확인 */
+      const ownerStatus = isGroupOwner(groupId);
+      setIsOwner(ownerStatus);
 
       /* 그룹 정보 */
       const group = getGroup(groupId);
       if (group) {
         setGroupName(group.name);
-        setIconUrl(group.icon_url);
-        setIconPreview(group.icon_url);
+        setGroupIconPreview(group.icon_url);
         setInviteCode(group.invite_code);
       }
 
-      /* 가입 요청 목록 */
-      const requests = getJoinRequests(groupId);
-      setJoinRequests(
-        requests.map((r) => ({
-          id: r.id,
-          user: {
-            nickname: r.user.nickname,
-            avatar_url: r.user.avatar_url,
-          },
-          created_at: r.created_at,
-        }))
-      );
+      /* 내 그룹 프로필 */
+      const myProfile = getMyGroupProfile(groupId);
+      if (myProfile) {
+        setMyNickname(myProfile.nickname || "");
+        setMyAvatarPreview(myProfile.avatar_url);
+      }
+
+      /* 방장이면 가입 요청 목록 조회 */
+      if (ownerStatus) {
+        const requests = getJoinRequests(groupId);
+        setJoinRequests(
+          requests.map((r) => ({
+            id: r.id,
+            user: {
+              nickname: r.user.nickname,
+              avatar_url: r.user.avatar_url,
+            },
+            created_at: r.created_at,
+          }))
+        );
+      }
 
       setIsLoading(false);
     };
@@ -95,8 +109,8 @@ export default function GroupSettingsPage({ params }: SettingsPageProps) {
     loadData();
   }, [groupId, router]);
 
-  /* 아이콘 선택 처리 */
-  const handleIconSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+  /* 프로필 아바타 선택 */
+  const handleProfileAvatarSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
@@ -105,36 +119,76 @@ export default function GroupSettingsPage({ params }: SettingsPageProps) {
       return;
     }
 
-    /* 미리보기 생성 */
     const reader = new FileReader();
     reader.onload = (e) => {
-      setIconPreview(e.target?.result as string);
+      setMyAvatarPreview(e.target?.result as string);
     };
     reader.readAsDataURL(file);
   };
 
-  /* 저장 */
-  const handleSave = async () => {
+  /* 그룹 아이콘 선택 */
+  const handleGroupIconSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!isValidImageFile(file)) {
+      alert("지원하지 않는 이미지 형식입니다.");
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      setGroupIconPreview(e.target?.result as string);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  /* 내 프로필 저장 */
+  const handleSaveProfile = async () => {
+    if (!myNickname.trim()) {
+      alert("닉네임을 입력해주세요.");
+      return;
+    }
+
+    setIsSavingProfile(true);
+
+    const { updateMyGroupProfile } = await import("@/lib/mock/services");
+    const success = updateMyGroupProfile(groupId, {
+      nickname: myNickname.trim(),
+      avatarUrl: myAvatarPreview,
+    });
+
+    if (success) {
+      alert("프로필이 저장되었습니다.");
+    } else {
+      alert("저장에 실패했습니다.");
+    }
+
+    setIsSavingProfile(false);
+  };
+
+  /* 그룹 설정 저장 */
+  const handleSaveGroup = async () => {
     if (!groupName.trim()) {
       alert("그룹 이름을 입력해주세요.");
       return;
     }
 
-    setIsSaving(true);
+    setIsSavingGroup(true);
 
     const { updateGroup } = await import("@/lib/mock/services");
     const success = updateGroup(groupId, {
       name: groupName.trim(),
-      iconUrl: iconPreview,
+      iconUrl: groupIconPreview,
     });
 
     if (success) {
-      router.push(`/groups/${groupId}`);
+      alert("그룹 설정이 저장되었습니다.");
     } else {
       alert("저장에 실패했습니다.");
     }
 
-    setIsSaving(false);
+    setIsSavingGroup(false);
   };
 
   /* 초대 코드 복사 */
@@ -164,7 +218,7 @@ export default function GroupSettingsPage({ params }: SettingsPageProps) {
 
   if (isLoading) {
     return (
-      <MobileLayout headerTitle="그룹 설정" headerBackHref={`/groups/${groupId}`}>
+      <MobileLayout headerTitle="설정" headerBackHref={`/groups/${groupId}`}>
         <S.Container style={{ alignItems: "center", paddingTop: 48 }}>
           <Loader2 size={32} className="animate-spin" />
         </S.Container>
@@ -173,53 +227,52 @@ export default function GroupSettingsPage({ params }: SettingsPageProps) {
   }
 
   return (
-    <MobileLayout headerTitle="그룹 설정" headerBackHref={`/groups/${groupId}`}>
+    <MobileLayout headerTitle="설정" headerBackHref={`/groups/${groupId}`}>
       <S.Container>
-        {/* 그룹 아이콘 */}
+        {/* ========== 내 그룹 프로필 ========== */}
+        <S.SectionHeader>내 그룹 프로필</S.SectionHeader>
+
         <S.IconSection>
-          <S.SectionTitle>그룹 아이콘</S.SectionTitle>
-          <S.IconPreview onClick={() => fileInputRef.current?.click()}>
-            {iconPreview ? (
-              <S.IconImage src={iconPreview} alt="그룹 아이콘" />
+          <S.IconPreview onClick={() => profileAvatarInputRef.current?.click()}>
+            {myAvatarPreview ? (
+              <S.IconImage src={myAvatarPreview} alt="내 프로필" />
             ) : (
               <S.IconPlaceholder>
-                {groupName.charAt(0).toUpperCase() || "G"}
+                {myNickname.charAt(0).toUpperCase() || "?"}
               </S.IconPlaceholder>
             )}
             <S.IconOverlay>
               <Camera size={24} />
             </S.IconOverlay>
             <S.HiddenInput
-              ref={fileInputRef}
+              ref={profileAvatarInputRef}
               type="file"
               accept="image/*"
-              onChange={handleIconSelect}
+              onChange={handleProfileAvatarSelect}
             />
           </S.IconPreview>
         </S.IconSection>
 
-        {/* 그룹 이름 */}
         <S.Section>
-          <S.SectionTitle>그룹 이름</S.SectionTitle>
+          <S.SectionTitle>닉네임</S.SectionTitle>
           <S.NameInput
-            value={groupName}
-            onChange={(e) => setGroupName(e.target.value)}
-            placeholder="그룹 이름을 입력하세요"
+            value={myNickname}
+            onChange={(e) => setMyNickname(e.target.value)}
+            placeholder="이 그룹에서 사용할 닉네임"
           />
         </S.Section>
 
-        {/* 저장 버튼 */}
-        <S.SaveButton onClick={handleSave} disabled={isSaving}>
-          {isSaving ? (
+        <S.SaveButton onClick={handleSaveProfile} disabled={isSavingProfile}>
+          {isSavingProfile ? (
             <Loader2 size={18} className="animate-spin" />
           ) : (
-            "저장"
+            "프로필 저장"
           )}
         </S.SaveButton>
 
+        {/* ========== 초대 코드 (모든 멤버) ========== */}
         <S.Divider />
 
-        {/* 초대 코드 */}
         <S.Section>
           <S.SectionTitle>초대 코드</S.SectionTitle>
           <S.InviteCodeCard>
@@ -231,27 +284,75 @@ export default function GroupSettingsPage({ params }: SettingsPageProps) {
           </S.InviteCodeCard>
         </S.Section>
 
-        <S.Divider />
+        {/* ========== 그룹 설정 (방장만) ========== */}
+        {isOwner && (
+          <>
+            <S.Divider />
 
-        {/* 가입 요청 관리 */}
-        <S.JoinRequestSection>
-          <S.JoinRequestHeader>
-            <S.SectionTitle>가입 요청</S.SectionTitle>
-            {joinRequests.length > 0 && (
-              <S.RequestCount>{joinRequests.length}</S.RequestCount>
-            )}
-          </S.JoinRequestHeader>
+            <S.SectionHeader>그룹 관리</S.SectionHeader>
 
-          {joinRequests.length > 0 ? (
-            <JoinRequestList
-              requests={joinRequests}
-              onApprove={handleApproveRequest}
-              onReject={handleRejectRequest}
-            />
-          ) : (
-            <S.EmptyRequests>대기 중인 가입 요청이 없습니다</S.EmptyRequests>
-          )}
-        </S.JoinRequestSection>
+            <S.IconSection>
+              <S.SectionTitle>그룹 아이콘</S.SectionTitle>
+              <S.IconPreview onClick={() => groupIconInputRef.current?.click()}>
+                {groupIconPreview ? (
+                  <S.IconImage src={groupIconPreview} alt="그룹 아이콘" />
+                ) : (
+                  <S.IconPlaceholder>
+                    {groupName.charAt(0).toUpperCase() || "G"}
+                  </S.IconPlaceholder>
+                )}
+                <S.IconOverlay>
+                  <Camera size={24} />
+                </S.IconOverlay>
+                <S.HiddenInput
+                  ref={groupIconInputRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={handleGroupIconSelect}
+                />
+              </S.IconPreview>
+            </S.IconSection>
+
+            <S.Section>
+              <S.SectionTitle>그룹 이름</S.SectionTitle>
+              <S.NameInput
+                value={groupName}
+                onChange={(e) => setGroupName(e.target.value)}
+                placeholder="그룹 이름을 입력하세요"
+              />
+            </S.Section>
+
+            <S.SaveButton onClick={handleSaveGroup} disabled={isSavingGroup}>
+              {isSavingGroup ? (
+                <Loader2 size={18} className="animate-spin" />
+              ) : (
+                "그룹 설정 저장"
+              )}
+            </S.SaveButton>
+
+            <S.Divider />
+
+            {/* 가입 요청 관리 */}
+            <S.JoinRequestSection>
+              <S.JoinRequestHeader>
+                <S.SectionTitle>가입 요청</S.SectionTitle>
+                {joinRequests.length > 0 && (
+                  <S.RequestCount>{joinRequests.length}</S.RequestCount>
+                )}
+              </S.JoinRequestHeader>
+
+              {joinRequests.length > 0 ? (
+                <JoinRequestList
+                  requests={joinRequests}
+                  onApprove={handleApproveRequest}
+                  onReject={handleRejectRequest}
+                />
+              ) : (
+                <S.EmptyRequests>대기 중인 가입 요청이 없습니다</S.EmptyRequests>
+              )}
+            </S.JoinRequestSection>
+          </>
+        )}
       </S.Container>
     </MobileLayout>
   );
