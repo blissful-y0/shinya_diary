@@ -20,7 +20,7 @@ interface Member {
 interface MemberListProps {
   members: Member[];
   canManage: boolean;
-  onRemove?: (memberId: string) => void;
+  onRemove?: (memberId: string, nickname: string) => void;
 }
 
 export default function MemberList({
@@ -63,11 +63,7 @@ export default function MemberList({
             <S.RemoveButton
               variant="ghost"
               size="sm"
-              onClick={() => {
-                if (confirm(`${member.nickname || "이 멤버"}를 강퇴하시겠습니까?`)) {
-                  onRemove(member.id);
-                }
-              }}
+              onClick={() => onRemove(member.id, member.nickname || "익명")}
             >
               <UserMinus size={16} />
             </S.RemoveButton>

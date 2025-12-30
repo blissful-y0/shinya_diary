@@ -213,10 +213,7 @@ export default function WritePage({ params }: WritePageProps) {
           {isSubmitting ? (
             <Loader2 size={20} className="animate-spin" />
           ) : (
-            <>
-              <Check size={20} />
-              {isEditing ? "수정" : "작성"}
-            </>
+            <>{isEditing ? "수정" : "작성"}</>
           )}
         </S.SubmitButton>
       </S.Container>

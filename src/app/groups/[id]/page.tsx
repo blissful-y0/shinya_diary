@@ -3,9 +3,11 @@
 import { use, useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { toast } from "sonner";
 import MobileLayout from "@/components/layout/MobileLayout";
 import DateSelector from "@/components/diary/DateSelector";
 import DiaryCard from "@/components/diary/DiaryCard";
+import ConfirmDialog from "@/components/common/ConfirmDialog";
 import { Settings, PenSquare, Lock, Loader2 } from "lucide-react";
 import { formatDateISO, isToday } from "@/utils/date";
 import * as S from "./styles/page.styles";
@@ -39,6 +41,10 @@ export default function GroupDetailPage({ params }: GroupDetailPageProps) {
   const [hasWrittenToday, setHasWrittenToday] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [groupName, setGroupName] = useState("");
+  const [deleteDialog, setDeleteDialog] = useState<{ open: boolean; diaryId: string }>({
+    open: false,
+    diaryId: "",
+  });
 
   /* 그룹 정보 및 다이어리 목록 로드 */
   const loadData = useCallback(async () => {
@@ -97,14 +103,20 @@ export default function GroupDetailPage({ params }: GroupDetailPageProps) {
     loadData();
   }, [loadData]);
 
-  /* 다이어리 삭제 */
-  const handleDeleteDiary = async (diaryId: string) => {
-    if (!confirm("일기를 삭제하시겠습니까?")) return;
+  /* 다이어리 삭제 다이얼로그 열기 */
+  const handleDeleteClick = (diaryId: string) => {
+    setDeleteDialog({ open: true, diaryId });
+  };
 
+  /* 다이어리 삭제 실행 */
+  const handleDeleteDiary = async () => {
     const { deleteDiary } = await import("@/lib/mock/services");
-    const success = deleteDiary(diaryId);
+    const success = deleteDiary(deleteDialog.diaryId);
     if (success) {
-      setDiaries((prev) => prev.filter((d) => d.id !== diaryId));
+      setDiaries((prev) => prev.filter((d) => d.id !== deleteDialog.diaryId));
+      toast.success("일기가 삭제되었습니다.");
+    } else {
+      toast.error("삭제에 실패했습니다.");
     }
   };
 
@@ -182,7 +194,7 @@ export default function GroupDetailPage({ params }: GroupDetailPageProps) {
                   onEdit={() =>
                     (window.location.href = `/groups/${groupId}/write?edit=${diary.id}`)
                   }
-                  onDelete={() => handleDeleteDiary(diary.id)}
+                  onDelete={() => handleDeleteClick(diary.id)}
                 />
               ))
             ) : (
@@ -198,6 +210,17 @@ export default function GroupDetailPage({ params }: GroupDetailPageProps) {
           </S.FeedSection>
         )}
       </S.Container>
+
+      {/* 다이어리 삭제 확인 다이얼로그 */}
+      <ConfirmDialog
+        open={deleteDialog.open}
+        onOpenChange={(open) => setDeleteDialog((prev) => ({ ...prev, open }))}
+        title="일기 삭제"
+        description="정말로 이 일기를 삭제하시겠습니까? 삭제된 일기는 복구할 수 없습니다."
+        confirmText="삭제"
+        variant="destructive"
+        onConfirm={handleDeleteDiary}
+      />
     </MobileLayout>
   );
 }

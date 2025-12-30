@@ -2,9 +2,12 @@
 
 import { use, useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 import MobileLayout from "@/components/layout/MobileLayout";
 import JoinRequestList from "@/components/group/JoinRequestList";
 import MemberList from "@/components/group/MemberList";
+import ConfirmDialog from "@/components/common/ConfirmDialog";
+import DeleteConfirmDialog from "@/components/common/DeleteConfirmDialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Camera, Copy, Check, Loader2, Trash2 } from "lucide-react";
 import { isValidImageFile } from "@/utils/imageConverter";
@@ -61,6 +64,14 @@ export default function GroupSettingsPage({ params }: SettingsPageProps) {
   const [isSavingGroup, setIsSavingGroup] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [codeCopied, setCodeCopied] = useState(false);
+
+  /* 다이얼로그 상태 */
+  const [removeMemberDialog, setRemoveMemberDialog] = useState<{
+    open: boolean;
+    memberId: string;
+    nickname: string;
+  }>({ open: false, memberId: "", nickname: "" });
+  const [deleteGroupDialog, setDeleteGroupDialog] = useState(false);
 
   /* 데이터 로드 */
   useEffect(() => {
@@ -131,7 +142,7 @@ export default function GroupSettingsPage({ params }: SettingsPageProps) {
     if (!file) return;
 
     if (!isValidImageFile(file)) {
-      alert("지원하지 않는 이미지 형식입니다.");
+      toast.error("지원하지 않는 이미지 형식입니다.");
       return;
     }
 
@@ -148,7 +159,7 @@ export default function GroupSettingsPage({ params }: SettingsPageProps) {
     if (!file) return;
 
     if (!isValidImageFile(file)) {
-      alert("지원하지 않는 이미지 형식입니다.");
+      toast.error("지원하지 않는 이미지 형식입니다.");
       return;
     }
 
@@ -162,7 +173,7 @@ export default function GroupSettingsPage({ params }: SettingsPageProps) {
   /* 내 프로필 저장 */
   const handleSaveProfile = async () => {
     if (!myNickname.trim()) {
-      alert("닉네임을 입력해주세요.");
+      toast.error("닉네임을 입력해주세요.");
       return;
     }
 
@@ -175,9 +186,9 @@ export default function GroupSettingsPage({ params }: SettingsPageProps) {
     });
 
     if (success) {
-      alert("프로필이 저장되었습니다.");
+      toast.success("프로필이 저장되었습니다.");
     } else {
-      alert("저장에 실패했습니다.");
+      toast.error("저장에 실패했습니다.");
     }
 
     setIsSavingProfile(false);
@@ -186,7 +197,7 @@ export default function GroupSettingsPage({ params }: SettingsPageProps) {
   /* 그룹 설정 저장 */
   const handleSaveGroup = async () => {
     if (!groupName.trim()) {
-      alert("그룹 이름을 입력해주세요.");
+      toast.error("그룹 이름을 입력해주세요.");
       return;
     }
 
@@ -199,9 +210,9 @@ export default function GroupSettingsPage({ params }: SettingsPageProps) {
     });
 
     if (success) {
-      alert("그룹 설정이 저장되었습니다.");
+      toast.success("그룹 설정이 저장되었습니다.");
     } else {
-      alert("저장에 실패했습니다.");
+      toast.error("저장에 실패했습니다.");
     }
 
     setIsSavingGroup(false);
@@ -211,6 +222,7 @@ export default function GroupSettingsPage({ params }: SettingsPageProps) {
   const handleCopyInviteCode = async () => {
     await navigator.clipboard.writeText(inviteCode);
     setCodeCopied(true);
+    toast.success("초대 코드가 복사되었습니다.");
     setTimeout(() => setCodeCopied(false), 2000);
   };
 
@@ -220,9 +232,9 @@ export default function GroupSettingsPage({ params }: SettingsPageProps) {
     const success = approveJoinRequest(requestId);
     if (success) {
       setJoinRequests((prev) => prev.filter((r) => r.id !== requestId));
-      /* 멤버 목록 갱신 */
       const memberList = getGroupMembersWithDetails(groupId);
       setMembers(memberList);
+      toast.success("가입 요청을 승인했습니다.");
     }
   };
 
@@ -232,44 +244,40 @@ export default function GroupSettingsPage({ params }: SettingsPageProps) {
     const success = rejectJoinRequest(requestId);
     if (success) {
       setJoinRequests((prev) => prev.filter((r) => r.id !== requestId));
+      toast.success("가입 요청을 거절했습니다.");
     }
   };
 
-  /* 멤버 강퇴 */
-  const handleRemoveMember = async (memberId: string) => {
+  /* 멤버 강퇴 다이얼로그 열기 */
+  const handleRemoveMemberClick = (memberId: string, nickname: string) => {
+    setRemoveMemberDialog({ open: true, memberId, nickname });
+  };
+
+  /* 멤버 강퇴 실행 */
+  const handleRemoveMember = async () => {
     const { removeMember, getGroupMembersWithDetails } = await import("@/lib/mock/services");
-    const success = removeMember(groupId, memberId);
+    const success = removeMember(groupId, removeMemberDialog.memberId);
     if (success) {
       const memberList = getGroupMembersWithDetails(groupId);
       setMembers(memberList);
+      toast.success(`${removeMemberDialog.nickname}님을 강퇴했습니다.`);
     } else {
-      alert("강퇴에 실패했습니다.");
+      toast.error("강퇴에 실패했습니다.");
     }
   };
 
-  /* 그룹 삭제 */
+  /* 그룹 삭제 실행 */
   const handleDeleteGroup = async () => {
-    const confirmText = prompt(
-      `정말로 "${groupName}" 그룹을 삭제하시겠습니까?\n\n삭제하려면 그룹 이름을 정확히 입력하세요:`
-    );
-
-    if (confirmText !== groupName) {
-      if (confirmText !== null) {
-        alert("그룹 이름이 일치하지 않습니다.");
-      }
-      return;
-    }
-
     setIsDeleting(true);
 
     const { deleteGroup } = await import("@/lib/mock/services");
     const success = deleteGroup(groupId);
 
     if (success) {
-      alert("그룹이 삭제되었습니다.");
+      toast.success("그룹이 삭제되었습니다.");
       router.replace("/groups");
     } else {
-      alert("삭제에 실패했습니다.");
+      toast.error("삭제에 실패했습니다.");
       setIsDeleting(false);
     }
   };
@@ -411,7 +419,7 @@ export default function GroupSettingsPage({ params }: SettingsPageProps) {
                 <MemberList
                   members={members}
                   canManage={true}
-                  onRemove={handleRemoveMember}
+                  onRemove={handleRemoveMemberClick}
                 />
 
                 <S.Divider />
@@ -447,7 +455,7 @@ export default function GroupSettingsPage({ params }: SettingsPageProps) {
                   </S.DangerDescription>
                   <S.DeleteButton
                     variant="destructive"
-                    onClick={handleDeleteGroup}
+                    onClick={() => setDeleteGroupDialog(true)}
                     disabled={isDeleting}
                   >
                     {isDeleting ? (
@@ -465,6 +473,28 @@ export default function GroupSettingsPage({ params }: SettingsPageProps) {
           )}
         </Tabs>
       </S.TabsContainer>
+
+      {/* 멤버 강퇴 확인 다이얼로그 */}
+      <ConfirmDialog
+        open={removeMemberDialog.open}
+        onOpenChange={(open) => setRemoveMemberDialog((prev) => ({ ...prev, open }))}
+        title="멤버 강퇴"
+        description={`${removeMemberDialog.nickname}님을 그룹에서 강퇴하시겠습니까?`}
+        confirmText="강퇴"
+        variant="destructive"
+        onConfirm={handleRemoveMember}
+      />
+
+      {/* 그룹 삭제 확인 다이얼로그 */}
+      <DeleteConfirmDialog
+        open={deleteGroupDialog}
+        onOpenChange={setDeleteGroupDialog}
+        title="그룹 삭제"
+        description="그룹을 삭제하면 모든 다이어리와 멤버 정보가 영구적으로 삭제됩니다. 이 작업은 되돌릴 수 없습니다."
+        confirmText={groupName}
+        confirmLabel="삭제하려면 그룹 이름을 정확히 입력하세요"
+        onConfirm={handleDeleteGroup}
+      />
     </MobileLayout>
   );
 }
