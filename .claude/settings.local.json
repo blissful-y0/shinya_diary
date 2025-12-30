@@ -4,7 +4,12 @@
       "Bash(npx create-next-app:*)",
       "Bash(yarn add:*)",
       "Bash(yarn build)",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(git commit -m \"$\\(cat <<''EOF''\nfeat: Shinya Diary 프로젝트 초기 설정 \\(Next.js + Supabase\\)\n\n- Next.js 16 App Router + TypeScript 설정\n- Supabase 클라이언트 구성 \\(client/server/middleware\\)\n- Google OAuth 인증 플로우 추가\n- WebP 이미지 변환 유틸리티 구현\n- Supabase Storage 업로드 로직 추가\n- RLS 정책이 포함된 데이터베이스 스키마 정의\n  - profiles, groups, group_members, diaries 테이블\n  - 그룹당 최대 4명 제한\n  - 다이어리 읽기 전 쓰기 필수 로직\n- Storage 버킷 및 보안 정책 설정\n\n🤖 Generated with [Claude Code]\\(https://claude.com/claude-code\\)\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n\\)\")",
+      "Bash(git branch:*)",
+      "Bash(git checkout:*)",
+      "Bash(npx shadcn@latest init:*)",
+      "Bash(npx shadcn@latest add:*)"
     ]
   }
 }
