@@ -1,6 +1,7 @@
 "use client";
 
 import { use, useState, useEffect, useCallback } from "react";
+import { useRouter } from "next/navigation";
 import MobileLayout from "@/components/layout/MobileLayout";
 import DateSelector from "@/components/diary/DateSelector";
 import DiaryCard from "@/components/diary/DiaryCard";
@@ -32,6 +33,7 @@ interface JoinRequest {
 
 export default function GroupDetailPage({ params }: GroupDetailPageProps) {
   const { id: groupId } = use(params);
+  const router = useRouter();
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [diaries, setDiaries] = useState<
     {
@@ -60,11 +62,18 @@ export default function GroupDetailPage({ params }: GroupDetailPageProps) {
     const {
       getGroup,
       isGroupOwner,
+      isGroupMember,
       getJoinRequests,
       getDiariesByDate,
       checkTodayDiary,
       getCurrentUser,
     } = await import("@/lib/mock/services");
+
+    /* 멤버 여부 확인 - 비멤버는 그룹 목록으로 리다이렉트 */
+    if (!isGroupMember(groupId)) {
+      router.replace("/groups");
+      return;
+    }
 
     /* 그룹 정보 */
     const group = getGroup(groupId);
@@ -119,7 +128,7 @@ export default function GroupDetailPage({ params }: GroupDetailPageProps) {
     );
 
     setIsLoading(false);
-  }, [groupId, selectedDate]);
+  }, [groupId, selectedDate, router]);
 
   useEffect(() => {
     loadData();

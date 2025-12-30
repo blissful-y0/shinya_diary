@@ -185,6 +185,14 @@ export function isGroupOwner(groupId: string): boolean {
   return group?.owner_id === MOCK_CURRENT_USER.id;
 }
 
+/* 내가 그룹 멤버인지 확인 */
+export function isGroupMember(groupId: string): boolean {
+  const userId = MOCK_CURRENT_USER.id;
+  return MOCK_GROUP_MEMBERS.some(
+    (m) => m.group_id === groupId && m.user_id === userId
+  );
+}
+
 /* =============================================
    다이어리 관련
    ============================================= */
@@ -196,8 +204,13 @@ export interface DiaryWithAuthor extends Diary {
   };
 }
 
-/* 날짜별 다이어리 조회 */
+/* 날짜별 다이어리 조회 (멤버만 조회 가능) */
 export function getDiariesByDate(groupId: string, date: string): DiaryWithAuthor[] {
+  /* 멤버 여부 확인 */
+  if (!isGroupMember(groupId)) {
+    return [];
+  }
+
   return MOCK_DIARIES
     .filter((d) => d.group_id === groupId && d.date === date)
     .map((d) => {

@@ -39,8 +39,14 @@ export default function WritePage({ params }: WritePageProps) {
       const {
         getMyDiary,
         checkTodayDiary,
-        getCurrentUser,
+        isGroupMember,
       } = await import("@/lib/mock/services");
+
+      /* 멤버 여부 확인 - 비멤버는 그룹 목록으로 리다이렉트 */
+      if (!isGroupMember(groupId)) {
+        router.replace("/groups");
+        return;
+      }
 
       const today = formatDateISO(new Date());
 
@@ -73,7 +79,7 @@ export default function WritePage({ params }: WritePageProps) {
     };
 
     init();
-  }, [groupId, editDiaryId]);
+  }, [groupId, editDiaryId, router]);
 
   /* 이미지 선택 처리 */
   const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
