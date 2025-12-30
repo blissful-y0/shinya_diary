@@ -2,12 +2,11 @@
 
 import { use, useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import MobileLayout from "@/components/layout/MobileLayout";
 import DateSelector from "@/components/diary/DateSelector";
 import DiaryCard from "@/components/diary/DiaryCard";
-import JoinRequestList from "@/components/group/JoinRequestList";
 import { Settings, PenSquare, Lock, Loader2, Copy, Check } from "lucide-react";
-import Link from "next/link";
 import { formatDateISO, isToday } from "@/utils/date";
 import * as S from "./styles/page.styles";
 
@@ -15,20 +14,11 @@ import * as S from "./styles/page.styles";
    그룹 상세 페이지 (피드)
    - 날짜별 다이어리 피드
    - Read-after-Write 잠금 로직 적용
-   - 방장: 가입 요청 관리
+   - 방장: 설정 페이지 링크
    ============================================= */
 
 interface GroupDetailPageProps {
   params: Promise<{ id: string }>;
-}
-
-interface JoinRequest {
-  id: string;
-  user: {
-    nickname: string | null;
-    avatar_url: string | null;
-  };
-  created_at: string;
 }
 
 export default function GroupDetailPage({ params }: GroupDetailPageProps) {
@@ -49,7 +39,6 @@ export default function GroupDetailPage({ params }: GroupDetailPageProps) {
   const [hasWrittenToday, setHasWrittenToday] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isOwner, setIsOwner] = useState(false);
-  const [joinRequests, setJoinRequests] = useState<JoinRequest[]>([]);
   const [groupName, setGroupName] = useState("");
   const [inviteCode, setInviteCode] = useState("");
   const [showInviteCode, setShowInviteCode] = useState(false);
@@ -63,7 +52,6 @@ export default function GroupDetailPage({ params }: GroupDetailPageProps) {
       getGroup,
       isGroupOwner,
       isGroupMember,
-      getJoinRequests,
       getDiariesByDate,
       checkTodayDiary,
       getCurrentUser,
@@ -85,21 +73,6 @@ export default function GroupDetailPage({ params }: GroupDetailPageProps) {
     /* 방장 여부 확인 */
     const ownerStatus = isGroupOwner(groupId);
     setIsOwner(ownerStatus);
-
-    /* 방장이면 가입 요청 목록 조회 */
-    if (ownerStatus) {
-      const requests = getJoinRequests(groupId);
-      setJoinRequests(
-        requests.map((r) => ({
-          id: r.id,
-          user: {
-            nickname: r.user.nickname,
-            avatar_url: r.user.avatar_url,
-          },
-          created_at: r.created_at,
-        }))
-      );
-    }
 
     /* 날짜별 다이어리 조회 */
     const dateStr = formatDateISO(selectedDate);
@@ -134,24 +107,6 @@ export default function GroupDetailPage({ params }: GroupDetailPageProps) {
     loadData();
   }, [loadData]);
 
-  /* 가입 요청 승인 */
-  const handleApproveRequest = async (requestId: string) => {
-    const { approveJoinRequest } = await import("@/lib/mock/services");
-    const success = approveJoinRequest(requestId);
-    if (success) {
-      setJoinRequests((prev) => prev.filter((r) => r.id !== requestId));
-    }
-  };
-
-  /* 가입 요청 거절 */
-  const handleRejectRequest = async (requestId: string) => {
-    const { rejectJoinRequest } = await import("@/lib/mock/services");
-    const success = rejectJoinRequest(requestId);
-    if (success) {
-      setJoinRequests((prev) => prev.filter((r) => r.id !== requestId));
-    }
-  };
-
   /* 다이어리 삭제 */
   const handleDeleteDiary = async (diaryId: string) => {
     if (!confirm("일기를 삭제하시겠습니까?")) return;
@@ -170,8 +125,16 @@ export default function GroupDetailPage({ params }: GroupDetailPageProps) {
     setTimeout(() => setCodeCopied(false), 2000);
   };
 
-  /* 설정 버튼 */
-  const headerRight = (
+  /* 헤더 우측 버튼 */
+  const headerRight = isOwner ? (
+    /* 방장: 설정 페이지로 이동 */
+    <Link href={`/groups/${groupId}/settings`}>
+      <S.SettingsButton as="span">
+        <Settings size={20} />
+      </S.SettingsButton>
+    </Link>
+  ) : (
+    /* 일반 멤버: 초대 코드 토글 */
     <S.SettingsButton onClick={() => setShowInviteCode(!showInviteCode)}>
       <Settings size={20} />
     </S.SettingsButton>
@@ -185,8 +148,8 @@ export default function GroupDetailPage({ params }: GroupDetailPageProps) {
       headerBackHref="/groups"
       headerRight={headerRight}
     >
-      {/* 초대 코드 표시 (토글) */}
-      {showInviteCode && (
+      {/* 초대 코드 표시 (일반 멤버용 토글) */}
+      {!isOwner && showInviteCode && (
         <S.InviteCodeBanner>
           <S.InviteCodeLabel>초대 코드</S.InviteCodeLabel>
           <S.InviteCodeRow>
@@ -205,15 +168,6 @@ export default function GroupDetailPage({ params }: GroupDetailPageProps) {
       />
 
       <S.Container>
-        {/* 방장: 가입 요청 목록 */}
-        {isOwner && joinRequests.length > 0 && (
-          <JoinRequestList
-            requests={joinRequests}
-            onApprove={handleApproveRequest}
-            onReject={handleRejectRequest}
-          />
-        )}
-
         {/* 오늘이고 아직 작성 안 한 경우: 글쓰기 유도 */}
         {isToday(selectedDate) && !hasWrittenToday && (
           <S.WriteStatusCard>

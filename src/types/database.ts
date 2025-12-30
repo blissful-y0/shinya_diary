@@ -50,6 +50,7 @@ export interface Database {
         Row: {
           id: string;
           name: string;
+          icon_url: string | null;
           invite_code: string;
           owner_id: string;
           created_at: string;
@@ -57,12 +58,14 @@ export interface Database {
         Insert: {
           id?: string;
           name: string;
+          icon_url?: string | null;
           invite_code: string;
           owner_id: string;
           created_at?: string;
         };
         Update: {
           name?: string;
+          icon_url?: string | null;
           invite_code?: string;
           owner_id?: string;
         };

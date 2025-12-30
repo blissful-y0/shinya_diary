@@ -3,7 +3,7 @@
 import { use, useState, useEffect, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import MobileLayout from "@/components/layout/MobileLayout";
-import { ImagePlus, X, Send, Loader2 } from "lucide-react";
+import { ImagePlus, X, Check, Loader2 } from "lucide-react";
 import { isValidImageFile } from "@/utils/imageConverter";
 import { formatDateISO } from "@/utils/date";
 import * as S from "./styles/page.styles";
@@ -163,22 +163,10 @@ export default function WritePage({ params }: WritePageProps) {
 
   const canSubmit = (content.trim() || imageFile || imagePreview) && !isSubmitting;
 
-  /* 제출 버튼 */
-  const headerRight = (
-    <S.SubmitButton onClick={handleSubmit} disabled={!canSubmit}>
-      {isSubmitting ? (
-        <Loader2 size={18} className="animate-spin" />
-      ) : (
-        <Send size={18} />
-      )}
-    </S.SubmitButton>
-  );
-
   return (
     <MobileLayout
       headerTitle={isEditing ? "일기 수정" : "오늘의 일기"}
       headerBackHref={`/groups/${groupId}`}
-      headerRight={headerRight}
       showNav={false}
     >
       <S.Container>
@@ -220,6 +208,18 @@ export default function WritePage({ params }: WritePageProps) {
           onChange={(e) => setContent(e.target.value)}
           disabled={isSubmitting}
         />
+
+        {/* 제출 버튼 (하단) */}
+        <S.SubmitButton onClick={handleSubmit} disabled={!canSubmit}>
+          {isSubmitting ? (
+            <Loader2 size={20} className="animate-spin" />
+          ) : (
+            <>
+              <Check size={20} />
+              {isEditing ? "수정 완료" : "작성 완료"}
+            </>
+          )}
+        </S.SubmitButton>
       </S.Container>
     </MobileLayout>
   );

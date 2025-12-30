@@ -16,11 +16,17 @@ export const Container = styled.div`
 `;
 
 export const SubmitButton = styled(Button)`
-  /* 제출 버튼 */
-  width: 40px;
-  height: 40px;
-  padding: 0;
-  border-radius: 50%;
+  /* 제출 버튼 (하단 고정) */
+  width: 100%;
+  height: 52px;
+  font-size: 16px;
+  font-weight: 600;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-top: auto;
 
   &:disabled {
     opacity: 0.5;

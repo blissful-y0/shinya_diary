@@ -52,6 +52,7 @@ export function createGroup(name: string): Group {
   const newGroup: Group = {
     id: `group-${generateId()}`,
     name,
+    icon_url: null,
     invite_code: generateInviteCode(),
     owner_id: MOCK_CURRENT_USER.id,
     created_at: new Date().toISOString(),
@@ -72,6 +73,26 @@ export function createGroup(name: string): Group {
   MOCK_GROUP_MEMBERS.push(newMember);
 
   return newGroup;
+}
+
+/* 그룹 정보 수정 (방장만 가능) */
+export function updateGroup(
+  groupId: string,
+  params: { name?: string; iconUrl?: string | null }
+): boolean {
+  const group = MOCK_GROUPS.find((g) => g.id === groupId);
+  if (!group || group.owner_id !== MOCK_CURRENT_USER.id) {
+    return false;
+  }
+
+  if (params.name !== undefined) {
+    group.name = params.name;
+  }
+  if (params.iconUrl !== undefined) {
+    group.icon_url = params.iconUrl;
+  }
+
+  return true;
 }
 
 /* 초대 코드로 그룹 찾기 */

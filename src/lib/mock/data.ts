@@ -40,6 +40,7 @@ export let MOCK_GROUPS: Group[] = [
   {
     id: "group-1",
     name: "심심해요",
+    icon_url: null,
     invite_code: "ABC12345",
     owner_id: "user-1",
     created_at: new Date().toISOString(),
@@ -47,6 +48,7 @@ export let MOCK_GROUPS: Group[] = [
   {
     id: "group-2",
     name: "진짜 심심해요",
+    icon_url: null,
     invite_code: "XYZ98765",
     owner_id: "user-2",
     created_at: new Date().toISOString(),
