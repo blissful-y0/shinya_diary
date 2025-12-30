@@ -10,7 +10,6 @@ export const CardContainer = styled.article`
   background-color: var(--card);
   border: 1px solid var(--border);
   border-radius: 16px;
-  overflow: hidden;
 `;
 
 export const CardHeader = styled.header`
@@ -113,6 +112,7 @@ export const ImageContainer = styled.div`
   width: 100%;
   aspect-ratio: 1;
   background-color: var(--muted);
+  overflow: hidden;
 `;
 
 export const DiaryImage = styled.img`
