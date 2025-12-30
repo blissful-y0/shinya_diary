@@ -131,3 +131,26 @@ export const ContentText = styled.p`
   white-space: pre-wrap;
   word-break: break-word;
 `;
+
+export const CommentToggle = styled.button`
+  /* 코멘트 토글 버튼 */
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 12px 16px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--muted-foreground);
+  border-top: 1px solid var(--border);
+  transition: color 0.2s, background-color 0.2s;
+  width: 100%;
+
+  &:hover {
+    color: var(--foreground);
+    background-color: var(--accent);
+  }
+
+  span {
+    color: var(--primary);
+  }
+`;

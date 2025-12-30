@@ -2,42 +2,54 @@
 
 import { useState } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import CommentSection from "@/components/comment/CommentSection";
 import { formatDistanceToNow } from "@/utils/date";
-import { MoreVertical, Pencil, Trash2 } from "lucide-react";
+import { MoreVertical, Pencil, Trash2, MessageCircle } from "lucide-react";
 import * as S from "./DiaryCard.styles";
 
 /* =============================================
    다이어리 카드 컴포넌트
    - 작성자 정보, 이미지, 내용 표시
    - 본인 글: 수정/삭제 메뉴
+   - 코멘트 섹션
    ============================================= */
 
 interface DiaryCardProps {
-  id?: string;
+  id: string;
+  groupId: string;
   nickname: string;
   avatarUrl?: string | null;
   imageUrl?: string | null;
   content?: string | null;
   createdAt: string;
   isOwn?: boolean;
+  commentCount?: number;
   onEdit?: () => void;
   onDelete?: () => void;
 }
 
 export default function DiaryCard({
+  id,
+  groupId,
   nickname,
   avatarUrl,
   imageUrl,
   content,
   createdAt,
   isOwn = false,
+  commentCount = 0,
   onEdit,
   onDelete,
 }: DiaryCardProps) {
   const [showMenu, setShowMenu] = useState(false);
+  const [showComments, setShowComments] = useState(false);
 
   const handleMenuToggle = () => {
     setShowMenu(!showMenu);
+  };
+
+  const handleToggleComments = () => {
+    setShowComments(!showComments);
   };
 
   const handleEdit = () => {
@@ -98,6 +110,17 @@ export default function DiaryCard({
 
       {/* 내용 */}
       {content && <S.ContentText>{content}</S.ContentText>}
+
+      {/* 코멘트 토글 버튼 */}
+      <S.CommentToggle onClick={handleToggleComments}>
+        <MessageCircle size={16} />
+        코멘트 {commentCount > 0 && <span>({commentCount})</span>}
+      </S.CommentToggle>
+
+      {/* 코멘트 섹션 */}
+      {showComments && (
+        <CommentSection diaryId={id} groupId={groupId} />
+      )}
     </S.CardContainer>
   );
 }

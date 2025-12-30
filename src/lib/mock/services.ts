@@ -9,11 +9,12 @@ import {
   MOCK_GROUP_MEMBERS,
   MOCK_JOIN_REQUESTS,
   MOCK_DIARIES,
+  MOCK_COMMENTS,
   generateId,
   generateInviteCode,
   type JoinRequest,
 } from "./data";
-import type { Group, GroupMember, Diary } from "@/types/database";
+import type { Group, GroupMember, Diary, Comment } from "@/types/database";
 
 /* =============================================
    인증 관련
@@ -427,5 +428,97 @@ export function deleteDiary(diaryId: string): boolean {
   if (index === -1) return false;
 
   MOCK_DIARIES.splice(index, 1);
+
+  /* 관련 코멘트도 삭제 */
+  for (let i = MOCK_COMMENTS.length - 1; i >= 0; i--) {
+    if (MOCK_COMMENTS[i].diary_id === diaryId) {
+      MOCK_COMMENTS.splice(i, 1);
+    }
+  }
+
+  return true;
+}
+
+/* =============================================
+   코멘트 관련
+   ============================================= */
+
+export interface CommentWithAuthor extends Comment {
+  author: {
+    nickname: string;
+    avatar_url: string | null;
+  };
+  isOwn: boolean;
+}
+
+/* 다이어리의 코멘트 목록 조회 */
+export function getCommentsByDiary(diaryId: string, groupId: string): CommentWithAuthor[] {
+  /* 멤버 여부 확인 */
+  if (!isGroupMember(groupId)) {
+    return [];
+  }
+
+  return MOCK_COMMENTS
+    .filter((c) => c.diary_id === diaryId)
+    .map((c) => {
+      const member = MOCK_GROUP_MEMBERS.find(
+        (m) => m.group_id === groupId && m.user_id === c.user_id
+      );
+      return {
+        ...c,
+        author: {
+          nickname: member?.nickname || "알 수 없음",
+          avatar_url: member?.avatar_url || null,
+        },
+        isOwn: c.user_id === MOCK_CURRENT_USER.id,
+      };
+    })
+    .sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
+}
+
+/* 코멘트 수 조회 */
+export function getCommentCount(diaryId: string): number {
+  return MOCK_COMMENTS.filter((c) => c.diary_id === diaryId).length;
+}
+
+/* 코멘트 생성 */
+export function createComment(diaryId: string, content: string): Comment | null {
+  if (!content.trim()) return null;
+
+  const newComment: Comment = {
+    id: `comment-${generateId()}`,
+    diary_id: diaryId,
+    user_id: MOCK_CURRENT_USER.id,
+    content: content.trim(),
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  };
+
+  MOCK_COMMENTS.push(newComment);
+  return newComment;
+}
+
+/* 코멘트 수정 */
+export function updateComment(commentId: string, content: string): boolean {
+  const comment = MOCK_COMMENTS.find((c) => c.id === commentId);
+  if (!comment || comment.user_id !== MOCK_CURRENT_USER.id) {
+    return false;
+  }
+
+  if (!content.trim()) return false;
+
+  comment.content = content.trim();
+  comment.updated_at = new Date().toISOString();
+  return true;
+}
+
+/* 코멘트 삭제 */
+export function deleteComment(commentId: string): boolean {
+  const index = MOCK_COMMENTS.findIndex(
+    (c) => c.id === commentId && c.user_id === MOCK_CURRENT_USER.id
+  );
+  if (index === -1) return false;
+
+  MOCK_COMMENTS.splice(index, 1);
   return true;
 }

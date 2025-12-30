@@ -36,6 +36,7 @@ export default function GroupDetailPage({ params }: GroupDetailPageProps) {
       content: string | null;
       createdAt: string;
       isOwn: boolean;
+      commentCount: number;
     }[]
   >([]);
   const [hasWrittenToday, setHasWrittenToday] = useState(false);
@@ -56,6 +57,7 @@ export default function GroupDetailPage({ params }: GroupDetailPageProps) {
       getDiariesByDate,
       checkTodayDiary,
       getCurrentUser,
+      getCommentCount,
     } = await import("@/lib/mock/services");
 
     /* 멤버 여부 확인 - 비멤버는 그룹 목록으로 리다이렉트 */
@@ -93,6 +95,7 @@ export default function GroupDetailPage({ params }: GroupDetailPageProps) {
         content: d.content,
         createdAt: d.created_at,
         isOwn: d.user_id === currentUser.id,
+        commentCount: getCommentCount(d.id),
       }))
     );
 
@@ -185,12 +188,14 @@ export default function GroupDetailPage({ params }: GroupDetailPageProps) {
                 <DiaryCard
                   key={diary.id}
                   id={diary.id}
+                  groupId={groupId}
                   nickname={diary.nickname}
                   avatarUrl={diary.avatarUrl}
                   imageUrl={diary.imageUrl}
                   content={diary.content}
                   createdAt={diary.createdAt}
                   isOwn={diary.isOwn}
+                  commentCount={diary.commentCount}
                   onEdit={() =>
                     (window.location.href = `/groups/${groupId}/write?edit=${diary.id}`)
                   }

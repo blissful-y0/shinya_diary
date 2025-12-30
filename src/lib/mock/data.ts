@@ -2,7 +2,7 @@
    Mock 데이터 - Supabase 연결 없이 테스트용
    ============================================= */
 
-import type { Profile, Group, GroupMember, Diary } from "@/types/database";
+import type { Profile, Group, GroupMember, Diary, Comment } from "@/types/database";
 
 /* 현재 로그인 사용자 (Mock) */
 export const MOCK_CURRENT_USER: Profile = {
@@ -135,6 +135,26 @@ export let MOCK_DIARIES: Diary[] = [
     sticker_data: null,
     date: new Date().toISOString().split("T")[0],
     created_at: new Date(Date.now() - 3600000).toISOString(),
+  },
+];
+
+/* Mock 코멘트 */
+export let MOCK_COMMENTS: Comment[] = [
+  {
+    id: "comment-1",
+    diary_id: "diary-1",
+    user_id: "user-2",
+    content: "정말 좋은 하루였네요! 부럽다~",
+    created_at: new Date(Date.now() - 1800000).toISOString(),
+    updated_at: new Date(Date.now() - 1800000).toISOString(),
+  },
+  {
+    id: "comment-2",
+    diary_id: "diary-2",
+    user_id: "user-1",
+    content: "뭐 먹었어요? 나도 맛있는 거 먹고 싶다!",
+    created_at: new Date(Date.now() - 900000).toISOString(),
+    updated_at: new Date(Date.now() - 900000).toISOString(),
   },
 ];
 

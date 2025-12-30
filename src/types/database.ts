@@ -119,6 +119,28 @@ export interface Database {
           sticker_data?: StickerData[] | null;
         };
       };
+      comments: {
+        Row: {
+          id: string;
+          diary_id: string;
+          user_id: string;
+          content: string;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          diary_id: string;
+          user_id: string;
+          content: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          content?: string;
+          updated_at?: string;
+        };
+      };
     };
   };
 }
@@ -127,3 +149,4 @@ export type Profile = Database["public"]["Tables"]["profiles"]["Row"];
 export type Group = Database["public"]["Tables"]["groups"]["Row"];
 export type GroupMember = Database["public"]["Tables"]["group_members"]["Row"];
 export type Diary = Database["public"]["Tables"]["diaries"]["Row"];
+export type Comment = Database["public"]["Tables"]["comments"]["Row"];
