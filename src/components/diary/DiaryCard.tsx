@@ -114,7 +114,7 @@ export default function DiaryCard({
       {/* 코멘트 토글 버튼 */}
       <S.CommentToggle onClick={handleToggleComments}>
         <MessageCircle size={16} />
-        코멘트 {commentCount > 0 && <span>({commentCount})</span>}
+        {commentCount > 0 && <span>{commentCount}</span>}
       </S.CommentToggle>
 
       {/* 코멘트 섹션 */}

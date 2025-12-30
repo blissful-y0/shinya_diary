@@ -15,21 +15,6 @@ export const Container = styled.div`
   background-color: var(--card);
 `;
 
-export const Header = styled.div`
-  /* 헤더 */
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--muted-foreground);
-`;
-
-export const CommentCount = styled.span`
-  /* 코멘트 수 */
-  color: var(--primary);
-`;
-
 export const CommentList = styled.div`
   /* 코멘트 목록 */
   display: flex;
@@ -191,6 +176,9 @@ export const SubmitButton = styled(Button)`
   border-radius: 50%;
   padding: 0;
   flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 `;
 
 export const EditInputContainer = styled.div`

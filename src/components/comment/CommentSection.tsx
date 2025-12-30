@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { toast } from "sonner";
-import { MessageCircle, Send, Loader2 } from "lucide-react";
+import { Send, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import ConfirmDialog from "@/components/common/ConfirmDialog";
 import { formatDistanceToNow } from "@/utils/date";
@@ -31,14 +31,20 @@ interface CommentSectionProps {
   groupId: string;
 }
 
-export default function CommentSection({ diaryId, groupId }: CommentSectionProps) {
+export default function CommentSection({
+  diaryId,
+  groupId,
+}: CommentSectionProps) {
   const [comments, setComments] = useState<Comment[]>([]);
   const [newComment, setNewComment] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editContent, setEditContent] = useState("");
-  const [deleteDialog, setDeleteDialog] = useState<{ open: boolean; commentId: string }>({
+  const [deleteDialog, setDeleteDialog] = useState<{
+    open: boolean;
+    commentId: string;
+  }>({
     open: false,
     commentId: "",
   });
@@ -61,7 +67,10 @@ export default function CommentSection({ diaryId, groupId }: CommentSectionProps
   const adjustTextareaHeight = () => {
     if (textareaRef.current) {
       textareaRef.current.style.height = "36px";
-      textareaRef.current.style.height = `${Math.min(textareaRef.current.scrollHeight, 100)}px`;
+      textareaRef.current.style.height = `${Math.min(
+        textareaRef.current.scrollHeight,
+        100
+      )}px`;
     }
   };
 
@@ -70,7 +79,9 @@ export default function CommentSection({ diaryId, groupId }: CommentSectionProps
     if (!newComment.trim() || isSubmitting) return;
 
     setIsSubmitting(true);
-    const { createComment, getCommentsByDiary } = await import("@/lib/mock/services");
+    const { createComment, getCommentsByDiary } = await import(
+      "@/lib/mock/services"
+    );
     const result = createComment(diaryId, newComment);
 
     if (result) {
@@ -115,7 +126,9 @@ export default function CommentSection({ diaryId, groupId }: CommentSectionProps
       return;
     }
 
-    const { updateComment, getCommentsByDiary } = await import("@/lib/mock/services");
+    const { updateComment, getCommentsByDiary } = await import(
+      "@/lib/mock/services"
+    );
     const success = updateComment(commentId, editContent);
 
     if (success) {
@@ -131,7 +144,9 @@ export default function CommentSection({ diaryId, groupId }: CommentSectionProps
 
   /* 삭제 실행 */
   const handleDelete = async () => {
-    const { deleteComment, getCommentsByDiary } = await import("@/lib/mock/services");
+    const { deleteComment, getCommentsByDiary } = await import(
+      "@/lib/mock/services"
+    );
     const success = deleteComment(deleteDialog.commentId);
 
     if (success) {
@@ -150,14 +165,6 @@ export default function CommentSection({ diaryId, groupId }: CommentSectionProps
 
   return (
     <S.Container>
-      <S.Header>
-        <MessageCircle size={14} />
-        코멘트
-        {comments.length > 0 && (
-          <S.CommentCount>{comments.length}</S.CommentCount>
-        )}
-      </S.Header>
-
       {/* 코멘트 목록 */}
       {isLoading ? (
         <S.EmptyState>
@@ -180,7 +187,9 @@ export default function CommentSection({ diaryId, groupId }: CommentSectionProps
               <S.CommentBody>
                 <S.CommentHeader>
                   <S.Nickname>{comment.author.nickname}</S.Nickname>
-                  <S.TimeAgo>{formatDistanceToNow(comment.created_at)}</S.TimeAgo>
+                  <S.TimeAgo>
+                    {formatDistanceToNow(comment.created_at)}
+                  </S.TimeAgo>
                   {isEdited(comment) && <S.EditedBadge>(수정됨)</S.EditedBadge>}
                 </S.CommentHeader>
 
@@ -192,10 +201,17 @@ export default function CommentSection({ diaryId, groupId }: CommentSectionProps
                       autoFocus
                     />
                     <S.EditActions>
-                      <Button variant="ghost" size="sm" onClick={handleEditCancel}>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={handleEditCancel}
+                      >
                         취소
                       </Button>
-                      <Button size="sm" onClick={() => handleEditSave(comment.id)}>
+                      <Button
+                        size="sm"
+                        onClick={() => handleEditSave(comment.id)}
+                      >
                         저장
                       </Button>
                     </S.EditActions>
@@ -205,11 +221,18 @@ export default function CommentSection({ diaryId, groupId }: CommentSectionProps
                     <S.Content>{comment.content}</S.Content>
                     {comment.isOwn && (
                       <S.Actions>
-                        <S.ActionButton onClick={() => handleEditStart(comment)}>
+                        <S.ActionButton
+                          onClick={() => handleEditStart(comment)}
+                        >
                           수정
                         </S.ActionButton>
                         <S.ActionButton
-                          onClick={() => setDeleteDialog({ open: true, commentId: comment.id })}
+                          onClick={() =>
+                            setDeleteDialog({
+                              open: true,
+                              commentId: comment.id,
+                            })
+                          }
                         >
                           삭제
                         </S.ActionButton>
