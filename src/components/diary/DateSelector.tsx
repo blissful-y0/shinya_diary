@@ -1,12 +1,14 @@
 "use client";
 
-import { ChevronLeft, ChevronRight } from "lucide-react";
-import { formatDateKorean, isToday } from "@/utils/date";
+import { useRef } from "react";
+import { ChevronLeft, ChevronRight, Calendar } from "lucide-react";
+import { formatDateKorean, formatDateISO, isToday } from "@/utils/date";
 import * as S from "./DateSelector.styles";
 
 /* =============================================
    날짜 선택 컴포넌트
    - 좌우 화살표로 날짜 이동
+   - 날짜 클릭 시 달력으로 직접 선택
    - 오늘 날짜 표시
    ============================================= */
 
@@ -19,6 +21,8 @@ export default function DateSelector({
   selectedDate,
   onDateChange,
 }: DateSelectorProps) {
+  const dateInputRef = useRef<HTMLInputElement>(null);
+
   /* 이전 날짜로 이동 */
   const handlePrevDay = () => {
     const prevDate = new Date(selectedDate);
@@ -36,7 +40,21 @@ export default function DateSelector({
     }
   };
 
+  /* 날짜 직접 선택 */
+  const handleDateSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newDate = new Date(e.target.value);
+    if (!isNaN(newDate.getTime()) && newDate <= new Date()) {
+      onDateChange(newDate);
+    }
+  };
+
+  /* 날짜 입력창 열기 */
+  const openDatePicker = () => {
+    dateInputRef.current?.showPicker();
+  };
+
   const canGoNext = !isToday(selectedDate);
+  const todayStr = formatDateISO(new Date());
 
   return (
     <S.Container>
@@ -44,9 +62,17 @@ export default function DateSelector({
         <ChevronLeft size={20} />
       </S.NavButton>
 
-      <S.DateDisplay>
+      <S.DateDisplay onClick={openDatePicker}>
         <S.DateText>{formatDateKorean(selectedDate)}</S.DateText>
         {isToday(selectedDate) && <S.TodayBadge>오늘</S.TodayBadge>}
+        <Calendar size={16} />
+        <S.HiddenDateInput
+          ref={dateInputRef}
+          type="date"
+          value={formatDateISO(selectedDate)}
+          max={todayStr}
+          onChange={handleDateSelect}
+        />
       </S.DateDisplay>
 
       <S.NavButton

@@ -34,11 +34,21 @@ export const NavButton = styled.button<{ disabled?: boolean }>`
   }
 `;
 
-export const DateDisplay = styled.div`
-  /* 날짜 표시 영역 */
+export const DateDisplay = styled.button`
+  /* 날짜 표시 영역 (클릭 가능) */
   display: flex;
   align-items: center;
   gap: 8px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  color: var(--muted-foreground);
+  position: relative;
+
+  &:hover {
+    background-color: var(--accent);
+  }
 `;
 
 export const DateText = styled.span`
@@ -56,4 +66,13 @@ export const TodayBadge = styled.span`
   color: white;
   background-color: var(--primary);
   border-radius: 10px;
+`;
+
+export const HiddenDateInput = styled.input`
+  /* 숨겨진 날짜 입력 */
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+  pointer-events: none;
 `;
