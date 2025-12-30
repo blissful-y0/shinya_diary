@@ -2,9 +2,6 @@
 -- Shinya Diary - 초기 스키마
 -- =============================================
 
--- UUID 확장 활성화
-CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
-
 -- =============================================
 -- 1. profiles 테이블 (사용자 프로필)
 -- =============================================
@@ -52,7 +49,7 @@ CREATE TRIGGER profiles_updated_at
 -- 2. groups 테이블 (그룹)
 -- =============================================
 CREATE TABLE public.groups (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   name TEXT NOT NULL,
   icon_url TEXT,
   cover_image_url TEXT,
@@ -95,7 +92,7 @@ CREATE TRIGGER groups_set_invite_code
 -- 3. group_members 테이블 (그룹 멤버)
 -- =============================================
 CREATE TABLE public.group_members (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   group_id UUID NOT NULL REFERENCES public.groups(id) ON DELETE CASCADE,
   user_id UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
   nickname TEXT,
@@ -132,7 +129,7 @@ CREATE TRIGGER group_members_limit
 CREATE TYPE public.join_request_status AS ENUM ('pending', 'approved', 'rejected');
 
 CREATE TABLE public.join_requests (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   group_id UUID NOT NULL REFERENCES public.groups(id) ON DELETE CASCADE,
   user_id UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
   status public.join_request_status NOT NULL DEFAULT 'pending',
@@ -144,7 +141,7 @@ CREATE TABLE public.join_requests (
 -- 5. diaries 테이블 (다이어리)
 -- =============================================
 CREATE TABLE public.diaries (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   group_id UUID NOT NULL REFERENCES public.groups(id) ON DELETE CASCADE,
   user_id UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
   content TEXT,
@@ -159,7 +156,7 @@ CREATE TABLE public.diaries (
 -- 6. comments 테이블 (코멘트)
 -- =============================================
 CREATE TABLE public.comments (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   diary_id UUID NOT NULL REFERENCES public.diaries(id) ON DELETE CASCADE,
   user_id UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
   content TEXT NOT NULL,
