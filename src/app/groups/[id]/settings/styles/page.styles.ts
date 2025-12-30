@@ -42,6 +42,48 @@ export const IconSection = styled.section`
   gap: 12px;
 `;
 
+export const CoverImageSection = styled.section`
+  /* 커버 이미지 섹션 */
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+`;
+
+export const CoverImagePreview = styled.div`
+  /* 커버 이미지 미리보기 */
+  width: 100%;
+  height: 120px;
+  border-radius: 12px;
+  background-color: var(--muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  position: relative;
+  cursor: pointer;
+
+  &:hover > div:last-of-type {
+    opacity: 1;
+  }
+`;
+
+export const CoverImage = styled.img`
+  /* 커버 이미지 */
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+`;
+
+export const CoverImagePlaceholder = styled.div`
+  /* 커버 이미지 플레이스홀더 */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  color: var(--muted-foreground);
+  font-size: 13px;
+`;
+
 export const SectionHeader = styled.h2`
   /* 섹션 헤더 (큰 제목) */
   display: flex;

@@ -51,6 +51,7 @@ export interface Database {
           id: string;
           name: string;
           icon_url: string | null;
+          cover_image_url: string | null;
           invite_code: string;
           owner_id: string;
           created_at: string;
@@ -59,6 +60,7 @@ export interface Database {
           id?: string;
           name: string;
           icon_url?: string | null;
+          cover_image_url?: string | null;
           invite_code: string;
           owner_id: string;
           created_at?: string;
@@ -66,6 +68,7 @@ export interface Database {
         Update: {
           name?: string;
           icon_url?: string | null;
+          cover_image_url?: string | null;
           invite_code?: string;
           owner_id?: string;
         };
