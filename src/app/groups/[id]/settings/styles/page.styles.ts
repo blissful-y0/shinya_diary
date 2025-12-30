@@ -84,6 +84,13 @@ export const CoverImagePlaceholder = styled.div`
   font-size: 13px;
 `;
 
+export const ImageHint = styled.p`
+  /* 이미지 권장 사이즈 힌트 */
+  font-size: 10px;
+  color: var(--muted-foreground);
+  text-align: center;
+`;
+
 export const SectionHeader = styled.h2`
   /* 섹션 헤더 (큰 제목) */
   display: flex;

@@ -431,6 +431,7 @@ export default function GroupSettingsPage({ params }: SettingsPageProps) {
                       onChange={handleGroupIconSelect}
                     />
                   </S.IconPreview>
+                  <S.ImageHint>권장 사이즈: 200 x 200px</S.ImageHint>
                 </S.IconSection>
 
                 {/* 커버 이미지 */}
@@ -457,6 +458,7 @@ export default function GroupSettingsPage({ params }: SettingsPageProps) {
                       onChange={handleCoverImageSelect}
                     />
                   </S.CoverImagePreview>
+                  <S.ImageHint>권장 사이즈: 800 x 400px</S.ImageHint>
                 </S.CoverImageSection>
 
                 <S.Section>
