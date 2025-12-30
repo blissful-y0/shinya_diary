@@ -50,6 +50,7 @@ export interface Database {
         Row: {
           id: string;
           name: string;
+          icon_url: string | null;
           invite_code: string;
           owner_id: string;
           created_at: string;
@@ -57,12 +58,14 @@ export interface Database {
         Insert: {
           id?: string;
           name: string;
+          icon_url?: string | null;
           invite_code: string;
           owner_id: string;
           created_at?: string;
         };
         Update: {
           name?: string;
+          icon_url?: string | null;
           invite_code?: string;
           owner_id?: string;
         };
@@ -72,17 +75,21 @@ export interface Database {
           id: string;
           group_id: string;
           user_id: string;
+          nickname: string | null;
+          avatar_url: string | null;
           joined_at: string;
         };
         Insert: {
           id?: string;
           group_id: string;
           user_id: string;
+          nickname?: string | null;
+          avatar_url?: string | null;
           joined_at?: string;
         };
         Update: {
-          group_id?: string;
-          user_id?: string;
+          nickname?: string | null;
+          avatar_url?: string | null;
         };
       };
       diaries: {
@@ -112,6 +119,28 @@ export interface Database {
           sticker_data?: StickerData[] | null;
         };
       };
+      comments: {
+        Row: {
+          id: string;
+          diary_id: string;
+          user_id: string;
+          content: string;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          diary_id: string;
+          user_id: string;
+          content: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          content?: string;
+          updated_at?: string;
+        };
+      };
     };
   };
 }
@@ -120,3 +149,4 @@ export type Profile = Database["public"]["Tables"]["profiles"]["Row"];
 export type Group = Database["public"]["Tables"]["groups"]["Row"];
 export type GroupMember = Database["public"]["Tables"]["group_members"]["Row"];
 export type Diary = Database["public"]["Tables"]["diaries"]["Row"];
+export type Comment = Database["public"]["Tables"]["comments"]["Row"];

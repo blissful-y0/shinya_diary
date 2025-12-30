@@ -1,9 +1,15 @@
 "use client";
 
 import { ReactNode } from "react";
-import styles from "./MobileLayout.module.css";
 import Header from "./Header";
 import BottomNav from "./BottomNav";
+import * as S from "./MobileLayout.styles";
+
+/* =============================================
+   모바일 레이아웃 컨테이너
+   - 최대 너비 480px로 모바일 최적화
+   - CSS 계층 구조 트리 형태로 구성
+   ============================================= */
 
 interface MobileLayoutProps {
   children: ReactNode;
@@ -22,16 +28,8 @@ export default function MobileLayout({
   headerBackHref,
   headerRight,
 }: MobileLayoutProps) {
-  const mainClassName = [
-    styles.main,
-    showHeader && styles.mainWithHeader,
-    !showNav && styles.mainNoNav,
-  ]
-    .filter(Boolean)
-    .join(" ");
-
   return (
-    <div className={styles.container}>
+    <S.Container>
       {showHeader && (
         <Header
           title={headerTitle}
@@ -39,8 +37,10 @@ export default function MobileLayout({
           right={headerRight}
         />
       )}
-      <main className={mainClassName}>{children}</main>
+      <S.Main $hasHeader={showHeader} $hasNav={showNav}>
+        {children}
+      </S.Main>
       {showNav && <BottomNav />}
-    </div>
+    </S.Container>
   );
 }
