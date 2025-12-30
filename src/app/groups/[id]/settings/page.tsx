@@ -176,7 +176,7 @@ export default function GroupSettingsPage({ params }: SettingsPageProps) {
     <MobileLayout headerTitle="그룹 설정" headerBackHref={`/groups/${groupId}`}>
       <S.Container>
         {/* 그룹 아이콘 */}
-        <S.Section>
+        <S.IconSection>
           <S.SectionTitle>그룹 아이콘</S.SectionTitle>
           <S.IconPreview onClick={() => fileInputRef.current?.click()}>
             {iconPreview ? (
@@ -196,7 +196,7 @@ export default function GroupSettingsPage({ params }: SettingsPageProps) {
               onChange={handleIconSelect}
             />
           </S.IconPreview>
-        </S.Section>
+        </S.IconSection>
 
         {/* 그룹 이름 */}
         <S.Section>

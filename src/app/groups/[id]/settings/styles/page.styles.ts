@@ -21,6 +21,14 @@ export const Section = styled.section`
   gap: 12px;
 `;
 
+export const IconSection = styled.section`
+  /* 아이콘 섹션 (중앙 정렬) */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+`;
+
 export const SectionTitle = styled.h2`
   /* 섹션 제목 */
   font-size: 16px;
