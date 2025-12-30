@@ -135,7 +135,7 @@ export const InputContainer = styled.div`
   /* 입력 컨테이너 */
   display: flex;
   gap: 8px;
-  align-items: flex-end;
+  align-items: center;
 `;
 
 export const InputWrapper = styled.div`
