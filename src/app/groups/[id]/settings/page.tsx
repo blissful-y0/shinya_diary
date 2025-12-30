@@ -51,7 +51,9 @@ export default function GroupSettingsPage({ params }: SettingsPageProps) {
   const [isOwner, setIsOwner] = useState(false);
   const [groupName, setGroupName] = useState("");
   const [groupIconPreview, setGroupIconPreview] = useState<string | null>(null);
-  const [coverImagePreview, setCoverImagePreview] = useState<string | null>(null);
+  const [coverImagePreview, setCoverImagePreview] = useState<string | null>(
+    null
+  );
   const [inviteCode, setInviteCode] = useState("");
   const [joinRequests, setJoinRequests] = useState<JoinRequest[]>([]);
   const [members, setMembers] = useState<Member[]>([]);
@@ -406,6 +408,31 @@ export default function GroupSettingsPage({ params }: SettingsPageProps) {
                 {/* 그룹 정보 */}
                 <S.SectionHeader>그룹 정보</S.SectionHeader>
 
+                <S.SectionTitle>그룹 아이콘</S.SectionTitle>
+                {/* 그룹 아이콘 */}
+                <S.IconSection>
+                  <S.IconPreview
+                    onClick={() => groupIconInputRef.current?.click()}
+                  >
+                    {groupIconPreview ? (
+                      <S.IconImage src={groupIconPreview} alt="그룹 아이콘" />
+                    ) : (
+                      <S.IconPlaceholder>
+                        {groupName.charAt(0).toUpperCase() || "G"}
+                      </S.IconPlaceholder>
+                    )}
+                    <S.IconOverlay>
+                      <Camera size={24} />
+                    </S.IconOverlay>
+                    <S.HiddenInput
+                      ref={groupIconInputRef}
+                      type="file"
+                      accept="image/*"
+                      onChange={handleGroupIconSelect}
+                    />
+                  </S.IconPreview>
+                </S.IconSection>
+
                 {/* 커버 이미지 */}
                 <S.CoverImageSection>
                   <S.SectionTitle>커버 이미지</S.SectionTitle>
@@ -431,30 +458,6 @@ export default function GroupSettingsPage({ params }: SettingsPageProps) {
                     />
                   </S.CoverImagePreview>
                 </S.CoverImageSection>
-
-                {/* 그룹 아이콘 */}
-                <S.IconSection>
-                  <S.IconPreview
-                    onClick={() => groupIconInputRef.current?.click()}
-                  >
-                    {groupIconPreview ? (
-                      <S.IconImage src={groupIconPreview} alt="그룹 아이콘" />
-                    ) : (
-                      <S.IconPlaceholder>
-                        {groupName.charAt(0).toUpperCase() || "G"}
-                      </S.IconPlaceholder>
-                    )}
-                    <S.IconOverlay>
-                      <Camera size={24} />
-                    </S.IconOverlay>
-                    <S.HiddenInput
-                      ref={groupIconInputRef}
-                      type="file"
-                      accept="image/*"
-                      onChange={handleGroupIconSelect}
-                    />
-                  </S.IconPreview>
-                </S.IconSection>
 
                 <S.Section>
                   <S.SectionTitle>그룹 이름</S.SectionTitle>

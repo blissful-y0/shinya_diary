@@ -5,6 +5,20 @@ import { Button } from "@/components/ui/button";
    그룹 상세 페이지 스타일
    ============================================= */
 
+export const CoverImageContainer = styled.div`
+  /* 커버 이미지 컨테이너 */
+  width: 100%;
+  height: 160px;
+  overflow: hidden;
+`;
+
+export const CoverImage = styled.img`
+  /* 커버 이미지 */
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+`;
+
 export const Container = styled.div`
   /* 페이지 컨테이너 */
   padding: 16px;
