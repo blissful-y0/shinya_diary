@@ -10,6 +10,7 @@ export const CardContainer = styled.article`
   background-color: var(--card);
   border: 1px solid var(--border);
   border-radius: 16px;
+  overflow: hidden;
 `;
 
 export const CardHeader = styled.header`
