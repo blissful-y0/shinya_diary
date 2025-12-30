@@ -42,6 +42,7 @@ export default function GroupDetailPage({ params }: GroupDetailPageProps) {
   const [hasWrittenToday, setHasWrittenToday] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [groupName, setGroupName] = useState("");
+  const [coverImageUrl, setCoverImageUrl] = useState<string | null>(null);
   const [deleteDialog, setDeleteDialog] = useState<{ open: boolean; diaryId: string }>({
     open: false,
     diaryId: "",
@@ -70,6 +71,7 @@ export default function GroupDetailPage({ params }: GroupDetailPageProps) {
     const group = getGroup(groupId);
     if (group) {
       setGroupName(group.name);
+      setCoverImageUrl(group.cover_image_url);
     }
 
     /* 날짜별 다이어리 조회 */
@@ -145,6 +147,13 @@ export default function GroupDetailPage({ params }: GroupDetailPageProps) {
         selectedDate={selectedDate}
         onDateChange={setSelectedDate}
       />
+
+      {/* 커버 이미지 */}
+      {coverImageUrl && (
+        <S.CoverImageContainer>
+          <S.CoverImage src={coverImageUrl} alt="" />
+        </S.CoverImageContainer>
+      )}
 
       <S.Container>
         {/* 오늘이고 아직 작성 안 한 경우: 글쓰기 유도 */}

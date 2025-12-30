@@ -17,6 +17,8 @@ import * as S from "./styles/page.styles";
 interface GroupWithInfo {
   id: string;
   name: string;
+  iconUrl: string | null;
+  coverImageUrl: string | null;
   memberCount: number;
   isOwner: boolean;
   hasPendingRequests: boolean;
@@ -43,6 +45,8 @@ export default function GroupsPage() {
       return {
         id: g.id,
         name: g.name,
+        iconUrl: g.icon_url,
+        coverImageUrl: g.cover_image_url,
         memberCount: g.memberCount,
         isOwner: g.owner_id === currentUser.id,
         hasPendingRequests: requests.length > 0,
@@ -92,6 +96,8 @@ export default function GroupsPage() {
                 key={group.id}
                 id={group.id}
                 name={group.name}
+                iconUrl={group.iconUrl}
+                coverImageUrl={group.coverImageUrl}
                 memberCount={group.memberCount}
                 isOwner={group.isOwner}
                 hasPendingRequests={group.hasPendingRequests}

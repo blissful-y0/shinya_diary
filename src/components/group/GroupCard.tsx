@@ -12,6 +12,8 @@ import * as S from "./GroupCard.styles";
 interface GroupCardProps {
   id: string;
   name: string;
+  iconUrl?: string | null;
+  coverImageUrl?: string | null;
   memberCount: number;
   isOwner: boolean;
   hasPendingRequests?: boolean;
@@ -20,15 +22,24 @@ interface GroupCardProps {
 export default function GroupCard({
   id,
   name,
+  iconUrl,
+  coverImageUrl,
   memberCount,
   isOwner,
   hasPendingRequests,
 }: GroupCardProps) {
   return (
     <S.CardLink href={`/groups/${id}`}>
+      {coverImageUrl && (
+        <S.CoverImage src={coverImageUrl} alt="" />
+      )}
       <S.CardContent>
-        <S.GroupIcon>
-          <Users size={24} />
+        <S.GroupIcon $hasImage={!!iconUrl}>
+          {iconUrl ? (
+            <S.IconImage src={iconUrl} alt="" />
+          ) : (
+            <Users size={24} />
+          )}
         </S.GroupIcon>
 
         <S.GroupInfo>

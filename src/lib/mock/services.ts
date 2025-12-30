@@ -54,6 +54,7 @@ export function createGroup(name: string): Group {
     id: `group-${generateId()}`,
     name,
     icon_url: null,
+    cover_image_url: null,
     invite_code: generateInviteCode(),
     owner_id: MOCK_CURRENT_USER.id,
     created_at: new Date().toISOString(),
@@ -79,7 +80,7 @@ export function createGroup(name: string): Group {
 /* 그룹 정보 수정 (방장만 가능) */
 export function updateGroup(
   groupId: string,
-  params: { name?: string; iconUrl?: string | null }
+  params: { name?: string; iconUrl?: string | null; coverImageUrl?: string | null }
 ): boolean {
   const group = MOCK_GROUPS.find((g) => g.id === groupId);
   if (!group || group.owner_id !== MOCK_CURRENT_USER.id) {
@@ -91,6 +92,9 @@ export function updateGroup(
   }
   if (params.iconUrl !== undefined) {
     group.icon_url = params.iconUrl;
+  }
+  if (params.coverImageUrl !== undefined) {
+    group.cover_image_url = params.coverImageUrl;
   }
 
   return true;

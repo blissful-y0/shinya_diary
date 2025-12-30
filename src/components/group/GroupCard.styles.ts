@@ -12,6 +12,7 @@ export const CardLink = styled(Link)`
   background-color: var(--card);
   border: 1px solid var(--border);
   border-radius: 12px;
+  overflow: hidden;
   transition: background-color 0.2s;
 
   &:hover {
@@ -23,6 +24,13 @@ export const CardLink = styled(Link)`
   }
 `;
 
+export const CoverImage = styled.img`
+  /* 커버 이미지 */
+  width: 100%;
+  height: 80px;
+  object-fit: cover;
+`;
+
 export const CardContent = styled.div`
   /* 카드 내용 */
   display: flex;
@@ -31,16 +39,25 @@ export const CardContent = styled.div`
   padding: 16px;
 `;
 
-export const GroupIcon = styled.div`
+export const GroupIcon = styled.div<{ $hasImage?: boolean }>`
   /* 그룹 아이콘 */
   width: 48px;
   height: 48px;
   display: flex;
   align-items: center;
   justify-content: center;
-  background-color: var(--muted);
+  background-color: ${({ $hasImage }) => ($hasImage ? "transparent" : "var(--muted)")};
   border-radius: 12px;
   color: var(--muted-foreground);
+  overflow: hidden;
+  flex-shrink: 0;
+`;
+
+export const IconImage = styled.img`
+  /* 아이콘 이미지 */
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 `;
 
 export const GroupInfo = styled.div`

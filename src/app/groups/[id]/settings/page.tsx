@@ -9,7 +9,7 @@ import MemberList from "@/components/group/MemberList";
 import ConfirmDialog from "@/components/common/ConfirmDialog";
 import DeleteConfirmDialog from "@/components/common/DeleteConfirmDialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Camera, Copy, Check, Loader2, Trash2 } from "lucide-react";
+import { Camera, Copy, Check, Loader2, Trash2, Image } from "lucide-react";
 import { isValidImageFile } from "@/utils/imageConverter";
 import * as S from "./styles/page.styles";
 
@@ -44,12 +44,16 @@ export default function GroupSettingsPage({ params }: SettingsPageProps) {
   const { id: groupId } = use(params);
   const router = useRouter();
   const groupIconInputRef = useRef<HTMLInputElement>(null);
+  const coverImageInputRef = useRef<HTMLInputElement>(null);
   const profileAvatarInputRef = useRef<HTMLInputElement>(null);
 
   /* 그룹 설정 (방장용) */
   const [isOwner, setIsOwner] = useState(false);
   const [groupName, setGroupName] = useState("");
   const [groupIconPreview, setGroupIconPreview] = useState<string | null>(null);
+  const [coverImagePreview, setCoverImagePreview] = useState<string | null>(
+    null
+  );
   const [inviteCode, setInviteCode] = useState("");
   const [joinRequests, setJoinRequests] = useState<JoinRequest[]>([]);
   const [members, setMembers] = useState<Member[]>([]);
@@ -102,6 +106,7 @@ export default function GroupSettingsPage({ params }: SettingsPageProps) {
       if (group) {
         setGroupName(group.name);
         setGroupIconPreview(group.icon_url);
+        setCoverImagePreview(group.cover_image_url);
         setInviteCode(group.invite_code);
       }
 
@@ -172,6 +177,23 @@ export default function GroupSettingsPage({ params }: SettingsPageProps) {
     reader.readAsDataURL(file);
   };
 
+  /* 커버 이미지 선택 */
+  const handleCoverImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!isValidImageFile(file)) {
+      toast.error("지원하지 않는 이미지 형식입니다.");
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      setCoverImagePreview(e.target?.result as string);
+    };
+    reader.readAsDataURL(file);
+  };
+
   /* 내 프로필 저장 */
   const handleSaveProfile = async () => {
     if (!myNickname.trim()) {
@@ -209,6 +231,7 @@ export default function GroupSettingsPage({ params }: SettingsPageProps) {
     const success = updateGroup(groupId, {
       name: groupName.trim(),
       iconUrl: groupIconPreview,
+      coverImageUrl: coverImagePreview,
     });
 
     if (success) {
@@ -385,6 +408,8 @@ export default function GroupSettingsPage({ params }: SettingsPageProps) {
                 {/* 그룹 정보 */}
                 <S.SectionHeader>그룹 정보</S.SectionHeader>
 
+                <S.SectionTitle>그룹 아이콘</S.SectionTitle>
+                {/* 그룹 아이콘 */}
                 <S.IconSection>
                   <S.IconPreview
                     onClick={() => groupIconInputRef.current?.click()}
@@ -406,7 +431,35 @@ export default function GroupSettingsPage({ params }: SettingsPageProps) {
                       onChange={handleGroupIconSelect}
                     />
                   </S.IconPreview>
+                  <S.ImageHint>권장 사이즈: 200 x 200px</S.ImageHint>
                 </S.IconSection>
+
+                {/* 커버 이미지 */}
+                <S.CoverImageSection>
+                  <S.SectionTitle>커버 이미지</S.SectionTitle>
+                  <S.CoverImagePreview
+                    onClick={() => coverImageInputRef.current?.click()}
+                  >
+                    {coverImagePreview ? (
+                      <S.CoverImage src={coverImagePreview} alt="커버 이미지" />
+                    ) : (
+                      <S.CoverImagePlaceholder>
+                        <Image size={32} />
+                        클릭하여 커버 이미지 추가
+                      </S.CoverImagePlaceholder>
+                    )}
+                    <S.IconOverlay>
+                      <Camera size={24} />
+                    </S.IconOverlay>
+                    <S.HiddenInput
+                      ref={coverImageInputRef}
+                      type="file"
+                      accept="image/*"
+                      onChange={handleCoverImageSelect}
+                    />
+                  </S.CoverImagePreview>
+                  <S.ImageHint>권장 사이즈: 800 x 400px</S.ImageHint>
+                </S.CoverImageSection>
 
                 <S.Section>
                   <S.SectionTitle>그룹 이름</S.SectionTitle>
