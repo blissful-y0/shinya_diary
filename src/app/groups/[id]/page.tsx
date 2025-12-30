@@ -4,7 +4,7 @@ import { use } from "react";
 import styled from "styled-components";
 import MobileLayout from "@/components/layout/MobileLayout";
 import { Button } from "@/components/ui/button";
-import { Settings, PenSquare } from "lucide-react";
+import { Settings, PenSquare, Lock } from "lucide-react";
 import Link from "next/link";
 
 /* =============================================
@@ -52,7 +52,7 @@ export default function GroupDetailPage({ params }: GroupDetailPageProps) {
         {/* 피드 - 추후 구현 */}
         <FeedSection>
           <LockedFeed>
-            <LockedIcon>🔒</LockedIcon>
+            <LockedIcon><Lock size={32} /></LockedIcon>
             <LockedText>
               일기를 작성하면 잠금이 해제됩니다
             </LockedText>
@@ -143,7 +143,7 @@ const LockedFeed = styled.div`
 
 const LockedIcon = styled.div`
   /* 잠금 아이콘 */
-  font-size: 32px;
+  color: var(--muted-foreground);
   margin-bottom: 12px;
 `;
 

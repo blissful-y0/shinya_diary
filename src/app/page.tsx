@@ -19,7 +19,7 @@ export default function HomePage() {
           <PlaceholderText>
             아직 오늘의 일기를 작성하지 않았어요.
             <br />
-            소중한 하루를 기록해보세요 ✨
+            소중한 하루를 기록해보세요.
           </PlaceholderText>
         </PlaceholderCard>
 

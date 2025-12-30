@@ -23,7 +23,7 @@ export default function LoginPage() {
     <Container>
       {/* 로고 & 브랜딩 영역 */}
       <BrandingSection>
-        <Logo>🌙</Logo>
+        <Logo>S</Logo>
         <AppName>Shinya Diary</AppName>
         <Tagline>소중한 순간을 함께 기록해요</Tagline>
       </BrandingSection>
@@ -96,8 +96,17 @@ const BrandingSection = styled.section`
 `;
 
 const Logo = styled.div`
-  /* 로고 이모지 */
-  font-size: 64px;
+  /* 로고 */
+  width: 80px;
+  height: 80px;
+  background: linear-gradient(135deg, #7C9EB2 0%, #A8C5D8 100%);
+  border-radius: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 40px;
+  font-weight: 700;
+  color: white;
   margin-bottom: 16px;
 `;
 

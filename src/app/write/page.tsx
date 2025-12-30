@@ -3,7 +3,7 @@
 import styled from "styled-components";
 import MobileLayout from "@/components/layout/MobileLayout";
 import { Button } from "@/components/ui/button";
-import { ChevronRight } from "lucide-react";
+import { ChevronRight, FileText } from "lucide-react";
 
 /* =============================================
    빠른 글쓰기 페이지
@@ -19,7 +19,7 @@ export default function QuickWritePage() {
         {/* 그룹 리스트 - 추후 데이터 연동 */}
         <GroupList>
           <EmptyState>
-            <EmptyIcon>📝</EmptyIcon>
+            <EmptyIcon><FileText size={48} /></EmptyIcon>
             <EmptyText>
               참여 중인 그룹이 없어요.
               <br />
@@ -89,7 +89,7 @@ const EmptyState = styled.div`
 
 const EmptyIcon = styled.div`
   /* 빈 상태 아이콘 */
-  font-size: 48px;
+  color: var(--muted-foreground);
   margin-bottom: 16px;
 `;
 

@@ -3,7 +3,7 @@
 import styled from "styled-components";
 import MobileLayout from "@/components/layout/MobileLayout";
 import { Button } from "@/components/ui/button";
-import { Plus, Users } from "lucide-react";
+import { Plus, Users, BookOpen } from "lucide-react";
 
 /* =============================================
    그룹 목록 페이지
@@ -30,7 +30,7 @@ export default function GroupsPage() {
         {/* 그룹 리스트 - 추후 데이터 연동 */}
         <GroupList>
           <EmptyState>
-            <EmptyIcon>📔</EmptyIcon>
+            <EmptyIcon><BookOpen size={48} /></EmptyIcon>
             <EmptyTitle>아직 그룹이 없어요</EmptyTitle>
             <EmptyText>
               새로운 그룹을 만들거나
@@ -90,7 +90,7 @@ const EmptyState = styled.div`
 
 const EmptyIcon = styled.div`
   /* 빈 상태 아이콘 */
-  font-size: 48px;
+  color: var(--muted-foreground);
   margin-bottom: 16px;
 `;
 

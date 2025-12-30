@@ -34,7 +34,7 @@ export default function ProfilePage() {
         <ProfileHeader>
           <Avatar className="w-20 h-20">
             <AvatarImage src="" alt="프로필 이미지" />
-            <AvatarFallback>🌙</AvatarFallback>
+            <AvatarFallback>U</AvatarFallback>
           </Avatar>
           <ProfileInfo>
             <ProfileName>로그인이 필요해요</ProfileName>

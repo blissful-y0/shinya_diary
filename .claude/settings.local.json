@@ -9,7 +9,8 @@
       "Bash(git branch:*)",
       "Bash(git checkout:*)",
       "Bash(npx shadcn@latest init:*)",
-      "Bash(npx shadcn@latest add:*)"
+      "Bash(npx shadcn@latest add:*)",
+      "Bash(git commit -m \"$\\(cat <<''EOF''\nfeat: UI 프레임워크 및 모바일 레이아웃 구성\n\n- Tailwind CSS v4 + shadcn/ui 설정\n- styled-components SSR 레지스트리 추가\n- 모바일 최적화 레이아웃 컴포넌트 구현\n  - MobileLayout: 메인 컨테이너 \\(max 480px\\)\n  - Header: 뒤로가기/제목/액션 버튼\n  - BottomNav: 하단 네비게이션 바\n- shadcn/ui 기본 컴포넌트 추가\n  - Button, Input, Card, Dialog, Avatar, Textarea, Label\n- 페이지 라우트 구성\n  - / : 홈 \\(오늘의 다이어리\\)\n  - /login : Google OAuth 로그인\n  - /groups : 그룹 목록\n  - /groups/[id] : 그룹 피드 \\(Read-after-Write\\)\n  - /groups/[id]/write : 다이어리 작성\n  - /write : 빠른 글쓰기\n  - /profile : 프로필\n\n🤖 Generated with [Claude Code]\\(https://claude.com/claude-code\\)\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n\\)\")"
     ]
   }
 }
