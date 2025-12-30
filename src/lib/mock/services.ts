@@ -244,6 +244,86 @@ export function updateMyGroupProfile(
   return true;
 }
 
+/* 그룹 삭제 (방장만 가능) */
+export function deleteGroup(groupId: string): boolean {
+  const group = getGroup(groupId);
+  if (!group || group.owner_id !== MOCK_CURRENT_USER.id) {
+    return false;
+  }
+
+  /* 그룹 삭제 */
+  const groupIndex = MOCK_GROUPS.findIndex((g) => g.id === groupId);
+  if (groupIndex !== -1) {
+    MOCK_GROUPS.splice(groupIndex, 1);
+  }
+
+  /* 멤버 삭제 */
+  for (let i = MOCK_GROUP_MEMBERS.length - 1; i >= 0; i--) {
+    if (MOCK_GROUP_MEMBERS[i].group_id === groupId) {
+      MOCK_GROUP_MEMBERS.splice(i, 1);
+    }
+  }
+
+  /* 가입 요청 삭제 */
+  for (let i = MOCK_JOIN_REQUESTS.length - 1; i >= 0; i--) {
+    if (MOCK_JOIN_REQUESTS[i].group_id === groupId) {
+      MOCK_JOIN_REQUESTS.splice(i, 1);
+    }
+  }
+
+  /* 다이어리 삭제 */
+  for (let i = MOCK_DIARIES.length - 1; i >= 0; i--) {
+    if (MOCK_DIARIES[i].group_id === groupId) {
+      MOCK_DIARIES.splice(i, 1);
+    }
+  }
+
+  return true;
+}
+
+/* 멤버 강퇴 (방장만 가능, 자기 자신은 강퇴 불가) */
+export function removeMember(groupId: string, memberId: string): boolean {
+  const group = getGroup(groupId);
+  if (!group || group.owner_id !== MOCK_CURRENT_USER.id) {
+    return false;
+  }
+
+  const member = MOCK_GROUP_MEMBERS.find((m) => m.id === memberId);
+  if (!member || member.group_id !== groupId) {
+    return false;
+  }
+
+  /* 자기 자신 강퇴 불가 */
+  if (member.user_id === MOCK_CURRENT_USER.id) {
+    return false;
+  }
+
+  /* 멤버 삭제 */
+  const index = MOCK_GROUP_MEMBERS.findIndex((m) => m.id === memberId);
+  if (index !== -1) {
+    MOCK_GROUP_MEMBERS.splice(index, 1);
+  }
+
+  return true;
+}
+
+/* 그룹 멤버 상세 정보 조회 (방장용) */
+export interface GroupMemberWithUser extends GroupMember {
+  isOwner: boolean;
+}
+
+export function getGroupMembersWithDetails(groupId: string): GroupMemberWithUser[] {
+  const group = getGroup(groupId);
+  if (!group) return [];
+
+  return MOCK_GROUP_MEMBERS
+    .filter((m) => m.group_id === groupId)
+    .map((m) => ({
+      ...m,
+      isOwner: m.user_id === group.owner_id,
+    }));
+}
+
 /* =============================================
    다이어리 관련
    ============================================= */

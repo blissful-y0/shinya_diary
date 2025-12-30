@@ -14,6 +14,19 @@ export const Container = styled.div`
   gap: 24px;
 `;
 
+export const TabsContainer = styled.div`
+  /* 탭 컨테이너 */
+  padding: 16px;
+`;
+
+export const TabContent = styled.div`
+  /* 탭 컨텐츠 */
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding-top: 20px;
+`;
+
 export const Section = styled.section`
   /* 섹션 */
   display: flex;
@@ -31,12 +44,21 @@ export const IconSection = styled.section`
 
 export const SectionHeader = styled.h2`
   /* 섹션 헤더 (큰 제목) */
-  font-size: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 16px;
   font-weight: 700;
   color: var(--foreground);
   padding-bottom: 8px;
   border-bottom: 2px solid var(--primary);
-  margin-bottom: 8px;
+`;
+
+export const MemberCount = styled.span`
+  /* 멤버 수 */
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--muted-foreground);
 `;
 
 export const SectionTitle = styled.h3`
@@ -172,4 +194,40 @@ export const EmptyRequests = styled.p`
   padding: 24px;
   background-color: var(--muted);
   border-radius: 12px;
+`;
+
+/* =============================================
+   위험 구역 스타일
+   ============================================= */
+
+export const DangerZone = styled.div`
+  /* 위험 구역 */
+  background-color: hsl(0 84% 60% / 0.1);
+  border: 1px solid hsl(0 84% 60% / 0.3);
+  border-radius: 12px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+`;
+
+export const DangerTitle = styled.h3`
+  /* 위험 구역 제목 */
+  font-size: 16px;
+  font-weight: 700;
+  color: hsl(0 84% 60%);
+`;
+
+export const DangerDescription = styled.p`
+  /* 위험 구역 설명 */
+  font-size: 13px;
+  color: var(--muted-foreground);
+  line-height: 1.5;
+`;
+
+export const DeleteButton = styled(Button)`
+  /* 삭제 버튼 */
+  gap: 8px;
+  height: 44px;
+  font-weight: 600;
 `;

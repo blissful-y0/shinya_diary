@@ -36,11 +36,9 @@ export default function WritePage({ params }: WritePageProps) {
   /* 수정 모드: 기존 다이어리 로드 */
   useEffect(() => {
     const init = async () => {
-      const {
-        getMyDiary,
-        checkTodayDiary,
-        isGroupMember,
-      } = await import("@/lib/mock/services");
+      const { getMyDiary, checkTodayDiary, isGroupMember } = await import(
+        "@/lib/mock/services"
+      );
 
       /* 멤버 여부 확인 - 비멤버는 그룹 목록으로 리다이렉트 */
       if (!isGroupMember(groupId)) {
@@ -161,7 +159,8 @@ export default function WritePage({ params }: WritePageProps) {
     }
   };
 
-  const canSubmit = (content.trim() || imageFile || imagePreview) && !isSubmitting;
+  const canSubmit =
+    (content.trim() || imageFile || imagePreview) && !isSubmitting;
 
   return (
     <MobileLayout
@@ -216,7 +215,7 @@ export default function WritePage({ params }: WritePageProps) {
           ) : (
             <>
               <Check size={20} />
-              {isEditing ? "수정 완료" : "작성 완료"}
+              {isEditing ? "수정" : "작성"}
             </>
           )}
         </S.SubmitButton>
