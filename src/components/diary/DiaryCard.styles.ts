@@ -136,6 +136,7 @@ export const CommentToggle = styled.button`
   /* 코멘트 토글 버튼 */
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 6px;
   padding: 12px 16px;
   font-size: 13px;
