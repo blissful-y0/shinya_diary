@@ -21,8 +21,12 @@ export async function getAuthUser() {
 /**
  * 성공 응답
  */
-export function apiResponse<T>(data: T, status = 200) {
-  return NextResponse.json({ success: true, data }, { status });
+export function apiResponse<T>(
+  data: T,
+  status = 200,
+  meta?: Record<string, unknown>
+) {
+  return NextResponse.json({ success: true, data, ...meta }, { status });
 }
 
 /**

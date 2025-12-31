@@ -18,27 +18,29 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
   const { diaryId } = await params;
   const supabase = await createClient();
 
-  const { data, error: queryError } = await supabase
+  // 다이어리 조회
+  const { data: diary, error: queryError } = await supabase
     .from("diaries")
-    .select(`
-      *,
-      author:group_members!inner(
-        nickname,
-        avatar_url
-      )
-    `)
+    .select("*")
     .eq("id", diaryId)
     .single();
 
-  if (queryError) {
-    return apiError("다이어리 조회 실패", 500);
-  }
-
-  if (!data) {
+  if (queryError || !diary) {
     return apiError("다이어리를 찾을 수 없습니다", 404);
   }
 
-  return apiResponse(data);
+  // 작성자 정보 조회
+  const { data: member } = await supabase
+    .from("group_members")
+    .select("nickname, avatar_url")
+    .eq("group_id", diary.group_id)
+    .eq("user_id", diary.user_id)
+    .single();
+
+  return apiResponse({
+    ...diary,
+    author: member || null,
+  });
 }
 
 /**

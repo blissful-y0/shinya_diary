@@ -16,7 +16,11 @@
       "Bash(git commit:*)",
       "Bash(find:*)",
       "Bash(wc:*)",
-      "Bash(git revert:*)"
+      "Bash(git revert:*)",
+      "Bash(supabase --version:*)",
+      "Bash(cat:*)",
+      "Bash(supabase link:*)",
+      "Bash(supabase db push:*)"
     ]
   }
 }
