@@ -1,13 +1,13 @@
-import { createClient } from "@/lib/supabase/server";
-import { NextResponse } from "next/server";
+import { createEdgeClient } from "@/lib/supabase/edge";
+import { NextResponse, type NextRequest } from "next/server";
 
 export const runtime = "edge";
 
 /**
  * GET /api/auth/me - 현재 로그인한 사용자 정보 조회
  */
-export async function GET() {
-  const supabase = await createClient();
+export async function GET(request: NextRequest) {
+  const supabase = createEdgeClient(request);
 
   const { data: { user }, error } = await supabase.auth.getUser();
 

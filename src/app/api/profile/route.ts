@@ -1,13 +1,13 @@
-import { createClient } from "@/lib/supabase/server";
-import { NextResponse } from "next/server";
+import { createEdgeClient } from "@/lib/supabase/edge";
+import { NextResponse, type NextRequest } from "next/server";
 
 export const runtime = "edge";
 
 /**
  * GET /api/profile - 현재 사용자 프로필 조회
  */
-export async function GET() {
-  const supabase = await createClient();
+export async function GET(request: NextRequest) {
+  const supabase = createEdgeClient(request);
 
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) {
@@ -96,8 +96,8 @@ export async function GET() {
 /**
  * PATCH /api/profile - 프로필 업데이트
  */
-export async function PATCH(request: Request) {
-  const supabase = await createClient();
+export async function PATCH(request: NextRequest) {
+  const supabase = createEdgeClient(request);
 
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) {
