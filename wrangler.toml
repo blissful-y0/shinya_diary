@@ -1,0 +1,13 @@
+name = "shinya-diary"
+compatibility_date = "2024-12-30"
+compatibility_flags = ["nodejs_compat"]
+pages_build_output_dir = ".vercel/output/static"
+
+# Production 환경 변수는 Cloudflare Dashboard에서 설정
+# 또는 .dev.vars 파일 사용 (gitignore에 추가됨)
+
+[env.preview]
+# Preview 환경 (PR, branch 배포)
+
+[env.production]
+# Production 환경

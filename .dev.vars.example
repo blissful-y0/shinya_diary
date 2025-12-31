@@ -1,0 +1,14 @@
+# Cloudflare Pages 로컬 개발용 환경 변수
+# 이 파일을 복사해서 .dev.vars 로 저장하세요
+
+# Supabase
+NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
+NEXT_PUBLIC_SITE_URL=http://localhost:3000
+
+# Cloudflare R2
+R2_ENDPOINT=https://your-account-id.r2.cloudflarestorage.com
+R2_ACCESS_KEY_ID=your-access-key
+R2_SECRET_ACCESS_KEY=your-secret-key
+R2_BUCKET_NAME=shinya-diary
+R2_PUBLIC_URL=https://cdn.your-domain.com
