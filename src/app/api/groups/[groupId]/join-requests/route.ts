@@ -56,30 +56,29 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
   const { groupId } = await params;
   const supabase = await createClient();
 
-  // 이미 멤버인지 확인
-  const { data: existingMember } = await supabase
-    .from("group_members")
-    .select("id")
-    .eq("group_id", groupId)
-    .eq("user_id", user!.id)
-    .single();
+  // 멤버 여부 + 기존 요청을 병렬로 확인
+  const [memberResult, requestResult] = await Promise.all([
+    supabase
+      .from("group_members")
+      .select("id")
+      .eq("group_id", groupId)
+      .eq("user_id", user!.id)
+      .single(),
+    supabase
+      .from("join_requests")
+      .select("id, status")
+      .eq("group_id", groupId)
+      .eq("user_id", user!.id)
+      .eq("status", "pending")
+      .single(),
+  ]);
 
-  if (existingMember) {
+  if (memberResult.data) {
     return apiError("이미 그룹 멤버입니다", 400);
   }
 
-  // 이미 요청했는지 확인
-  const { data: existingRequest } = await supabase
-    .from("join_requests")
-    .select("id, status")
-    .eq("group_id", groupId)
-    .eq("user_id", user!.id)
-    .single();
-
-  if (existingRequest) {
-    if (existingRequest.status === "pending") {
-      return apiError("이미 가입 요청을 보냈습니다", 400);
-    }
+  if (requestResult.data) {
+    return apiError("이미 가입 요청을 보냈습니다", 400);
   }
 
   const { error: insertError } = await supabase.from("join_requests").insert({

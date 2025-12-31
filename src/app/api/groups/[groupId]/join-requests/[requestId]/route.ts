@@ -25,30 +25,34 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
 
   const supabase = await createClient();
 
-  // 방장 확인
-  const { data: group } = await supabase
-    .from("groups")
-    .select("owner_id")
-    .eq("id", groupId)
-    .single();
+  // 방장 확인 + 요청 정보 + 멤버 수를 병렬로 조회
+  const [groupResult, requestResult, memberCountResult] = await Promise.all([
+    supabase
+      .from("groups")
+      .select("owner_id")
+      .eq("id", groupId)
+      .single(),
+    supabase
+      .from("join_requests")
+      .select("user_id, status")
+      .eq("id", requestId)
+      .eq("group_id", groupId)
+      .single(),
+    supabase
+      .from("group_members")
+      .select("id", { count: "exact", head: true })
+      .eq("group_id", groupId),
+  ]);
 
-  if (!group || group.owner_id !== user!.id) {
+  if (!groupResult.data || groupResult.data.owner_id !== user!.id) {
     return apiError("권한이 없습니다", 403);
   }
 
-  // 요청 정보 조회
-  const { data: joinRequest, error: requestError } = await supabase
-    .from("join_requests")
-    .select("*")
-    .eq("id", requestId)
-    .eq("group_id", groupId)
-    .single();
-
-  if (requestError || !joinRequest) {
+  if (!requestResult.data) {
     return apiError("가입 요청을 찾을 수 없습니다", 404);
   }
 
-  if (joinRequest.status !== "pending") {
+  if (requestResult.data.status !== "pending") {
     return apiError("이미 처리된 요청입니다", 400);
   }
 
@@ -57,31 +61,25 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
       return apiError("닉네임이 필요합니다");
     }
 
-    // 멤버 수 확인 (최대 4명)
-    const { count } = await supabase
-      .from("group_members")
-      .select("id", { count: "exact", head: true })
-      .eq("group_id", groupId);
-
-    if (count && count >= 4) {
+    if (memberCountResult.count && memberCountResult.count >= 4) {
       return apiError("그룹 최대 인원(4명)을 초과했습니다", 400);
     }
 
-    // 요청 상태 변경
-    await supabase
-      .from("join_requests")
-      .update({ status: "approved" })
-      .eq("id", requestId);
+    // 요청 상태 변경 + 멤버 추가를 병렬로 처리
+    const [, memberResult] = await Promise.all([
+      supabase
+        .from("join_requests")
+        .update({ status: "approved" })
+        .eq("id", requestId),
+      supabase.from("group_members").insert({
+        group_id: groupId,
+        user_id: requestResult.data.user_id,
+        nickname,
+      }),
+    ]);
 
-    // 멤버로 추가
-    const { error: memberError } = await supabase.from("group_members").insert({
-      group_id: groupId,
-      user_id: joinRequest.user_id,
-      nickname,
-    });
-
-    if (memberError) {
-      return apiError(memberError.message, 500);
+    if (memberResult.error) {
+      return apiError(memberResult.error.message, 500);
     }
   } else {
     // 거절

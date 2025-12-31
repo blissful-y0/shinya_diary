@@ -29,28 +29,28 @@ export async function GET() {
 
   const groupIds = memberships.map((m) => m.group_id);
 
-  // 그룹 정보 조회
-  const { data: groups, error: groupError } = await supabase
-    .from("groups")
-    .select("*")
-    .in("id", groupIds);
+  // 그룹 정보와 멤버 수를 병렬로 조회
+  const [groupsResult, memberCountsResult] = await Promise.all([
+    supabase
+      .from("groups")
+      .select("id, name, owner_id, icon_url, cover_image_url, invite_code, created_at")
+      .in("id", groupIds),
+    supabase
+      .from("group_members")
+      .select("group_id")
+      .in("group_id", groupIds),
+  ]);
 
-  if (groupError) {
+  if (groupsResult.error) {
     return apiError("그룹 조회 실패", 500);
   }
 
-  // 각 그룹의 멤버 수 조회
-  const { data: memberCounts } = await supabase
-    .from("group_members")
-    .select("group_id")
-    .in("group_id", groupIds);
-
   const countMap = new Map<string, number>();
-  memberCounts?.forEach((m) => {
+  memberCountsResult.data?.forEach((m) => {
     countMap.set(m.group_id, (countMap.get(m.group_id) || 0) + 1);
   });
 
-  const result = groups?.map((g) => ({
+  const result = groupsResult.data?.map((g) => ({
     ...g,
     memberCount: countMap.get(g.id) || 0,
   }));

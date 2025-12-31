@@ -21,7 +21,7 @@ export async function GET(request: NextRequest) {
 
   const { data, error: queryError } = await supabase
     .from("groups")
-    .select("*")
+    .select("id, name, owner_id, icon_url, cover_image_url, invite_code, created_at")
     .eq("invite_code", code.toUpperCase())
     .single();
 

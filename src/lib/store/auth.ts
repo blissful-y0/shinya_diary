@@ -12,9 +12,7 @@ export const profileAtom = atomWithStorage<Profile | null>("shinya:profile", nul
 
 // 프로필 통계 (localStorage 저장)
 export const profileStatsAtom = atomWithStorage<ProfileStats>("shinya:stats", {
-  diaryCount: 0,
   groupCount: 0,
-  streakDays: 0,
 });
 
 // 인증 상태 로딩 중

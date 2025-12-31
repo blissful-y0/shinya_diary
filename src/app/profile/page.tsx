@@ -17,7 +17,8 @@ import * as S from "./styles/page.styles";
    ============================================= */
 
 export default function ProfilePage() {
-  const { profile, stats, isLoading, signOut, deleteAccount, refreshProfile } = useRequireAuth();
+  const { profile, stats, isLoading, signOut, deleteAccount, refreshProfile } =
+    useRequireAuth();
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -31,19 +32,16 @@ export default function ProfilePage() {
     await deleteAccount();
   };
 
-  const handleProfileUpdate = async (nickname: string, avatarUrl: string | null) => {
+  const handleProfileUpdate = async (
+    nickname: string,
+    avatarUrl: string | null
+  ) => {
     const result = await updateMyProfile({ nickname, avatarUrl });
     if (result.success) {
       await refreshProfile();
     }
     return result.success;
   };
-
-  const headerRight = (
-    <S.SettingsButton>
-      <Settings size={20} />
-    </S.SettingsButton>
-  );
 
   const getInitials = (name: string | null, email: string) => {
     if (name) return name.charAt(0).toUpperCase();
@@ -61,7 +59,7 @@ export default function ProfilePage() {
   }
 
   return (
-    <MobileLayout headerTitle="프로필" headerRight={headerRight}>
+    <MobileLayout headerTitle="프로필">
       <S.Container>
         {/* 프로필 헤더 */}
         <S.ProfileHeader>
@@ -72,7 +70,9 @@ export default function ProfilePage() {
             </AvatarFallback>
           </Avatar>
           <S.ProfileInfo>
-            <S.ProfileName>{profile?.nickname || "닉네임을 설정해주세요"}</S.ProfileName>
+            <S.ProfileName>
+              {profile?.nickname || "닉네임을 설정해주세요"}
+            </S.ProfileName>
             <S.ProfileEmail>{profile?.email}</S.ProfileEmail>
           </S.ProfileInfo>
           <S.EditProfileButton
@@ -84,21 +84,11 @@ export default function ProfilePage() {
           </S.EditProfileButton>
         </S.ProfileHeader>
 
-        {/* 통계 */}
+        {/* 참여 그룹 */}
         <S.StatsCard>
-          <S.StatItem>
-            <S.StatValue>{stats.diaryCount}</S.StatValue>
-            <S.StatLabel>작성한 일기</S.StatLabel>
-          </S.StatItem>
-          <S.StatDivider />
           <S.StatItem>
             <S.StatValue>{stats.groupCount}</S.StatValue>
             <S.StatLabel>참여 그룹</S.StatLabel>
-          </S.StatItem>
-          <S.StatDivider />
-          <S.StatItem>
-            <S.StatValue>{stats.streakDays}</S.StatValue>
-            <S.StatLabel>연속 작성</S.StatLabel>
           </S.StatItem>
         </S.StatsCard>
 

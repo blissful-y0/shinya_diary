@@ -25,24 +25,20 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
 
   const supabase = await createClient();
 
-  // 본인 댓글인지 확인
-  const { data: comment } = await supabase
-    .from("comments")
-    .select("user_id")
-    .eq("id", commentId)
-    .single();
-
-  if (!comment || comment.user_id !== user!.id) {
-    return apiError("권한이 없습니다", 403);
-  }
-
-  const { error: updateError } = await supabase
+  // user_id 조건으로 권한 확인 + 업데이트를 한 번에 처리
+  const { data, error: updateError } = await supabase
     .from("comments")
     .update({ content })
-    .eq("id", commentId);
+    .eq("id", commentId)
+    .eq("user_id", user!.id)
+    .select("id");
 
   if (updateError) {
     return apiError(updateError.message, 500);
+  }
+
+  if (!data || data.length === 0) {
+    return apiError("권한이 없습니다", 403);
   }
 
   return apiResponse({ success: true });
@@ -58,24 +54,20 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
   const { commentId } = await params;
   const supabase = await createClient();
 
-  // 본인 댓글인지 확인
-  const { data: comment } = await supabase
-    .from("comments")
-    .select("user_id")
-    .eq("id", commentId)
-    .single();
-
-  if (!comment || comment.user_id !== user!.id) {
-    return apiError("권한이 없습니다", 403);
-  }
-
-  const { error: deleteError } = await supabase
+  // user_id 조건으로 권한 확인 + 삭제를 한 번에 처리
+  const { data, error: deleteError } = await supabase
     .from("comments")
     .delete()
-    .eq("id", commentId);
+    .eq("id", commentId)
+    .eq("user_id", user!.id)
+    .select("id");
 
   if (deleteError) {
     return apiError(deleteError.message, 500);
+  }
+
+  if (!data || data.length === 0) {
+    return apiError("권한이 없습니다", 403);
   }
 
   return apiResponse({ success: true });

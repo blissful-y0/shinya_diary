@@ -17,6 +17,7 @@ import {
   getDiaries,
   checkTodayDiary,
   getCommentCount,
+  getGroupMembers,
   type Diary,
 } from "@/lib/api/client";
 import { useRequireAuth } from "@/lib/hooks/useAuth";
@@ -54,6 +55,10 @@ export default function GroupDetailPage({ params }: GroupDetailPageProps) {
   const [isLoading, setIsLoading] = useState(true);
   const [groupName, setGroupName] = useState("");
   const [coverImageUrl, setCoverImageUrl] = useState<string | null>(null);
+  const [myGroupProfile, setMyGroupProfile] = useState<{
+    nickname: string;
+    avatar_url: string | null;
+  } | null>(null);
   const [deleteDialog, setDeleteDialog] = useState<{
     open: boolean;
     diaryId: string;
@@ -68,8 +73,12 @@ export default function GroupDetailPage({ params }: GroupDetailPageProps) {
 
     setIsLoading(true);
 
-    /* 그룹 정보 */
-    const groupRes = await getGroup(groupId);
+    /* 그룹 정보 + 멤버 정보 병렬 조회 */
+    const [groupRes, membersRes] = await Promise.all([
+      getGroup(groupId),
+      getGroupMembers(groupId),
+    ]);
+
     if (!groupRes.success || !groupRes.data) {
       toast.error("그룹을 찾을 수 없습니다");
       router.replace("/groups");
@@ -77,6 +86,17 @@ export default function GroupDetailPage({ params }: GroupDetailPageProps) {
     }
     setGroupName(groupRes.data.name);
     setCoverImageUrl(groupRes.data.cover_image_url);
+
+    /* 현재 사용자의 그룹 프로필 저장 */
+    if (membersRes.success && membersRes.data) {
+      const myMember = membersRes.data.find((m) => m.user_id === profile.id);
+      if (myMember) {
+        setMyGroupProfile({
+          nickname: myMember.nickname || profile.nickname || "나",
+          avatar_url: myMember.avatar_url || profile.avatar_url,
+        });
+      }
+    }
 
     /* 날짜별 다이어리 조회 */
     const dateStr = formatDateISO(selectedDate);
@@ -213,6 +233,7 @@ export default function GroupDetailPage({ params }: GroupDetailPageProps) {
                   createdAt={diary.createdAt}
                   isOwn={diary.isOwn}
                   commentCount={diary.commentCount}
+                  currentUserAuthor={myGroupProfile}
                   onEdit={() =>
                     (window.location.href = `/groups/${groupId}/write?edit=${diary.id}`)
                   }

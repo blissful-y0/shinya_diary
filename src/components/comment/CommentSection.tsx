@@ -24,11 +24,13 @@ import * as S from "./CommentSection.styles";
 interface CommentSectionProps {
   diaryId: string;
   groupId: string;
+  currentUserAuthor?: { nickname: string; avatar_url: string | null } | null;
 }
 
 export default function CommentSection({
   diaryId,
   groupId,
+  currentUserAuthor,
 }: CommentSectionProps) {
   const [comments, setComments] = useState<Comment[]>([]);
   const [newComment, setNewComment] = useState("");
@@ -70,21 +72,49 @@ export default function CommentSection({
     }
   };
 
-  /* 코멘트 작성 */
+  /* 코멘트 작성 (Optimistic Update) */
   const handleSubmit = async () => {
     if (!newComment.trim() || isSubmitting) return;
 
-    setIsSubmitting(true);
-    const result = await apiCreateComment(diaryId, newComment.trim());
+    const content = newComment.trim();
+    const tempId = `temp-${Date.now()}`;
+    const optimisticComment: Comment = {
+      id: tempId,
+      diary_id: diaryId,
+      user_id: "",
+      content,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+      author: {
+        nickname: currentUserAuthor?.nickname || "나",
+        avatar_url: currentUserAuthor?.avatar_url || null,
+      },
+      isOwn: true,
+    };
 
-    if (result.success) {
-      await loadComments();
-      setNewComment("");
-      if (textareaRef.current) {
-        textareaRef.current.style.height = "36px";
-      }
+    // UI 먼저 업데이트
+    setComments((prev) => [...prev, optimisticComment]);
+    setNewComment("");
+    if (textareaRef.current) {
+      textareaRef.current.style.height = "36px";
+    }
+
+    setIsSubmitting(true);
+    const result = await apiCreateComment(diaryId, content);
+
+    if (result.success && result.data) {
+      // 실제 데이터로 교체 (author는 유지)
+      setComments((prev) =>
+        prev.map((c) =>
+          c.id === tempId
+            ? { ...result.data!, author: c.author, isOwn: true }
+            : c
+        )
+      );
       toast.success("코멘트를 작성했습니다.");
     } else {
+      // 롤백
+      setComments((prev) => prev.filter((c) => c.id !== tempId));
       toast.error("코멘트 작성에 실패했습니다.");
     }
 
@@ -111,33 +141,57 @@ export default function CommentSection({
     setEditContent("");
   };
 
-  /* 수정 저장 */
+  /* 수정 저장 (Optimistic Update) */
   const handleEditSave = async (commentId: string) => {
     if (!editContent.trim()) {
       toast.error("내용을 입력해주세요.");
       return;
     }
 
-    const result = await apiUpdateComment(commentId, editContent.trim());
+    const newContent = editContent.trim();
+    const originalComment = comments.find((c) => c.id === commentId);
+
+    // UI 먼저 업데이트
+    setComments((prev) =>
+      prev.map((c) =>
+        c.id === commentId
+          ? { ...c, content: newContent, updated_at: new Date().toISOString() }
+          : c
+      )
+    );
+    setEditingId(null);
+    setEditContent("");
+
+    const result = await apiUpdateComment(commentId, newContent);
 
     if (result.success) {
-      await loadComments();
-      setEditingId(null);
-      setEditContent("");
       toast.success("코멘트를 수정했습니다.");
     } else {
+      // 롤백
+      if (originalComment) {
+        setComments((prev) =>
+          prev.map((c) => (c.id === commentId ? originalComment : c))
+        );
+      }
       toast.error("수정에 실패했습니다.");
     }
   };
 
-  /* 삭제 실행 */
+  /* 삭제 실행 (Optimistic Update) */
   const handleDelete = async () => {
-    const result = await apiDeleteComment(deleteDialog.commentId);
+    const { commentId } = deleteDialog;
+    const originalComments = [...comments];
+
+    // UI 먼저 업데이트
+    setComments((prev) => prev.filter((c) => c.id !== commentId));
+
+    const result = await apiDeleteComment(commentId);
 
     if (result.success) {
-      await loadComments();
       toast.success("코멘트를 삭제했습니다.");
     } else {
+      // 롤백
+      setComments(originalComments);
       toast.error("삭제에 실패했습니다.");
     }
   };

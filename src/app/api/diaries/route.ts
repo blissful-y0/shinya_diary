@@ -26,51 +26,43 @@ export async function GET(request: NextRequest) {
   const today = new Date().toISOString().split("T")[0];
   const isToday = date === today;
 
-  // 오늘이면 먼저 작성 여부 확인
-  let hasWrittenToday = false;
-  if (isToday) {
-    const { data: myDiary } = await supabase
-      .from("diaries")
-      .select("id")
-      .eq("group_id", groupId)
-      .eq("user_id", user!.id)
-      .eq("date", date)
-      .single();
-
-    hasWrittenToday = !!myDiary;
-  }
-
-  // 다이어리 조회
-  let query = supabase
+  // 다이어리 목록 조회 (한 번의 쿼리로 작성 여부도 확인)
+  const { data: allDiaries, error: queryError } = await supabase
     .from("diaries")
-    .select("*")
+    .select("id, group_id, user_id, content, image_url, date, created_at, sticker_data")
     .eq("group_id", groupId)
     .eq("date", date)
     .order("created_at", { ascending: false });
-
-  // 오늘인데 아직 안 썼으면 자기 글만 (없으면 빈 배열)
-  if (isToday && !hasWrittenToday) {
-    query = query.eq("user_id", user!.id);
-  }
-
-  const { data: diaries, error: queryError } = await query;
 
   if (queryError) {
     console.error("Diary query error:", queryError);
     return apiError(`다이어리 조회 실패: ${queryError.message}`, 500);
   }
 
-  // 작성자 정보 별도 조회
-  const userIds = [...new Set(diaries?.map(d => d.user_id) || [])];
+  // 내 다이어리 존재 여부 확인
+  const hasWrittenToday = allDiaries?.some(d => d.user_id === user!.id) || false;
+
+  // 오늘인데 안 썼으면 빈 배열 반환
+  if (isToday && !hasWrittenToday) {
+    return apiResponse([], 200, { hasWrittenToday: false });
+  }
+
+  // 작성자 정보 조회
+  const userIds = [...new Set(allDiaries?.map(d => d.user_id) || [])];
+
+  if (userIds.length === 0) {
+    return apiResponse([], 200, { hasWrittenToday });
+  }
+
   const { data: members } = await supabase
     .from("group_members")
     .select("user_id, nickname, avatar_url")
     .eq("group_id", groupId)
-    .in("user_id", userIds.length > 0 ? userIds : ["none"]);
+    .in("user_id", userIds);
 
   const memberMap = new Map(members?.map(m => [m.user_id, m]) || []);
 
-  const data = diaries?.map(diary => ({
+  const data = allDiaries?.map(diary => ({
     ...diary,
     author: memberMap.get(diary.user_id) || null,
   }));
@@ -94,28 +86,28 @@ export async function POST(request: NextRequest) {
 
   const supabase = await createClient();
 
-  // 멤버 확인
-  const { data: member } = await supabase
-    .from("group_members")
-    .select("id")
-    .eq("group_id", groupId)
-    .eq("user_id", user!.id)
-    .single();
+  // 멤버 확인과 기존 작성 여부를 병렬로 확인
+  const [memberResult, existingResult] = await Promise.all([
+    supabase
+      .from("group_members")
+      .select("id")
+      .eq("group_id", groupId)
+      .eq("user_id", user!.id)
+      .single(),
+    supabase
+      .from("diaries")
+      .select("id")
+      .eq("group_id", groupId)
+      .eq("user_id", user!.id)
+      .eq("date", date)
+      .single(),
+  ]);
 
-  if (!member) {
+  if (!memberResult.data) {
     return apiError("그룹 멤버가 아닙니다", 403);
   }
 
-  // 이미 작성했는지 확인
-  const { data: existing } = await supabase
-    .from("diaries")
-    .select("id")
-    .eq("group_id", groupId)
-    .eq("user_id", user!.id)
-    .eq("date", date)
-    .single();
-
-  if (existing) {
+  if (existingResult.data) {
     return apiError("이미 오늘의 다이어리를 작성했습니다", 400);
   }
 

@@ -23,7 +23,7 @@ export async function GET(request: NextRequest) {
   // 댓글 조회
   const { data: comments, error: queryError } = await supabase
     .from("comments")
-    .select("*")
+    .select("id, diary_id, user_id, content, created_at, updated_at")
     .eq("diary_id", diaryId)
     .order("created_at", { ascending: true });
 

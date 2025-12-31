@@ -32,7 +32,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
   // 멤버 목록
   const { data: members, error: memberError } = await supabase
     .from("group_members")
-    .select("*")
+    .select("id, user_id, group_id, nickname, avatar_url, joined_at")
     .eq("group_id", groupId)
     .order("joined_at", { ascending: true });
 

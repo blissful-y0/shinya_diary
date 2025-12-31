@@ -17,77 +17,32 @@ export async function GET(request: NextRequest) {
     );
   }
 
-  const { data: profile, error } = await supabase
-    .from("profiles")
-    .select("*")
-    .eq("id", user.id)
-    .single();
-
-  if (error) {
-    return NextResponse.json(
-      { success: false, error: error.message },
-      { status: 500 }
-    );
-  }
-
-  // 통계 조회
-  const [diaryResult, groupResult] = await Promise.all([
+  // 프로필과 그룹 수를 병렬로 조회
+  const [profileResult, groupCountResult] = await Promise.all([
     supabase
-      .from("diaries")
-      .select("*", { count: "exact", head: true })
-      .eq("user_id", user.id),
+      .from("profiles")
+      .select("id, email, nickname, avatar_url, provider, created_at, updated_at")
+      .eq("id", user.id)
+      .single(),
     supabase
       .from("group_members")
       .select("*", { count: "exact", head: true })
       .eq("user_id", user.id),
   ]);
 
-  // 연속 작성일 계산
-  const { data: diaries } = await supabase
-    .from("diaries")
-    .select("date")
-    .eq("user_id", user.id)
-    .order("date", { ascending: false })
-    .limit(100);
-
-  let streakDays = 0;
-  if (diaries && diaries.length > 0) {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-
-    const dates = [...new Set(diaries.map((d) => d.date))].sort().reverse();
-
-    for (let i = 0; i < dates.length; i++) {
-      const diaryDate = new Date(dates[i]);
-      diaryDate.setHours(0, 0, 0, 0);
-
-      const expectedDate = new Date(today);
-      expectedDate.setDate(expectedDate.getDate() - i);
-
-      if (diaryDate.getTime() === expectedDate.getTime()) {
-        streakDays++;
-      } else if (i === 0) {
-        const yesterday = new Date(today);
-        yesterday.setDate(yesterday.getDate() - 1);
-        if (diaryDate.getTime() === yesterday.getTime()) {
-          streakDays++;
-        } else {
-          break;
-        }
-      } else {
-        break;
-      }
-    }
+  if (profileResult.error) {
+    return NextResponse.json(
+      { success: false, error: profileResult.error.message },
+      { status: 500 }
+    );
   }
 
   return NextResponse.json({
     success: true,
     data: {
-      profile,
+      profile: profileResult.data,
       stats: {
-        diaryCount: diaryResult.count || 0,
-        groupCount: groupResult.count || 0,
-        streakDays,
+        groupCount: groupCountResult.count || 0,
       },
     },
   });

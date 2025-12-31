@@ -339,9 +339,7 @@ export interface Profile {
 }
 
 export interface ProfileStats {
-  diaryCount: number;
   groupCount: number;
-  streakDays: number;
 }
 
 export async function getMyProfile() {

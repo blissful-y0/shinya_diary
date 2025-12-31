@@ -20,7 +20,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
 
   const { data, error: queryError } = await supabase
     .from("groups")
-    .select("*")
+    .select("id, name, owner_id, icon_url, cover_image_url, invite_code, created_at")
     .eq("id", groupId)
     .single();
 
