@@ -16,6 +16,10 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+  // styled-components SSR 지원
+  compiler: {
+    styledComponents: true,
+  },
 };
 
 export default nextConfig;
