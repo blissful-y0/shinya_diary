@@ -1,18 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useState } from "react";
 import MobileLayout from "@/components/layout/MobileLayout";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Settings, LogOut, ChevronRight } from "lucide-react";
-import {
-  signOut,
-  deleteAccount,
-  getMyProfile,
-  updateMyProfile,
-  type Profile,
-  type ProfileStats,
-} from "@/lib/api/client";
+import { updateMyProfile } from "@/lib/api/client";
+import { useRequireAuth } from "@/lib/hooks/useAuth";
 import { EditProfileModal } from "@/components/profile/EditProfileModal";
 import DeleteConfirmDialog from "@/components/common/DeleteConfirmDialog";
 import * as S from "./styles/page.styles";
@@ -24,35 +17,10 @@ import * as S from "./styles/page.styles";
    ============================================= */
 
 export default function ProfilePage() {
-  const router = useRouter();
-  const [profile, setProfile] = useState<Profile | null>(null);
-  const [stats, setStats] = useState<ProfileStats>({
-    diaryCount: 0,
-    groupCount: 0,
-    streakDays: 0,
-  });
-  const [isLoading, setIsLoading] = useState(true);
+  const { profile, stats, isLoading, signOut, deleteAccount, refreshProfile } = useRequireAuth();
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
-
-  useEffect(() => {
-    loadProfile();
-  }, []);
-
-  const loadProfile = async () => {
-    setIsLoading(true);
-    const result = await getMyProfile();
-
-    if (!result.success || !result.data) {
-      router.push("/login");
-      return;
-    }
-
-    setProfile(result.data.profile);
-    setStats(result.data.stats);
-    setIsLoading(false);
-  };
 
   const handleLogout = async () => {
     await signOut();
@@ -66,7 +34,7 @@ export default function ProfilePage() {
   const handleProfileUpdate = async (nickname: string, avatarUrl: string | null) => {
     const result = await updateMyProfile({ nickname, avatarUrl });
     if (result.success) {
-      await loadProfile();
+      await refreshProfile();
     }
     return result.success;
   };

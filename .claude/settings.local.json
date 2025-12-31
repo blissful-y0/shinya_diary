@@ -20,7 +20,8 @@
       "Bash(supabase --version:*)",
       "Bash(cat:*)",
       "Bash(supabase link:*)",
-      "Bash(supabase db push:*)"
+      "Bash(supabase db push:*)",
+      "Bash(grep:*)"
     ]
   }
 }

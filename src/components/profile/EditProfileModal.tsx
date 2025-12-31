@@ -96,7 +96,6 @@ export function EditProfileModal({
               onChange={handleFileChange}
               style={{ display: "none" }}
             />
-            <AvatarHint>사진을 탭하여 변경</AvatarHint>
           </AvatarSection>
 
           {/* 닉네임 수정 */}
