@@ -1,17 +1,12 @@
-import { createClient } from "@/lib/supabase/client";
 import {
   convertToWebP,
-  generateWebPFilename,
   isValidImageFile,
   type ConversionOptions,
 } from "./imageConverter";
 
-const STORAGE_BUCKET = "diary-images";
-
 export interface UploadResult {
   success: boolean;
   url?: string;
-  path?: string;
   error?: string;
 }
 
@@ -22,21 +17,19 @@ export interface UploadProgress {
 }
 
 /**
- * Uploads an image to Supabase Storage after converting to WebP
+ * Uploads an image to Cloudflare R2 via API after converting to WebP
  * @param file - The image file to upload
- * @param userId - The user's ID for path namespacing
+ * @param folder - The folder name (default: "diaries")
  * @param options - Optional conversion options
  * @param onProgress - Optional progress callback
  * @returns Promise<UploadResult>
  */
-export async function uploadDiaryImage(
+export async function uploadImage(
   file: File,
-  userId: string,
+  folder: string = "diaries",
   options?: ConversionOptions,
   onProgress?: (progress: UploadProgress) => void
 ): Promise<UploadResult> {
-  const supabase = createClient();
-
   try {
     // Stage 1: Validate
     onProgress?.({
@@ -60,34 +53,31 @@ export async function uploadDiaryImage(
     });
 
     const webpBlob = await convertToWebP(file, options);
-    const filePath = generateWebPFilename(file.name, userId);
 
-    // Stage 3: Upload to Supabase Storage
+    // Stage 3: Upload to R2 via API
     onProgress?.({
       stage: "uploading",
       progress: 60,
       message: "업로드 중...",
     });
 
-    const { data, error } = await supabase.storage
-      .from(STORAGE_BUCKET)
-      .upload(filePath, webpBlob, {
-        contentType: "image/webp",
-        cacheControl: "3600",
-        upsert: false,
-      });
+    const formData = new FormData();
+    formData.append("file", webpBlob, "image.webp");
+    formData.append("folder", folder);
 
-    if (error) {
+    const response = await fetch("/api/upload", {
+      method: "POST",
+      body: formData,
+    });
+
+    const result = await response.json();
+
+    if (!result.success) {
       return {
         success: false,
-        error: `업로드 실패: ${error.message}`,
+        error: result.error || "업로드 실패",
       };
     }
-
-    // Get public URL
-    const {
-      data: { publicUrl },
-    } = supabase.storage.from(STORAGE_BUCKET).getPublicUrl(data.path);
 
     onProgress?.({
       stage: "complete",
@@ -97,8 +87,7 @@ export async function uploadDiaryImage(
 
     return {
       success: true,
-      url: publicUrl,
-      path: data.path,
+      url: result.data.url,
     };
   } catch (err) {
     const errorMessage =
@@ -118,34 +107,37 @@ export async function uploadDiaryImage(
 }
 
 /**
- * Deletes an image from Supabase Storage
- * @param path - The file path to delete
- * @returns Promise<boolean>
+ * Legacy function - 기존 코드 호환용
+ * @deprecated Use uploadImage instead
  */
-export async function deleteDiaryImage(path: string): Promise<boolean> {
-  const supabase = createClient();
-
-  const { error } = await supabase.storage.from(STORAGE_BUCKET).remove([path]);
-
-  return !error;
+export async function uploadDiaryImage(
+  file: File,
+  userId: string,
+  options?: ConversionOptions,
+  onProgress?: (progress: UploadProgress) => void
+): Promise<UploadResult> {
+  return uploadImage(file, "diaries", options, onProgress);
 }
 
 /**
- * Gets a signed URL for temporary access (if bucket is private)
- * @param path - The file path
- * @param expiresIn - Expiration time in seconds (default: 1 hour)
- * @returns Promise<string | null>
+ * Upload avatar image
  */
-export async function getSignedUrl(
-  path: string,
-  expiresIn: number = 3600
-): Promise<string | null> {
-  const supabase = createClient();
+export async function uploadAvatar(
+  file: File,
+  options?: ConversionOptions,
+  onProgress?: (progress: UploadProgress) => void
+): Promise<UploadResult> {
+  return uploadImage(file, "avatars", options, onProgress);
+}
 
-  const { data, error } = await supabase.storage
-    .from(STORAGE_BUCKET)
-    .createSignedUrl(path, expiresIn);
-
-  if (error) return null;
-  return data.signedUrl;
+/**
+ * Upload group image (icon or cover)
+ */
+export async function uploadGroupImage(
+  file: File,
+  type: "icon" | "cover",
+  options?: ConversionOptions,
+  onProgress?: (progress: UploadProgress) => void
+): Promise<UploadResult> {
+  return uploadImage(file, `groups/${type}`, options, onProgress);
 }
