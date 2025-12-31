@@ -3,6 +3,8 @@
  * 모든 API 호출을 위한 공통 함수들
  */
 
+import { convertToWebP } from "@/lib/utils/image";
+
 interface ApiResponse<T> {
   success: boolean;
   data?: T;
@@ -62,9 +64,12 @@ export async function signOut() {
 }
 
 export async function deleteAccount() {
-  const result = await fetchApi<{ success: boolean }>("/api/auth/delete-account", {
-    method: "DELETE",
-  });
+  const result = await fetchApi<{ success: boolean }>(
+    "/api/auth/delete-account",
+    {
+      method: "DELETE",
+    }
+  );
   if (result.success) {
     window.location.href = "/login";
   }
@@ -113,7 +118,11 @@ export async function createGroup(name: string, nickname: string) {
 
 export async function updateGroup(
   groupId: string,
-  data: { name?: string; iconUrl?: string | null; coverImageUrl?: string | null }
+  data: {
+    name?: string;
+    iconUrl?: string | null;
+    coverImageUrl?: string | null;
+  }
 ) {
   return fetchApi<{ success: boolean }>(`/api/groups/${groupId}`, {
     method: "PATCH",
@@ -176,9 +185,12 @@ export async function getJoinRequests(groupId: string) {
 }
 
 export async function createJoinRequest(groupId: string) {
-  return fetchApi<{ success: boolean }>(`/api/groups/${groupId}/join-requests`, {
-    method: "POST",
-  });
+  return fetchApi<{ success: boolean }>(
+    `/api/groups/${groupId}/join-requests`,
+    {
+      method: "POST",
+    }
+  );
 }
 
 export async function handleJoinRequest(
@@ -216,19 +228,25 @@ export interface Diary {
 
 export async function getDiaries(groupId: string, date: string) {
   return fetchApi<Diary[]>(
-    `/api/diaries?groupId=${encodeURIComponent(groupId)}&date=${encodeURIComponent(date)}`
+    `/api/diaries?groupId=${encodeURIComponent(
+      groupId
+    )}&date=${encodeURIComponent(date)}`
   );
 }
 
 export async function getMyDiary(groupId: string, date: string) {
   return fetchApi<Diary | null>(
-    `/api/diaries/my?groupId=${encodeURIComponent(groupId)}&date=${encodeURIComponent(date)}`
+    `/api/diaries/my?groupId=${encodeURIComponent(
+      groupId
+    )}&date=${encodeURIComponent(date)}`
   );
 }
 
 export async function checkTodayDiary(groupId: string, date: string) {
   return fetchApi<{ hasWritten: boolean }>(
-    `/api/diaries/check?groupId=${encodeURIComponent(groupId)}&date=${encodeURIComponent(date)}`
+    `/api/diaries/check?groupId=${encodeURIComponent(
+      groupId
+    )}&date=${encodeURIComponent(date)}`
   );
 }
 
@@ -274,7 +292,9 @@ export interface Comment {
 
 export async function getComments(diaryId: string, groupId: string) {
   return fetchApi<Comment[]>(
-    `/api/comments?diaryId=${encodeURIComponent(diaryId)}&groupId=${encodeURIComponent(groupId)}`
+    `/api/comments?diaryId=${encodeURIComponent(
+      diaryId
+    )}&groupId=${encodeURIComponent(groupId)}`
   );
 }
 
@@ -343,11 +363,14 @@ export async function updateMyProfile(data: {
 // ============================================
 
 export async function uploadImage(file: File, folder: string = "diaries") {
-  const formData = new FormData();
-  formData.append("file", file);
-  formData.append("folder", folder);
-
   try {
+    // WebP로 변환 (이미 WebP인 경우 그대로 반환)
+    const webpFile = await convertToWebP(file);
+
+    const formData = new FormData();
+    formData.append("file", webpFile);
+    formData.append("folder", folder);
+
     const res = await fetch("/api/upload", {
       method: "POST",
       body: formData,
