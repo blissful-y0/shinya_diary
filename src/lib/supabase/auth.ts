@@ -1,23 +1,44 @@
 import { createClient } from "./client";
+import type { Provider } from "@supabase/supabase-js";
+
+/**
+ * Generic OAuth sign in
+ */
+export async function signInWithOAuth(provider: Provider) {
+  const supabase = createClient();
+
+  const options: Record<string, unknown> = {
+    redirectTo: `${window.location.origin}/auth/callback`,
+  };
+
+  // Provider-specific options
+  if (provider === "google") {
+    options.queryParams = {
+      access_type: "offline",
+      prompt: "consent",
+    };
+  }
+
+  const { data, error } = await supabase.auth.signInWithOAuth({
+    provider,
+    options,
+  });
+
+  return { data, error };
+}
 
 /**
  * Sign in with Google OAuth
  */
 export async function signInWithGoogle() {
-  const supabase = createClient();
+  return signInWithOAuth("google");
+}
 
-  const { data, error } = await supabase.auth.signInWithOAuth({
-    provider: "google",
-    options: {
-      redirectTo: `${window.location.origin}/auth/callback`,
-      queryParams: {
-        access_type: "offline",
-        prompt: "consent",
-      },
-    },
-  });
-
-  return { data, error };
+/**
+ * Sign in with Apple OAuth
+ */
+export async function signInWithApple() {
+  return signInWithOAuth("apple");
 }
 
 /**

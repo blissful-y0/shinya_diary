@@ -10,6 +10,7 @@ export const MOCK_CURRENT_USER: Profile = {
   email: "test@example.com",
   nickname: "테스트유저",
   avatar_url: null,
+  provider: "google",
   created_at: new Date().toISOString(),
   updated_at: new Date().toISOString(),
 };
@@ -22,6 +23,7 @@ export const MOCK_USERS: Profile[] = [
     email: "friend1@example.com",
     nickname: "친구1",
     avatar_url: null,
+    provider: "google",
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
   },
@@ -30,6 +32,7 @@ export const MOCK_USERS: Profile[] = [
     email: "friend2@example.com",
     nickname: "친구2",
     avatar_url: null,
+    provider: "apple",
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
   },
