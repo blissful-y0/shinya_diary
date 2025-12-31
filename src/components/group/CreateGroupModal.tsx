@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { toast } from "sonner";
 import {
   Dialog,
   DialogContent,
@@ -10,11 +11,13 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Loader2 } from "lucide-react";
+import { createGroup, getGroup } from "@/lib/api/client";
 import * as S from "./CreateGroupModal.styles";
 
 /* =============================================
    그룹 생성 모달
    - 그룹 이름 입력
+   - 닉네임 입력
    - 생성 후 초대 코드 표시
    ============================================= */
 
@@ -30,6 +33,7 @@ export default function CreateGroupModal({
   onCreated,
 }: CreateGroupModalProps) {
   const [groupName, setGroupName] = useState("");
+  const [nickname, setNickname] = useState("");
   const [isCreating, setIsCreating] = useState(false);
   const [createdGroup, setCreatedGroup] = useState<{
     id: string;
@@ -39,24 +43,27 @@ export default function CreateGroupModal({
 
   /* 그룹 생성 */
   const handleCreate = async () => {
-    if (!groupName.trim()) return;
+    if (!groupName.trim() || !nickname.trim()) return;
 
     setIsCreating(true);
 
-    /* Mock: 서버 지연 시뮬레이션 */
-    await new Promise((resolve) => setTimeout(resolve, 500));
+    const res = await createGroup(groupName.trim(), nickname.trim());
 
-    /* Mock 서비스 사용 */
-    const { createGroup } = await import("@/lib/mock/services");
-    const group = createGroup(groupName.trim());
+    if (res.success && res.data) {
+      // 생성된 그룹 정보 조회하여 초대 코드 가져오기
+      const groupRes = await getGroup(res.data.groupId);
+      if (groupRes.success && groupRes.data) {
+        const result = {
+          id: res.data.groupId,
+          name: groupName.trim(),
+          inviteCode: groupRes.data.invite_code,
+        };
+        setCreatedGroup(result);
+      }
+    } else {
+      toast.error(res.error || "그룹 생성에 실패했습니다.");
+    }
 
-    const result = {
-      id: group.id,
-      name: group.name,
-      inviteCode: group.invite_code,
-    };
-
-    setCreatedGroup(result);
     setIsCreating(false);
   };
 
@@ -71,6 +78,7 @@ export default function CreateGroupModal({
   /* 모달 닫기 */
   const handleClose = () => {
     setGroupName("");
+    setNickname("");
     setCreatedGroup(null);
     onOpenChange(false);
   };
@@ -79,7 +87,7 @@ export default function CreateGroupModal({
   const handleCopyCode = async () => {
     if (createdGroup) {
       await navigator.clipboard.writeText(createdGroup.inviteCode);
-      alert("초대 코드가 복사되었습니다.");
+      toast.success("초대 코드가 복사되었습니다.");
     }
   };
 
@@ -126,13 +134,26 @@ export default function CreateGroupModal({
               <S.CharCount>{groupName.length}/20</S.CharCount>
             </S.FormField>
 
+            <S.FormField>
+              <Label htmlFor="nickname">이 그룹에서 사용할 닉네임</Label>
+              <Input
+                id="nickname"
+                placeholder="닉네임을 입력하세요"
+                value={nickname}
+                onChange={(e) => setNickname(e.target.value)}
+                maxLength={10}
+                disabled={isCreating}
+              />
+              <S.CharCount>{nickname.length}/10</S.CharCount>
+            </S.FormField>
+
             <S.ButtonGroup>
               <S.CancelButton variant="outline" onClick={handleClose}>
                 취소
               </S.CancelButton>
               <S.CreateButton
                 onClick={handleCreate}
-                disabled={!groupName.trim() || isCreating}
+                disabled={!groupName.trim() || !nickname.trim() || isCreating}
               >
                 {isCreating ? (
                   <>

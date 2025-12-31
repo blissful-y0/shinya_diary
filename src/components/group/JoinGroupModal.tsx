@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { toast } from "sonner";
 import {
   Dialog,
   DialogContent,
@@ -9,6 +10,7 @@ import {
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Loader2, Users, CheckCircle } from "lucide-react";
+import { findGroupByInviteCode, createJoinRequest, getGroupMembers } from "@/lib/api/client";
 import * as S from "./JoinGroupModal.styles";
 
 /* =============================================
@@ -49,25 +51,22 @@ export default function JoinGroupModal({
     setIsLoading(true);
     setError("");
 
-    /* Mock: 서버 지연 시뮬레이션 */
-    await new Promise((resolve) => setTimeout(resolve, 300));
+    const res = await findGroupByInviteCode(inviteCode.trim());
 
-    const { findGroupByInviteCode, getGroupMembers } = await import(
-      "@/lib/mock/services"
-    );
-    const group = findGroupByInviteCode(inviteCode.trim());
-
-    if (!group) {
-      setError("유효하지 않은 초대 코드입니다.");
+    if (!res.success || !res.data) {
+      setError(res.error || "유효하지 않은 초대 코드입니다.");
       setIsLoading(false);
       return;
     }
 
-    const members = getGroupMembers(group.id);
+    const group = res.data;
+    const membersRes = await getGroupMembers(group.id);
+    const memberCount = membersRes.success && membersRes.data ? membersRes.data.length : 1;
+
     setFoundGroup({
       id: group.id,
       name: group.name,
-      memberCount: members.length,
+      memberCount,
     });
     setStep("confirm");
     setIsLoading(false);
@@ -79,14 +78,10 @@ export default function JoinGroupModal({
 
     setIsLoading(true);
 
-    /* Mock: 서버 지연 시뮬레이션 */
-    await new Promise((resolve) => setTimeout(resolve, 300));
+    const res = await createJoinRequest(foundGroup.id);
 
-    const { requestJoinGroup } = await import("@/lib/mock/services");
-    const result = requestJoinGroup(foundGroup.id);
-
-    if (!result.success) {
-      setError(result.message);
+    if (!res.success) {
+      setError(res.error || "가입 요청에 실패했습니다.");
       setIsLoading(false);
       return;
     }

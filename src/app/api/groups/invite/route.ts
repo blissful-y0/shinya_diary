@@ -2,6 +2,8 @@ import { createClient } from "@/lib/supabase/server";
 import { apiResponse, apiError, requireAuth } from "@/lib/api/utils";
 import { NextRequest } from "next/server";
 
+export const runtime = "edge";
+
 /**
  * GET /api/groups/invite?code=XXX - 초대 코드로 그룹 찾기
  */

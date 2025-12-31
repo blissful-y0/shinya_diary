@@ -1,11 +1,14 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import MobileLayout from "@/components/layout/MobileLayout";
 import GroupCard from "@/components/group/GroupCard";
 import CreateGroupModal from "@/components/group/CreateGroupModal";
 import JoinGroupModal from "@/components/group/JoinGroupModal";
-import { Plus, Users, BookOpen } from "lucide-react";
+import { Plus, Users, BookOpen, Loader2 } from "lucide-react";
+import { getMyGroups, type Group } from "@/lib/api/client";
+import { createClient } from "@/lib/supabase/client";
 import * as S from "./styles/page.styles";
 
 /* =============================================
@@ -25,41 +28,63 @@ interface GroupWithInfo {
 }
 
 export default function GroupsPage() {
+  const router = useRouter();
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [groups, setGroups] = useState<GroupWithInfo[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showJoinModal, setShowJoinModal] = useState(false);
 
+  /* 현재 사용자 확인 */
+  useEffect(() => {
+    const checkAuth = async () => {
+      const supabase = createClient();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
+      if (!user) {
+        router.replace("/login");
+        return;
+      }
+
+      setCurrentUserId(user.id);
+    };
+
+    checkAuth();
+  }, [router]);
+
   /* 그룹 목록 로드 */
   const loadGroups = async () => {
+    if (!currentUserId) return;
+
     setIsLoading(true);
 
-    const { getMyGroups, getJoinRequests, getCurrentUser } = await import(
-      "@/lib/mock/services"
-    );
-    const currentUser = getCurrentUser();
-    const myGroups = getMyGroups();
-
-    const groupsWithInfo: GroupWithInfo[] = myGroups.map((g) => {
-      const requests = getJoinRequests(g.id);
-      return {
+    const res = await getMyGroups();
+    if (res.success && res.data) {
+      const groupsWithInfo: GroupWithInfo[] = res.data.map((g: Group) => ({
         id: g.id,
         name: g.name,
         iconUrl: g.icon_url,
         coverImageUrl: g.cover_image_url,
-        memberCount: g.memberCount,
-        isOwner: g.owner_id === currentUser.id,
-        hasPendingRequests: requests.length > 0,
-      };
-    });
+        memberCount: g.memberCount || 1,
+        isOwner: g.owner_id === currentUserId,
+        hasPendingRequests: false, // TODO: 가입 요청 여부 체크
+      }));
 
-    setGroups(groupsWithInfo);
+      setGroups(groupsWithInfo);
+    } else {
+      setGroups([]);
+    }
+
     setIsLoading(false);
   };
 
   useEffect(() => {
-    loadGroups();
-  }, []);
+    if (currentUserId) {
+      loadGroups();
+    }
+  }, [currentUserId]);
 
   /* 그룹 생성 완료 */
   const handleGroupCreated = () => {
@@ -89,7 +114,9 @@ export default function GroupsPage() {
         {/* 그룹 리스트 */}
         <S.GroupList>
           {isLoading ? (
-            <S.LoadingText>로딩 중...</S.LoadingText>
+            <S.LoadingContainer>
+              <Loader2 size={32} className="animate-spin" />
+            </S.LoadingContainer>
           ) : groups.length > 0 ? (
             groups.map((group) => (
               <GroupCard

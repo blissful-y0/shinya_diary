@@ -2,6 +2,8 @@ import { createClient } from "@/lib/supabase/server";
 import { apiResponse, apiError, requireAuth } from "@/lib/api/utils";
 import { NextRequest } from "next/server";
 
+export const runtime = "edge";
+
 /**
  * GET /api/comments/count?diaryId= - 댓글 수 조회
  */

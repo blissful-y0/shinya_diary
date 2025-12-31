@@ -1,5 +1,7 @@
 "use client";
 
+export const runtime = "edge";
+
 import { use, useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
@@ -11,6 +13,20 @@ import DeleteConfirmDialog from "@/components/common/DeleteConfirmDialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Camera, Copy, Check, Loader2, Trash2, Image } from "lucide-react";
 import { isValidImageFile } from "@/utils/imageConverter";
+import {
+  getGroup,
+  getGroupMembers,
+  getJoinRequests,
+  updateGroup,
+  updateGroupProfile,
+  deleteGroup,
+  removeMember,
+  handleJoinRequest,
+  uploadImage,
+  type GroupMember,
+  type JoinRequest,
+} from "@/lib/api/client";
+import { createClient } from "@/lib/supabase/client";
 import * as S from "./styles/page.styles";
 
 /* =============================================
@@ -23,23 +39,6 @@ interface SettingsPageProps {
   params: Promise<{ id: string }>;
 }
 
-interface JoinRequest {
-  id: string;
-  user: {
-    nickname: string | null;
-    avatar_url: string | null;
-  };
-  created_at: string;
-}
-
-interface Member {
-  id: string;
-  nickname: string | null;
-  avatar_url: string | null;
-  joined_at: string;
-  isOwner: boolean;
-}
-
 export default function GroupSettingsPage({ params }: SettingsPageProps) {
   const { id: groupId } = use(params);
   const router = useRouter();
@@ -50,16 +49,22 @@ export default function GroupSettingsPage({ params }: SettingsPageProps) {
   /* 그룹 설정 (방장용) */
   const [isOwner, setIsOwner] = useState(false);
   const [groupName, setGroupName] = useState("");
+  const [groupIconFile, setGroupIconFile] = useState<File | null>(null);
   const [groupIconPreview, setGroupIconPreview] = useState<string | null>(null);
-  const [coverImagePreview, setCoverImagePreview] = useState<string | null>(
-    null
-  );
+  const [coverImageFile, setCoverImageFile] = useState<File | null>(null);
+  const [coverImagePreview, setCoverImagePreview] = useState<string | null>(null);
   const [inviteCode, setInviteCode] = useState("");
-  const [joinRequests, setJoinRequests] = useState<JoinRequest[]>([]);
-  const [members, setMembers] = useState<Member[]>([]);
+  const [joinRequests, setJoinRequests] = useState<
+    { id: string; user: { nickname: string | null; avatar_url: string | null }; created_at: string }[]
+  >([]);
+  const [members, setMembers] = useState<
+    { id: string; nickname: string | null; avatar_url: string | null; joined_at: string; isOwner: boolean }[]
+  >([]);
 
   /* 내 그룹 프로필 */
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [myNickname, setMyNickname] = useState("");
+  const [myAvatarFile, setMyAvatarFile] = useState<File | null>(null);
   const [myAvatarPreview, setMyAvatarPreview] = useState<string | null>(null);
 
   /* 상태 */
@@ -82,57 +87,71 @@ export default function GroupSettingsPage({ params }: SettingsPageProps) {
     const loadData = async () => {
       setIsLoading(true);
 
+      const supabase = createClient();
       const {
-        getGroup,
-        isGroupOwner,
-        isGroupMember,
-        getMyGroupProfile,
-        getJoinRequests,
-        getGroupMembersWithDetails,
-      } = await import("@/lib/mock/services");
+        data: { user },
+      } = await supabase.auth.getUser();
 
-      /* 멤버 여부 확인 */
-      if (!isGroupMember(groupId)) {
+      if (!user) {
+        router.replace("/login");
+        return;
+      }
+
+      setCurrentUserId(user.id);
+
+      /* 그룹 정보 */
+      const groupRes = await getGroup(groupId);
+      if (!groupRes.success || !groupRes.data) {
+        toast.error("그룹을 찾을 수 없습니다");
         router.replace("/groups");
         return;
       }
 
-      /* 방장 여부 확인 */
-      const ownerStatus = isGroupOwner(groupId);
-      setIsOwner(ownerStatus);
+      const group = groupRes.data;
+      setGroupName(group.name);
+      setGroupIconPreview(group.icon_url);
+      setCoverImagePreview(group.cover_image_url);
+      setInviteCode(group.invite_code);
+      setIsOwner(group.owner_id === user.id);
 
-      /* 그룹 정보 */
-      const group = getGroup(groupId);
-      if (group) {
-        setGroupName(group.name);
-        setGroupIconPreview(group.icon_url);
-        setCoverImagePreview(group.cover_image_url);
-        setInviteCode(group.invite_code);
-      }
-
-      /* 내 그룹 프로필 */
-      const myProfile = getMyGroupProfile(groupId);
-      if (myProfile) {
-        setMyNickname(myProfile.nickname || "");
-        setMyAvatarPreview(myProfile.avatar_url);
-      }
-
-      /* 방장이면 가입 요청 목록 및 멤버 목록 조회 */
-      if (ownerStatus) {
-        const requests = getJoinRequests(groupId);
-        setJoinRequests(
-          requests.map((r) => ({
-            id: r.id,
-            user: {
-              nickname: r.user.nickname,
-              avatar_url: r.user.avatar_url,
-            },
-            created_at: r.created_at,
+      /* 멤버 목록 */
+      const membersRes = await getGroupMembers(groupId);
+      if (membersRes.success && membersRes.data) {
+        setMembers(
+          membersRes.data.map((m: GroupMember) => ({
+            id: m.user_id,
+            nickname: m.nickname,
+            avatar_url: m.avatar_url,
+            joined_at: m.joined_at,
+            isOwner: m.user_id === group.owner_id,
           }))
         );
 
-        const memberList = getGroupMembersWithDetails(groupId);
-        setMembers(memberList);
+        /* 내 프로필 찾기 */
+        const myProfile = membersRes.data.find(
+          (m: GroupMember) => m.user_id === user.id
+        );
+        if (myProfile) {
+          setMyNickname(myProfile.nickname || "");
+          setMyAvatarPreview(myProfile.avatar_url);
+        }
+      }
+
+      /* 방장이면 가입 요청 목록 조회 */
+      if (group.owner_id === user.id) {
+        const requestsRes = await getJoinRequests(groupId);
+        if (requestsRes.success && requestsRes.data) {
+          setJoinRequests(
+            requestsRes.data.map((r: JoinRequest) => ({
+              id: r.id,
+              user: {
+                nickname: r.user.nickname,
+                avatar_url: r.user.avatar_url,
+              },
+              created_at: r.created_at,
+            }))
+          );
+        }
       }
 
       setIsLoading(false);
@@ -142,9 +161,7 @@ export default function GroupSettingsPage({ params }: SettingsPageProps) {
   }, [groupId, router]);
 
   /* 프로필 아바타 선택 */
-  const handleProfileAvatarSelect = (
-    e: React.ChangeEvent<HTMLInputElement>
-  ) => {
+  const handleProfileAvatarSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
@@ -153,6 +170,7 @@ export default function GroupSettingsPage({ params }: SettingsPageProps) {
       return;
     }
 
+    setMyAvatarFile(file);
     const reader = new FileReader();
     reader.onload = (e) => {
       setMyAvatarPreview(e.target?.result as string);
@@ -170,6 +188,7 @@ export default function GroupSettingsPage({ params }: SettingsPageProps) {
       return;
     }
 
+    setGroupIconFile(file);
     const reader = new FileReader();
     reader.onload = (e) => {
       setGroupIconPreview(e.target?.result as string);
@@ -187,6 +206,7 @@ export default function GroupSettingsPage({ params }: SettingsPageProps) {
       return;
     }
 
+    setCoverImageFile(file);
     const reader = new FileReader();
     reader.onload = (e) => {
       setCoverImagePreview(e.target?.result as string);
@@ -201,17 +221,31 @@ export default function GroupSettingsPage({ params }: SettingsPageProps) {
       return;
     }
 
+    if (!currentUserId) return;
+
     setIsSavingProfile(true);
 
-    const { updateMyGroupProfile } = await import("@/lib/mock/services");
-    const success = updateMyGroupProfile(groupId, {
-      nickname: myNickname.trim(),
-      avatarUrl: myAvatarPreview,
-    });
+    try {
+      let avatarUrl = myAvatarPreview;
 
-    if (success) {
-      toast.success("프로필이 저장되었습니다.");
-    } else {
+      if (myAvatarFile) {
+        const uploadRes = await uploadImage(myAvatarFile, "avatars");
+        if (uploadRes.success && uploadRes.data) {
+          avatarUrl = uploadRes.data.url;
+        }
+      }
+
+      const res = await updateGroupProfile(groupId, currentUserId, {
+        nickname: myNickname.trim(),
+        avatarUrl,
+      });
+
+      if (res.success) {
+        toast.success("프로필이 저장되었습니다.");
+      } else {
+        toast.error("저장에 실패했습니다.");
+      }
+    } catch {
       toast.error("저장에 실패했습니다.");
     }
 
@@ -227,16 +261,36 @@ export default function GroupSettingsPage({ params }: SettingsPageProps) {
 
     setIsSavingGroup(true);
 
-    const { updateGroup } = await import("@/lib/mock/services");
-    const success = updateGroup(groupId, {
-      name: groupName.trim(),
-      iconUrl: groupIconPreview,
-      coverImageUrl: coverImagePreview,
-    });
+    try {
+      let iconUrl = groupIconPreview;
+      let coverUrl = coverImagePreview;
 
-    if (success) {
-      toast.success("그룹 설정이 저장되었습니다.");
-    } else {
+      if (groupIconFile) {
+        const uploadRes = await uploadImage(groupIconFile, "group-icons");
+        if (uploadRes.success && uploadRes.data) {
+          iconUrl = uploadRes.data.url;
+        }
+      }
+
+      if (coverImageFile) {
+        const uploadRes = await uploadImage(coverImageFile, "group-covers");
+        if (uploadRes.success && uploadRes.data) {
+          coverUrl = uploadRes.data.url;
+        }
+      }
+
+      const res = await updateGroup(groupId, {
+        name: groupName.trim(),
+        iconUrl,
+        coverImageUrl: coverUrl,
+      });
+
+      if (res.success) {
+        toast.success("그룹 설정이 저장되었습니다.");
+      } else {
+        toast.error("저장에 실패했습니다.");
+      }
+    } catch {
       toast.error("저장에 실패했습니다.");
     }
 
@@ -253,23 +307,35 @@ export default function GroupSettingsPage({ params }: SettingsPageProps) {
 
   /* 가입 요청 승인 */
   const handleApproveRequest = async (requestId: string) => {
-    const { approveJoinRequest, getGroupMembersWithDetails } = await import(
-      "@/lib/mock/services"
-    );
-    const success = approveJoinRequest(requestId);
-    if (success) {
+    const request = joinRequests.find((r) => r.id === requestId);
+    const nickname = request?.user.nickname || "새 멤버";
+
+    const res = await handleJoinRequest(groupId, requestId, "approve", nickname);
+    if (res.success) {
       setJoinRequests((prev) => prev.filter((r) => r.id !== requestId));
-      const memberList = getGroupMembersWithDetails(groupId);
-      setMembers(memberList);
+      // 멤버 목록 다시 로드
+      const membersRes = await getGroupMembers(groupId);
+      if (membersRes.success && membersRes.data) {
+        const groupRes = await getGroup(groupId);
+        const ownerId = groupRes.data?.owner_id;
+        setMembers(
+          membersRes.data.map((m: GroupMember) => ({
+            id: m.user_id,
+            nickname: m.nickname,
+            avatar_url: m.avatar_url,
+            joined_at: m.joined_at,
+            isOwner: m.user_id === ownerId,
+          }))
+        );
+      }
       toast.success("가입 요청을 승인했습니다.");
     }
   };
 
   /* 가입 요청 거절 */
   const handleRejectRequest = async (requestId: string) => {
-    const { rejectJoinRequest } = await import("@/lib/mock/services");
-    const success = rejectJoinRequest(requestId);
-    if (success) {
+    const res = await handleJoinRequest(groupId, requestId, "reject");
+    if (res.success) {
       setJoinRequests((prev) => prev.filter((r) => r.id !== requestId));
       toast.success("가입 요청을 거절했습니다.");
     }
@@ -282,13 +348,11 @@ export default function GroupSettingsPage({ params }: SettingsPageProps) {
 
   /* 멤버 강퇴 실행 */
   const handleRemoveMember = async () => {
-    const { removeMember, getGroupMembersWithDetails } = await import(
-      "@/lib/mock/services"
-    );
-    const success = removeMember(groupId, removeMemberDialog.memberId);
-    if (success) {
-      const memberList = getGroupMembersWithDetails(groupId);
-      setMembers(memberList);
+    const res = await removeMember(groupId, removeMemberDialog.memberId);
+    if (res.success) {
+      setMembers((prev) =>
+        prev.filter((m) => m.id !== removeMemberDialog.memberId)
+      );
       toast.success(`${removeMemberDialog.nickname}님을 강퇴했습니다.`);
     } else {
       toast.error("강퇴에 실패했습니다.");
@@ -299,10 +363,9 @@ export default function GroupSettingsPage({ params }: SettingsPageProps) {
   const handleDeleteGroup = async () => {
     setIsDeleting(true);
 
-    const { deleteGroup } = await import("@/lib/mock/services");
-    const success = deleteGroup(groupId);
+    const res = await deleteGroup(groupId);
 
-    if (success) {
+    if (res.success) {
       toast.success("그룹이 삭제되었습니다.");
       router.replace("/groups");
     } else {
@@ -371,10 +434,7 @@ export default function GroupSettingsPage({ params }: SettingsPageProps) {
                 />
               </S.Section>
 
-              <S.SaveButton
-                onClick={handleSaveProfile}
-                disabled={isSavingProfile}
-              >
+              <S.SaveButton onClick={handleSaveProfile} disabled={isSavingProfile}>
                 {isSavingProfile ? (
                   <Loader2 size={18} className="animate-spin" />
                 ) : (
@@ -470,10 +530,7 @@ export default function GroupSettingsPage({ params }: SettingsPageProps) {
                   />
                 </S.Section>
 
-                <S.SaveButton
-                  onClick={handleSaveGroup}
-                  disabled={isSavingGroup}
-                >
+                <S.SaveButton onClick={handleSaveGroup} disabled={isSavingGroup}>
                   {isSavingGroup ? (
                     <Loader2 size={18} className="animate-spin" />
                   ) : (
