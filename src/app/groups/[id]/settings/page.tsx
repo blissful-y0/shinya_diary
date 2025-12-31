@@ -14,6 +14,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Camera, Copy, Check, Loader2, Trash2, Image } from "lucide-react";
 import { isValidImageFile } from "@/utils/imageConverter";
 import {
+  getCurrentUser,
   getGroup,
   getGroupMembers,
   getJoinRequests,
@@ -26,7 +27,6 @@ import {
   type GroupMember,
   type JoinRequest,
 } from "@/lib/api/client";
-import { createClient } from "@/lib/supabase/client";
 import * as S from "./styles/page.styles";
 
 /* =============================================
@@ -87,16 +87,13 @@ export default function GroupSettingsPage({ params }: SettingsPageProps) {
     const loadData = async () => {
       setIsLoading(true);
 
-      const supabase = createClient();
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-
-      if (!user) {
+      const userRes = await getCurrentUser();
+      if (!userRes.success || !userRes.data) {
         router.replace("/login");
         return;
       }
 
+      const user = userRes.data;
       setCurrentUserId(user.id);
 
       /* 그룹 정보 */

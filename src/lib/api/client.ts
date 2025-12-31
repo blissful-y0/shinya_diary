@@ -31,6 +31,47 @@ async function fetchApi<T>(
 }
 
 // ============================================
+// Auth API
+// ============================================
+
+export interface CurrentUser {
+  id: string;
+  email: string;
+}
+
+export async function getCurrentUser() {
+  return fetchApi<CurrentUser>("/api/auth/me");
+}
+
+export async function signInWithGoogle() {
+  const result = await fetchApi<{ url: string }>("/api/auth/google");
+  if (result.success && result.data?.url) {
+    window.location.href = result.data.url;
+  }
+  return result;
+}
+
+export async function signOut() {
+  const result = await fetchApi<{ success: boolean }>("/api/auth/signout", {
+    method: "POST",
+  });
+  if (result.success) {
+    window.location.href = "/login";
+  }
+  return result;
+}
+
+export async function deleteAccount() {
+  const result = await fetchApi<{ success: boolean }>("/api/auth/delete-account", {
+    method: "DELETE",
+  });
+  if (result.success) {
+    window.location.href = "/login";
+  }
+  return result;
+}
+
+// ============================================
 // Groups API
 // ============================================
 
@@ -223,6 +264,7 @@ export interface Comment {
   user_id: string;
   content: string;
   created_at: string;
+  updated_at: string;
   author: {
     nickname: string | null;
     avatar_url: string | null;
@@ -259,6 +301,40 @@ export async function updateComment(commentId: string, content: string) {
 export async function deleteComment(commentId: string) {
   return fetchApi<{ success: boolean }>(`/api/comments/${commentId}`, {
     method: "DELETE",
+  });
+}
+
+// ============================================
+// Profile API
+// ============================================
+
+export interface Profile {
+  id: string;
+  email: string;
+  nickname: string | null;
+  avatar_url: string | null;
+  provider: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ProfileStats {
+  diaryCount: number;
+  groupCount: number;
+  streakDays: number;
+}
+
+export async function getMyProfile() {
+  return fetchApi<{ profile: Profile; stats: ProfileStats }>("/api/profile");
+}
+
+export async function updateMyProfile(data: {
+  nickname?: string;
+  avatarUrl?: string | null;
+}) {
+  return fetchApi<{ success: boolean }>("/api/profile", {
+    method: "PATCH",
+    body: JSON.stringify(data),
   });
 }
 

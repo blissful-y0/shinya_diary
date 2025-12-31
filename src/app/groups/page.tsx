@@ -7,8 +7,7 @@ import GroupCard from "@/components/group/GroupCard";
 import CreateGroupModal from "@/components/group/CreateGroupModal";
 import JoinGroupModal from "@/components/group/JoinGroupModal";
 import { Plus, Users, BookOpen, Loader2 } from "lucide-react";
-import { getMyGroups, type Group } from "@/lib/api/client";
-import { createClient } from "@/lib/supabase/client";
+import { getCurrentUser, getMyGroups, type Group } from "@/lib/api/client";
 import * as S from "./styles/page.styles";
 
 /* =============================================
@@ -38,17 +37,12 @@ export default function GroupsPage() {
   /* 현재 사용자 확인 */
   useEffect(() => {
     const checkAuth = async () => {
-      const supabase = createClient();
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-
-      if (!user) {
+      const userRes = await getCurrentUser();
+      if (!userRes.success || !userRes.data) {
         router.replace("/login");
         return;
       }
-
-      setCurrentUserId(user.id);
+      setCurrentUserId(userRes.data.id);
     };
 
     checkAuth();

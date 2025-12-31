@@ -10,13 +10,13 @@ import { ImagePlus, X, Loader2 } from "lucide-react";
 import { isValidImageFile } from "@/utils/imageConverter";
 import { formatDateISO } from "@/utils/date";
 import {
+  getCurrentUser,
   getMyDiary,
   checkTodayDiary,
   createDiary,
   updateDiary,
   uploadImage,
 } from "@/lib/api/client";
-import { createClient } from "@/lib/supabase/client";
 import * as S from "./styles/page.styles";
 
 /* =============================================
@@ -50,12 +50,8 @@ export default function WritePage({ params }: WritePageProps) {
   /* 초기화: 수정 모드 또는 기존 다이어리 확인 */
   useEffect(() => {
     const init = async () => {
-      const supabase = createClient();
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-
-      if (!user) {
+      const userRes = await getCurrentUser();
+      if (!userRes.success || !userRes.data) {
         router.replace("/login");
         return;
       }

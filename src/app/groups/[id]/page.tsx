@@ -13,13 +13,13 @@ import ConfirmDialog from "@/components/common/ConfirmDialog";
 import { Settings, PenSquare, Lock, Loader2 } from "lucide-react";
 import { formatDateISO, isToday } from "@/utils/date";
 import {
+  getCurrentUser,
   getGroup,
   getDiaries,
   checkTodayDiary,
   getCommentCount,
   type Diary,
 } from "@/lib/api/client";
-import { createClient } from "@/lib/supabase/client";
 import * as S from "./styles/page.styles";
 
 /* =============================================
@@ -64,18 +64,15 @@ export default function GroupDetailPage({ params }: GroupDetailPageProps) {
 
   /* 현재 사용자 ID 가져오기 */
   useEffect(() => {
-    const getUser = async () => {
-      const supabase = createClient();
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-      if (user) {
-        setCurrentUserId(user.id);
+    const fetchUser = async () => {
+      const userRes = await getCurrentUser();
+      if (userRes.success && userRes.data) {
+        setCurrentUserId(userRes.data.id);
       } else {
         router.replace("/login");
       }
     };
-    getUser();
+    fetchUser();
   }, [router]);
 
   /* 그룹 정보 및 다이어리 목록 로드 */

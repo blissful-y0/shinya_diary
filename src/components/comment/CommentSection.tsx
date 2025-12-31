@@ -6,6 +6,13 @@ import { Send, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import ConfirmDialog from "@/components/common/ConfirmDialog";
 import { formatDistanceToNow } from "@/utils/date";
+import {
+  getComments,
+  createComment as apiCreateComment,
+  updateComment as apiUpdateComment,
+  deleteComment as apiDeleteComment,
+  type Comment,
+} from "@/lib/api/client";
 import * as S from "./CommentSection.styles";
 
 /* =============================================
@@ -13,18 +20,6 @@ import * as S from "./CommentSection.styles";
    - 코멘트 목록 및 입력
    - CRUD 기능 포함
    ============================================= */
-
-interface Comment {
-  id: string;
-  content: string;
-  created_at: string;
-  updated_at: string;
-  author: {
-    nickname: string;
-    avatar_url: string | null;
-  };
-  isOwn: boolean;
-}
 
 interface CommentSectionProps {
   diaryId: string;
@@ -51,15 +46,16 @@ export default function CommentSection({
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   /* 코멘트 목록 로드 */
-  useEffect(() => {
-    const loadComments = async () => {
-      setIsLoading(true);
-      const { getCommentsByDiary } = await import("@/lib/mock/services");
-      const data = getCommentsByDiary(diaryId, groupId);
-      setComments(data);
-      setIsLoading(false);
-    };
+  const loadComments = async () => {
+    setIsLoading(true);
+    const result = await getComments(diaryId, groupId);
+    if (result.success && result.data) {
+      setComments(result.data);
+    }
+    setIsLoading(false);
+  };
 
+  useEffect(() => {
     loadComments();
   }, [diaryId, groupId]);
 
@@ -79,14 +75,10 @@ export default function CommentSection({
     if (!newComment.trim() || isSubmitting) return;
 
     setIsSubmitting(true);
-    const { createComment, getCommentsByDiary } = await import(
-      "@/lib/mock/services"
-    );
-    const result = createComment(diaryId, newComment);
+    const result = await apiCreateComment(diaryId, newComment.trim());
 
-    if (result) {
-      const updatedComments = getCommentsByDiary(diaryId, groupId);
-      setComments(updatedComments);
+    if (result.success) {
+      await loadComments();
       setNewComment("");
       if (textareaRef.current) {
         textareaRef.current.style.height = "36px";
@@ -126,14 +118,10 @@ export default function CommentSection({
       return;
     }
 
-    const { updateComment, getCommentsByDiary } = await import(
-      "@/lib/mock/services"
-    );
-    const success = updateComment(commentId, editContent);
+    const result = await apiUpdateComment(commentId, editContent.trim());
 
-    if (success) {
-      const updatedComments = getCommentsByDiary(diaryId, groupId);
-      setComments(updatedComments);
+    if (result.success) {
+      await loadComments();
       setEditingId(null);
       setEditContent("");
       toast.success("코멘트를 수정했습니다.");
@@ -144,14 +132,10 @@ export default function CommentSection({
 
   /* 삭제 실행 */
   const handleDelete = async () => {
-    const { deleteComment, getCommentsByDiary } = await import(
-      "@/lib/mock/services"
-    );
-    const success = deleteComment(deleteDialog.commentId);
+    const result = await apiDeleteComment(deleteDialog.commentId);
 
-    if (success) {
-      const updatedComments = getCommentsByDiary(diaryId, groupId);
-      setComments(updatedComments);
+    if (result.success) {
+      await loadComments();
       toast.success("코멘트를 삭제했습니다.");
     } else {
       toast.error("삭제에 실패했습니다.");
@@ -179,7 +163,7 @@ export default function CommentSection({
                   <S.AvatarImage src={comment.author.avatar_url} alt="" />
                 ) : (
                   <S.AvatarPlaceholder>
-                    {comment.author.nickname.charAt(0).toUpperCase()}
+                    {(comment.author.nickname || "?").charAt(0).toUpperCase()}
                   </S.AvatarPlaceholder>
                 )}
               </S.Avatar>
