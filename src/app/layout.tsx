@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Noto_Sans_KR } from "next/font/google";
 import StyledComponentsRegistry from "@/lib/registry";
 import JotaiProvider from "@/components/providers/JotaiProvider";
+import { SWRProvider } from "@/lib/swr/config";
 import { Toaster } from "@/components/ui/sonner";
 import "./globals.css";
 
@@ -50,10 +51,12 @@ export default function RootLayout({
     <html lang="ko" className={notoSansKR.variable}>
       <body>
         <JotaiProvider>
-          <StyledComponentsRegistry>
-            {children}
-            <Toaster position="top-center" richColors />
-          </StyledComponentsRegistry>
+          <SWRProvider>
+            <StyledComponentsRegistry>
+              {children}
+              <Toaster position="top-center" richColors />
+            </StyledComponentsRegistry>
+          </SWRProvider>
         </JotaiProvider>
       </body>
     </html>

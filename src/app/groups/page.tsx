@@ -1,12 +1,12 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import MobileLayout from "@/components/layout/MobileLayout";
 import GroupCard from "@/components/group/GroupCard";
 import CreateGroupModal from "@/components/group/CreateGroupModal";
 import JoinGroupModal from "@/components/group/JoinGroupModal";
 import { Plus, Users, BookOpen, Loader2 } from "lucide-react";
-import { getMyGroups, type Group } from "@/lib/api/client";
+import { useGroups } from "@/lib/swr/hooks";
 import { useRequireAuth } from "@/lib/hooks/useAuth";
 import * as S from "./styles/page.styles";
 
@@ -16,58 +16,15 @@ import * as S from "./styles/page.styles";
    - 그룹 생성/참여 모달
    ============================================= */
 
-interface GroupWithInfo {
-  id: string;
-  name: string;
-  iconUrl: string | null;
-  coverImageUrl: string | null;
-  memberCount: number;
-  isOwner: boolean;
-  hasPendingRequests: boolean;
-}
-
 export default function GroupsPage() {
   const { profile, isLoading: authLoading } = useRequireAuth();
-  const [groups, setGroups] = useState<GroupWithInfo[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const { groups, isLoading, mutate } = useGroups();
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showJoinModal, setShowJoinModal] = useState(false);
 
-  /* 그룹 목록 로드 */
-  const loadGroups = async () => {
-    if (!profile) return;
-
-    setIsLoading(true);
-
-    const res = await getMyGroups();
-    if (res.success && res.data) {
-      const groupsWithInfo: GroupWithInfo[] = res.data.map((g: Group) => ({
-        id: g.id,
-        name: g.name,
-        iconUrl: g.icon_url,
-        coverImageUrl: g.cover_image_url,
-        memberCount: g.memberCount || 1,
-        isOwner: g.owner_id === profile.id,
-        hasPendingRequests: false,
-      }));
-
-      setGroups(groupsWithInfo);
-    } else {
-      setGroups([]);
-    }
-
-    setIsLoading(false);
-  };
-
-  useEffect(() => {
-    if (profile && !authLoading) {
-      loadGroups();
-    }
-  }, [profile, authLoading]);
-
   /* 그룹 생성 완료 */
   const handleGroupCreated = () => {
-    loadGroups();
+    mutate(); // SWR 캐시 갱신
   };
 
   /* 가입 요청 완료 */
@@ -92,21 +49,21 @@ export default function GroupsPage() {
 
         {/* 그룹 리스트 */}
         <S.GroupList>
-          {isLoading ? (
+          {isLoading || authLoading ? (
             <S.LoadingContainer>
               <Loader2 size={32} className="animate-spin" />
             </S.LoadingContainer>
-          ) : groups.length > 0 ? (
+          ) : groups && groups.length > 0 ? (
             groups.map((group) => (
               <GroupCard
                 key={group.id}
                 id={group.id}
                 name={group.name}
-                iconUrl={group.iconUrl}
-                coverImageUrl={group.coverImageUrl}
-                memberCount={group.memberCount}
-                isOwner={group.isOwner}
-                hasPendingRequests={group.hasPendingRequests}
+                iconUrl={group.icon_url}
+                coverImageUrl={group.cover_image_url}
+                memberCount={group.memberCount || 1}
+                isOwner={group.owner_id === profile?.id}
+                hasPendingRequests={false}
               />
             ))
           ) : (

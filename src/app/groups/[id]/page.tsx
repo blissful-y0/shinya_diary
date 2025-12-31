@@ -2,7 +2,7 @@
 
 export const runtime = "edge";
 
-import { use, useState, useEffect, useCallback } from "react";
+import { use, useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { toast } from "sonner";
@@ -12,14 +12,7 @@ import DiaryCard from "@/components/diary/DiaryCard";
 import ConfirmDialog from "@/components/common/ConfirmDialog";
 import { Settings, PenSquare, Lock, Loader2 } from "lucide-react";
 import { formatDateISO, isToday } from "@/utils/date";
-import {
-  getGroup,
-  getDiaries,
-  checkTodayDiary,
-  getCommentCount,
-  getGroupMembers,
-  type Diary,
-} from "@/lib/api/client";
+import { useGroup, useGroupMembers, useDiaries } from "@/lib/swr/hooks";
 import { useRequireAuth } from "@/lib/hooks/useAuth";
 import * as S from "./styles/page.styles";
 
@@ -34,31 +27,11 @@ interface GroupDetailPageProps {
   params: Promise<{ id: string }>;
 }
 
-interface DiaryWithMeta {
-  id: string;
-  nickname: string;
-  avatarUrl: string | null;
-  imageUrl: string | null;
-  content: string | null;
-  createdAt: string;
-  isOwn: boolean;
-  commentCount: number;
-}
-
 export default function GroupDetailPage({ params }: GroupDetailPageProps) {
   const { id: groupId } = use(params);
   const router = useRouter();
   const { profile, isLoading: authLoading } = useRequireAuth();
   const [selectedDate, setSelectedDate] = useState(new Date());
-  const [diaries, setDiaries] = useState<DiaryWithMeta[]>([]);
-  const [hasWrittenToday, setHasWrittenToday] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
-  const [groupName, setGroupName] = useState("");
-  const [coverImageUrl, setCoverImageUrl] = useState<string | null>(null);
-  const [myGroupProfile, setMyGroupProfile] = useState<{
-    nickname: string;
-    avatar_url: string | null;
-  } | null>(null);
   const [deleteDialog, setDeleteDialog] = useState<{
     open: boolean;
     diaryId: string;
@@ -67,79 +40,54 @@ export default function GroupDetailPage({ params }: GroupDetailPageProps) {
     diaryId: "",
   });
 
-  /* 그룹 정보 및 다이어리 목록 로드 */
-  const loadData = useCallback(async () => {
-    if (!profile) return;
+  const dateStr = formatDateISO(selectedDate);
 
-    setIsLoading(true);
+  // SWR hooks
+  const { group, isLoading: groupLoading, isError: groupError } = useGroup(groupId);
+  const { members } = useGroupMembers(groupId);
+  const { diaries, isLoading: diariesLoading, mutate: mutateDiaries } = useDiaries(groupId, dateStr);
 
-    /* 그룹 정보 + 멤버 정보 병렬 조회 */
-    const [groupRes, membersRes] = await Promise.all([
-      getGroup(groupId),
-      getGroupMembers(groupId),
-    ]);
-
-    if (!groupRes.success || !groupRes.data) {
+  // 그룹 에러 시 리다이렉트
+  useEffect(() => {
+    if (groupError) {
       toast.error("그룹을 찾을 수 없습니다");
       router.replace("/groups");
-      return;
     }
-    setGroupName(groupRes.data.name);
-    setCoverImageUrl(groupRes.data.cover_image_url);
+  }, [groupError, router]);
 
-    /* 현재 사용자의 그룹 프로필 저장 */
-    if (membersRes.success && membersRes.data) {
-      const myMember = membersRes.data.find((m) => m.user_id === profile.id);
-      if (myMember) {
-        setMyGroupProfile({
-          nickname: myMember.nickname || profile.nickname || "나",
-          avatar_url: myMember.avatar_url || profile.avatar_url,
-        });
-      }
-    }
+  // 현재 사용자의 그룹 프로필
+  const myGroupProfile = useMemo(() => {
+    if (!members || !profile) return null;
+    const myMember = members.find((m) => m.user_id === profile.id);
+    if (!myMember) return null;
+    return {
+      nickname: myMember.nickname || profile.nickname || "나",
+      avatar_url: myMember.avatar_url || profile.avatar_url,
+    };
+  }, [members, profile]);
 
-    /* 날짜별 다이어리 조회 */
-    const dateStr = formatDateISO(selectedDate);
+  // 오늘 작성 여부 확인
+  const hasWrittenToday = useMemo(() => {
+    if (!isToday(selectedDate)) return true;
+    if (!diaries || !profile) return false;
+    return diaries.some((d) => d.user_id === profile.id);
+  }, [selectedDate, diaries, profile]);
 
-    /* 오늘 날짜인 경우 작성 여부 확인 */
-    if (isToday(selectedDate)) {
-      const checkRes = await checkTodayDiary(groupId, dateStr);
-      setHasWrittenToday(checkRes.success && checkRes.data?.hasWritten === true);
-    } else {
-      setHasWrittenToday(true);
-    }
+  // 다이어리 목록 변환
+  const diariesWithMeta = useMemo(() => {
+    if (!diaries || !profile) return [];
+    return diaries.map((d) => ({
+      id: d.id,
+      nickname: d.author?.nickname || "익명",
+      avatarUrl: d.author?.avatar_url || null,
+      imageUrl: d.image_url,
+      content: d.content,
+      createdAt: d.created_at,
+      isOwn: d.user_id === profile.id,
+    }));
+  }, [diaries, profile]);
 
-    /* 다이어리 목록 */
-    const diariesRes = await getDiaries(groupId, dateStr);
-    if (diariesRes.success && diariesRes.data) {
-      const diariesWithMeta = await Promise.all(
-        diariesRes.data.map(async (d: Diary) => {
-          const countRes = await getCommentCount(d.id);
-          return {
-            id: d.id,
-            nickname: d.author?.nickname || "익명",
-            avatarUrl: d.author?.avatar_url || null,
-            imageUrl: d.image_url,
-            content: d.content,
-            createdAt: d.created_at,
-            isOwn: d.user_id === profile.id,
-            commentCount: countRes.success ? countRes.data?.count || 0 : 0,
-          };
-        })
-      );
-      setDiaries(diariesWithMeta);
-    } else {
-      setDiaries([]);
-    }
-
-    setIsLoading(false);
-  }, [groupId, selectedDate, profile]);
-
-  useEffect(() => {
-    if (profile && !authLoading) {
-      loadData();
-    }
-  }, [loadData, profile, authLoading]);
+  const isLoading = authLoading || groupLoading || diariesLoading;
 
   /* 다이어리 삭제 다이얼로그 열기 */
   const handleDeleteClick = (diaryId: string) => {
@@ -149,7 +97,7 @@ export default function GroupDetailPage({ params }: GroupDetailPageProps) {
   /* 다이어리 삭제 실행 */
   const handleDeleteDiary = async () => {
     // TODO: Add delete diary API
-    setDiaries((prev) => prev.filter((d) => d.id !== deleteDialog.diaryId));
+    mutateDiaries();
     toast.success("일기가 삭제되었습니다.");
   };
 
@@ -166,7 +114,7 @@ export default function GroupDetailPage({ params }: GroupDetailPageProps) {
 
   return (
     <MobileLayout
-      headerTitle={groupName || "그룹"}
+      headerTitle={group?.name || "그룹"}
       headerBackHref="/groups"
       headerRight={headerRight}
     >
@@ -177,9 +125,9 @@ export default function GroupDetailPage({ params }: GroupDetailPageProps) {
       />
 
       {/* 커버 이미지 */}
-      {coverImageUrl && (
+      {group?.cover_image_url && (
         <S.CoverImageContainer>
-          <S.CoverImage src={coverImageUrl} alt="" />
+          <S.CoverImage src={group.cover_image_url} alt="" />
         </S.CoverImageContainer>
       )}
 
@@ -219,9 +167,9 @@ export default function GroupDetailPage({ params }: GroupDetailPageProps) {
                 </S.LockedIcon>
                 <S.LockedText>일기를 작성하면 잠금이 해제됩니다</S.LockedText>
               </S.LockedFeed>
-            ) : diaries.length > 0 ? (
+            ) : diariesWithMeta.length > 0 ? (
               /* 다이어리 목록 */
-              diaries.map((diary) => (
+              diariesWithMeta.map((diary) => (
                 <DiaryCard
                   key={diary.id}
                   id={diary.id}
@@ -232,7 +180,6 @@ export default function GroupDetailPage({ params }: GroupDetailPageProps) {
                   content={diary.content}
                   createdAt={diary.createdAt}
                   isOwn={diary.isOwn}
-                  commentCount={diary.commentCount}
                   currentUserAuthor={myGroupProfile}
                   onEdit={() =>
                     (window.location.href = `/groups/${groupId}/write?edit=${diary.id}`)
