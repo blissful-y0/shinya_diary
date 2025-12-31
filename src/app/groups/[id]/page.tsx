@@ -13,13 +13,13 @@ import ConfirmDialog from "@/components/common/ConfirmDialog";
 import { Settings, PenSquare, Lock, Loader2 } from "lucide-react";
 import { formatDateISO, isToday } from "@/utils/date";
 import {
-  getCurrentUser,
   getGroup,
   getDiaries,
   checkTodayDiary,
   getCommentCount,
   type Diary,
 } from "@/lib/api/client";
+import { useRequireAuth } from "@/lib/hooks/useAuth";
 import * as S from "./styles/page.styles";
 
 /* =============================================
@@ -47,13 +47,13 @@ interface DiaryWithMeta {
 export default function GroupDetailPage({ params }: GroupDetailPageProps) {
   const { id: groupId } = use(params);
   const router = useRouter();
+  const { profile, isLoading: authLoading } = useRequireAuth();
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [diaries, setDiaries] = useState<DiaryWithMeta[]>([]);
   const [hasWrittenToday, setHasWrittenToday] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [groupName, setGroupName] = useState("");
   const [coverImageUrl, setCoverImageUrl] = useState<string | null>(null);
-  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [deleteDialog, setDeleteDialog] = useState<{
     open: boolean;
     diaryId: string;
@@ -62,22 +62,9 @@ export default function GroupDetailPage({ params }: GroupDetailPageProps) {
     diaryId: "",
   });
 
-  /* 현재 사용자 ID 가져오기 */
-  useEffect(() => {
-    const fetchUser = async () => {
-      const userRes = await getCurrentUser();
-      if (userRes.success && userRes.data) {
-        setCurrentUserId(userRes.data.id);
-      } else {
-        router.replace("/login");
-      }
-    };
-    fetchUser();
-  }, [router]);
-
   /* 그룹 정보 및 다이어리 목록 로드 */
   const loadData = useCallback(async () => {
-    if (!currentUserId) return;
+    if (!profile) return;
 
     setIsLoading(true);
 
@@ -115,7 +102,7 @@ export default function GroupDetailPage({ params }: GroupDetailPageProps) {
             imageUrl: d.image_url,
             content: d.content,
             createdAt: d.created_at,
-            isOwn: d.user_id === currentUserId,
+            isOwn: d.user_id === profile.id,
             commentCount: countRes.success ? countRes.data?.count || 0 : 0,
           };
         })
@@ -126,13 +113,13 @@ export default function GroupDetailPage({ params }: GroupDetailPageProps) {
     }
 
     setIsLoading(false);
-  }, [groupId, selectedDate, router, currentUserId]);
+  }, [groupId, selectedDate, profile]);
 
   useEffect(() => {
-    if (currentUserId) {
+    if (profile && !authLoading) {
       loadData();
     }
-  }, [loadData, currentUserId]);
+  }, [loadData, profile, authLoading]);
 
   /* 다이어리 삭제 다이얼로그 열기 */
   const handleDeleteClick = (diaryId: string) => {

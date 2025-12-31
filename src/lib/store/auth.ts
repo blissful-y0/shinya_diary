@@ -4,33 +4,25 @@ import type { Profile, ProfileStats } from "@/lib/api/client";
 
 /**
  * 인증 상태 전역 관리 (Jotai + localStorage)
+ * profile에 id, email 포함되어 있으므로 profile만 저장
  */
-
-// 현재 유저 정보
-export interface AuthUser {
-  id: string;
-  email: string;
-}
 
 // localStorage에 저장되는 프로필 정보
 export const profileAtom = atomWithStorage<Profile | null>("shinya:profile", null);
 
-// 프로필 통계 (캐싱용, localStorage 저장 안함)
-export const profileStatsAtom = atom<ProfileStats>({
+// 프로필 통계 (localStorage 저장)
+export const profileStatsAtom = atomWithStorage<ProfileStats>("shinya:stats", {
   diaryCount: 0,
   groupCount: 0,
   streakDays: 0,
 });
-
-// 인증 유저 정보 (localStorage)
-export const authUserAtom = atomWithStorage<AuthUser | null>("shinya:user", null);
 
 // 인증 상태 로딩 중
 export const authLoadingAtom = atom<boolean>(true);
 
 // 인증 여부 (derived atom)
 export const isAuthenticatedAtom = atom((get) => {
-  return get(authUserAtom) !== null;
+  return get(profileAtom) !== null;
 });
 
 // 프로필 마지막 로드 시간 (캐시 유효성 체크용)

@@ -3,7 +3,6 @@
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import { useCallback, useEffect } from "react";
 import {
-  authUserAtom,
   authLoadingAtom,
   profileAtom,
   profileStatsAtom,
@@ -12,7 +11,6 @@ import {
   isAuthenticatedAtom,
 } from "@/lib/store/auth";
 import {
-  getCurrentUser,
   getMyProfile,
   signOut as apiSignOut,
   deleteAccount as apiDeleteAccount,
@@ -20,12 +18,11 @@ import {
 
 /**
  * 인증 상태 관리 훅
- * - 전역 상태로 유저/프로필 관리
+ * - 전역 상태로 프로필 관리
  * - localStorage 캐싱
  * - 자동 세션 체크
  */
 export function useAuth() {
-  const [authUser, setAuthUser] = useAtom(authUserAtom);
   const [profile, setProfile] = useAtom(profileAtom);
   const [stats, setStats] = useAtom(profileStatsAtom);
   const [isLoading, setIsLoading] = useAtom(authLoadingAtom);
@@ -36,7 +33,7 @@ export function useAuth() {
   // 세션 체크 및 프로필 로드
   const checkAuth = useCallback(async (forceRefresh = false) => {
     // 캐시가 유효하고 강제 갱신이 아니면 스킵
-    if (!forceRefresh && isCacheValid && authUser && profile) {
+    if (!forceRefresh && isCacheValid && profile) {
       setIsLoading(false);
       return true;
     }
@@ -44,38 +41,28 @@ export function useAuth() {
     setIsLoading(true);
 
     try {
-      // 먼저 현재 유저 확인
-      const userResult = await getCurrentUser();
+      // 프로필 로드 (인증 체크 포함)
+      const profileResult = await getMyProfile();
 
-      if (!userResult.success || !userResult.data) {
+      if (!profileResult.success || !profileResult.data) {
         // 인증 실패 - 상태 초기화
-        setAuthUser(null);
         setProfile(null);
         setIsLoading(false);
         return false;
       }
 
-      setAuthUser(userResult.data);
-
-      // 프로필 로드
-      const profileResult = await getMyProfile();
-
-      if (profileResult.success && profileResult.data) {
-        setProfile(profileResult.data.profile);
-        setStats(profileResult.data.stats);
-        setLastFetched(Date.now());
-      }
-
+      setProfile(profileResult.data.profile);
+      setStats(profileResult.data.stats);
+      setLastFetched(Date.now());
       setIsLoading(false);
       return true;
     } catch (error) {
       console.error("Auth check failed:", error);
-      setAuthUser(null);
       setProfile(null);
       setIsLoading(false);
       return false;
     }
-  }, [authUser, profile, isCacheValid, setAuthUser, setProfile, setStats, setLastFetched, setIsLoading]);
+  }, [profile, isCacheValid, setProfile, setStats, setLastFetched, setIsLoading]);
 
   // 프로필만 갱신 (수정 후 호출)
   const refreshProfile = useCallback(async () => {
@@ -93,32 +80,29 @@ export function useAuth() {
   // 로그아웃
   const signOut = useCallback(async () => {
     await apiSignOut();
-    setAuthUser(null);
     setProfile(null);
     setLastFetched(0);
-    // localStorage도 클리어
+    // localStorage 클리어
     if (typeof window !== "undefined") {
       localStorage.removeItem("shinya:profile");
-      localStorage.removeItem("shinya:user");
+      localStorage.removeItem("shinya:stats");
       localStorage.removeItem("shinya:profile_fetched");
     }
-  }, [setAuthUser, setProfile, setLastFetched]);
+  }, [setProfile, setLastFetched]);
 
   // 회원 탈퇴
   const deleteAccount = useCallback(async () => {
     await apiDeleteAccount();
-    setAuthUser(null);
     setProfile(null);
     setLastFetched(0);
     if (typeof window !== "undefined") {
       localStorage.removeItem("shinya:profile");
-      localStorage.removeItem("shinya:user");
+      localStorage.removeItem("shinya:stats");
       localStorage.removeItem("shinya:profile_fetched");
     }
-  }, [setAuthUser, setProfile, setLastFetched]);
+  }, [setProfile, setLastFetched]);
 
   return {
-    user: authUser,
     profile,
     stats,
     isLoading,

@@ -1,13 +1,13 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
 import MobileLayout from "@/components/layout/MobileLayout";
 import GroupCard from "@/components/group/GroupCard";
 import CreateGroupModal from "@/components/group/CreateGroupModal";
 import JoinGroupModal from "@/components/group/JoinGroupModal";
 import { Plus, Users, BookOpen, Loader2 } from "lucide-react";
-import { getCurrentUser, getMyGroups, type Group } from "@/lib/api/client";
+import { getMyGroups, type Group } from "@/lib/api/client";
+import { useRequireAuth } from "@/lib/hooks/useAuth";
 import * as S from "./styles/page.styles";
 
 /* =============================================
@@ -27,30 +27,15 @@ interface GroupWithInfo {
 }
 
 export default function GroupsPage() {
-  const router = useRouter();
-  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const { profile, isLoading: authLoading } = useRequireAuth();
   const [groups, setGroups] = useState<GroupWithInfo[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showJoinModal, setShowJoinModal] = useState(false);
 
-  /* 현재 사용자 확인 */
-  useEffect(() => {
-    const checkAuth = async () => {
-      const userRes = await getCurrentUser();
-      if (!userRes.success || !userRes.data) {
-        router.replace("/login");
-        return;
-      }
-      setCurrentUserId(userRes.data.id);
-    };
-
-    checkAuth();
-  }, [router]);
-
   /* 그룹 목록 로드 */
   const loadGroups = async () => {
-    if (!currentUserId) return;
+    if (!profile) return;
 
     setIsLoading(true);
 
@@ -62,8 +47,8 @@ export default function GroupsPage() {
         iconUrl: g.icon_url,
         coverImageUrl: g.cover_image_url,
         memberCount: g.memberCount || 1,
-        isOwner: g.owner_id === currentUserId,
-        hasPendingRequests: false, // TODO: 가입 요청 여부 체크
+        isOwner: g.owner_id === profile.id,
+        hasPendingRequests: false,
       }));
 
       setGroups(groupsWithInfo);
@@ -75,10 +60,10 @@ export default function GroupsPage() {
   };
 
   useEffect(() => {
-    if (currentUserId) {
+    if (profile && !authLoading) {
       loadGroups();
     }
-  }, [currentUserId]);
+  }, [profile, authLoading]);
 
   /* 그룹 생성 완료 */
   const handleGroupCreated = () => {
