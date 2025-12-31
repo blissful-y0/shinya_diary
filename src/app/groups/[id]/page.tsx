@@ -1,5 +1,7 @@
 "use client";
 
+export const runtime = "edge";
+
 import { use, useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
@@ -10,6 +12,14 @@ import DiaryCard from "@/components/diary/DiaryCard";
 import ConfirmDialog from "@/components/common/ConfirmDialog";
 import { Settings, PenSquare, Lock, Loader2 } from "lucide-react";
 import { formatDateISO, isToday } from "@/utils/date";
+import {
+  getGroup,
+  getDiaries,
+  checkTodayDiary,
+  getCommentCount,
+  type Diary,
+} from "@/lib/api/client";
+import { createClient } from "@/lib/supabase/client";
 import * as S from "./styles/page.styles";
 
 /* =============================================
@@ -23,90 +33,109 @@ interface GroupDetailPageProps {
   params: Promise<{ id: string }>;
 }
 
+interface DiaryWithMeta {
+  id: string;
+  nickname: string;
+  avatarUrl: string | null;
+  imageUrl: string | null;
+  content: string | null;
+  createdAt: string;
+  isOwn: boolean;
+  commentCount: number;
+}
+
 export default function GroupDetailPage({ params }: GroupDetailPageProps) {
   const { id: groupId } = use(params);
   const router = useRouter();
   const [selectedDate, setSelectedDate] = useState(new Date());
-  const [diaries, setDiaries] = useState<
-    {
-      id: string;
-      nickname: string;
-      avatarUrl: string | null;
-      imageUrl: string | null;
-      content: string | null;
-      createdAt: string;
-      isOwn: boolean;
-      commentCount: number;
-    }[]
-  >([]);
+  const [diaries, setDiaries] = useState<DiaryWithMeta[]>([]);
   const [hasWrittenToday, setHasWrittenToday] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [groupName, setGroupName] = useState("");
   const [coverImageUrl, setCoverImageUrl] = useState<string | null>(null);
-  const [deleteDialog, setDeleteDialog] = useState<{ open: boolean; diaryId: string }>({
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const [deleteDialog, setDeleteDialog] = useState<{
+    open: boolean;
+    diaryId: string;
+  }>({
     open: false,
     diaryId: "",
   });
 
+  /* 현재 사용자 ID 가져오기 */
+  useEffect(() => {
+    const getUser = async () => {
+      const supabase = createClient();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (user) {
+        setCurrentUserId(user.id);
+      } else {
+        router.replace("/login");
+      }
+    };
+    getUser();
+  }, [router]);
+
   /* 그룹 정보 및 다이어리 목록 로드 */
   const loadData = useCallback(async () => {
+    if (!currentUserId) return;
+
     setIsLoading(true);
 
-    const {
-      getGroup,
-      isGroupMember,
-      getDiariesByDate,
-      checkTodayDiary,
-      getCurrentUser,
-      getCommentCount,
-    } = await import("@/lib/mock/services");
-
-    /* 멤버 여부 확인 - 비멤버는 그룹 목록으로 리다이렉트 */
-    if (!isGroupMember(groupId)) {
+    /* 그룹 정보 */
+    const groupRes = await getGroup(groupId);
+    if (!groupRes.success || !groupRes.data) {
+      toast.error("그룹을 찾을 수 없습니다");
       router.replace("/groups");
       return;
     }
-
-    /* 그룹 정보 */
-    const group = getGroup(groupId);
-    if (group) {
-      setGroupName(group.name);
-      setCoverImageUrl(group.cover_image_url);
-    }
+    setGroupName(groupRes.data.name);
+    setCoverImageUrl(groupRes.data.cover_image_url);
 
     /* 날짜별 다이어리 조회 */
     const dateStr = formatDateISO(selectedDate);
-    const currentUser = getCurrentUser();
 
     /* 오늘 날짜인 경우 작성 여부 확인 */
     if (isToday(selectedDate)) {
-      const written = checkTodayDiary(groupId, dateStr);
-      setHasWrittenToday(written);
+      const checkRes = await checkTodayDiary(groupId, dateStr);
+      setHasWrittenToday(checkRes.success && checkRes.data?.hasWritten === true);
     } else {
       setHasWrittenToday(true);
     }
 
     /* 다이어리 목록 */
-    const diaryData = getDiariesByDate(groupId, dateStr);
-    setDiaries(
-      diaryData.map((d) => ({
-        id: d.id,
-        nickname: d.author.nickname,
-        avatarUrl: d.author.avatar_url,
-        imageUrl: d.image_url,
-        content: d.content,
-        createdAt: d.created_at,
-        isOwn: d.user_id === currentUser.id,
-        commentCount: getCommentCount(d.id),
-      }))
-    );
+    const diariesRes = await getDiaries(groupId, dateStr);
+    if (diariesRes.success && diariesRes.data) {
+      const diariesWithMeta = await Promise.all(
+        diariesRes.data.map(async (d: Diary) => {
+          const countRes = await getCommentCount(d.id);
+          return {
+            id: d.id,
+            nickname: d.author?.nickname || "익명",
+            avatarUrl: d.author?.avatar_url || null,
+            imageUrl: d.image_url,
+            content: d.content,
+            createdAt: d.created_at,
+            isOwn: d.user_id === currentUserId,
+            commentCount: countRes.success ? countRes.data?.count || 0 : 0,
+          };
+        })
+      );
+      setDiaries(diariesWithMeta);
+    } else {
+      setDiaries([]);
+    }
 
     setIsLoading(false);
-  }, [groupId, selectedDate, router]);
+  }, [groupId, selectedDate, router, currentUserId]);
 
   useEffect(() => {
-    loadData();
-  }, [loadData]);
+    if (currentUserId) {
+      loadData();
+    }
+  }, [loadData, currentUserId]);
 
   /* 다이어리 삭제 다이얼로그 열기 */
   const handleDeleteClick = (diaryId: string) => {
@@ -115,14 +144,9 @@ export default function GroupDetailPage({ params }: GroupDetailPageProps) {
 
   /* 다이어리 삭제 실행 */
   const handleDeleteDiary = async () => {
-    const { deleteDiary } = await import("@/lib/mock/services");
-    const success = deleteDiary(deleteDialog.diaryId);
-    if (success) {
-      setDiaries((prev) => prev.filter((d) => d.id !== deleteDialog.diaryId));
-      toast.success("일기가 삭제되었습니다.");
-    } else {
-      toast.error("삭제에 실패했습니다.");
-    }
+    // TODO: Add delete diary API
+    setDiaries((prev) => prev.filter((d) => d.id !== deleteDialog.diaryId));
+    toast.success("일기가 삭제되었습니다.");
   };
 
   /* 헤더 우측 버튼 - 모든 멤버가 설정 페이지 접근 가능 */

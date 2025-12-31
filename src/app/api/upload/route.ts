@@ -2,7 +2,8 @@ import { PutObjectCommand } from "@aws-sdk/client-s3";
 import { r2Client, R2_BUCKET_NAME, R2_PUBLIC_URL } from "@/lib/r2/client";
 import { apiResponse, apiError, requireAuth } from "@/lib/api/utils";
 import { NextRequest } from "next/server";
-import { v4 as uuidv4 } from "uuid";
+
+export const runtime = "edge";
 
 /**
  * POST /api/upload - 이미지 업로드 (Cloudflare R2)
@@ -17,7 +18,7 @@ export async function POST(request: NextRequest) {
   try {
     const formData = await request.formData();
     const file = formData.get("file") as File | null;
-    const folder = formData.get("folder") as string || "diaries";
+    const folder = (formData.get("folder") as string) || "diaries";
 
     if (!file) {
       return apiError("파일이 필요합니다");
@@ -36,16 +37,17 @@ export async function POST(request: NextRequest) {
 
     // 파일명 생성
     const ext = file.type.split("/")[1];
-    const filename = `${folder}/${user!.id}/${uuidv4()}.${ext}`;
+    const filename = `${folder}/${user!.id}/${crypto.randomUUID()}.${ext}`;
 
-    // R2에 업로드
-    const buffer = Buffer.from(await file.arrayBuffer());
+    // R2에 업로드 (Edge Runtime에서는 Uint8Array 사용)
+    const arrayBuffer = await file.arrayBuffer();
+    const uint8Array = new Uint8Array(arrayBuffer);
 
     await r2Client.send(
       new PutObjectCommand({
         Bucket: R2_BUCKET_NAME,
         Key: filename,
-        Body: buffer,
+        Body: uint8Array,
         ContentType: file.type,
         CacheControl: "public, max-age=31536000", // 1년 캐시
       })

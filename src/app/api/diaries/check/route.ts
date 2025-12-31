@@ -2,6 +2,8 @@ import { createClient } from "@/lib/supabase/server";
 import { apiResponse, apiError, requireAuth } from "@/lib/api/utils";
 import { NextRequest } from "next/server";
 
+export const runtime = "edge";
+
 /**
  * GET /api/diaries/check?groupId=&date= - 오늘 작성 여부 확인
  */

@@ -45,6 +45,15 @@ export const LoadingText = styled.p`
   color: var(--muted-foreground);
 `;
 
+export const LoadingContainer = styled.div`
+  /* 로딩 컨테이너 */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 48px 0;
+  color: var(--muted-foreground);
+`;
+
 export const EmptyState = styled.div`
   /* 빈 상태 표시 */
   display: flex;
