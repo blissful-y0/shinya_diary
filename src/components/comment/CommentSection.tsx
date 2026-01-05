@@ -5,7 +5,7 @@ import { toast } from "sonner";
 import { Send, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import ConfirmDialog from "@/components/common/ConfirmDialog";
-import { formatDistanceToNow } from "@/utils/date";
+import { formatDistanceToNow } from "@/lib/utils/date";
 import {
   getComments,
   createComment as apiCreateComment,

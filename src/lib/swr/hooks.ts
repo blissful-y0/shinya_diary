@@ -3,7 +3,7 @@
 import useSWR from "swr";
 import useSWRMutation from "swr/mutation";
 import type { Group, GroupMember, Diary, Comment, Profile, ProfileStats } from "@/lib/api/client";
-import { isToday } from "@/utils/date";
+import { isToday } from "@/lib/utils/date";
 
 /**
  * SWR Hooks for API

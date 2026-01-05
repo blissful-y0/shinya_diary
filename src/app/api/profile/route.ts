@@ -1,23 +1,8 @@
-import { createEdgeClient } from "@/lib/supabase/edge";
-import { NextResponse, type NextRequest } from "next/server";
+import { withAuth, apiResponse, ApiErrors } from "@/lib/api/utils";
 
 export const runtime = "edge";
 
-/**
- * GET /api/profile - 현재 사용자 프로필 조회
- */
-export async function GET(request: NextRequest) {
-  const supabase = createEdgeClient(request);
-
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) {
-    return NextResponse.json(
-      { success: false, error: "인증이 필요합니다" },
-      { status: 401 }
-    );
-  }
-
-  // 프로필과 그룹 수를 병렬로 조회
+export const GET = withAuth(async ({ user, supabase }) => {
   const [profileResult, groupCountResult] = await Promise.all([
     supabase
       .from("profiles")
@@ -31,37 +16,18 @@ export async function GET(request: NextRequest) {
   ]);
 
   if (profileResult.error) {
-    return NextResponse.json(
-      { success: false, error: profileResult.error.message },
-      { status: 500 }
-    );
+    throw ApiErrors.internal(profileResult.error.message);
   }
 
-  return NextResponse.json({
-    success: true,
-    data: {
-      profile: profileResult.data,
-      stats: {
-        groupCount: groupCountResult.count || 0,
-      },
+  return apiResponse({
+    profile: profileResult.data,
+    stats: {
+      groupCount: groupCountResult.count || 0,
     },
   });
-}
+});
 
-/**
- * PATCH /api/profile - 프로필 업데이트
- */
-export async function PATCH(request: NextRequest) {
-  const supabase = createEdgeClient(request);
-
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) {
-    return NextResponse.json(
-      { success: false, error: "인증이 필요합니다" },
-      { status: 401 }
-    );
-  }
-
+export const PATCH = withAuth(async ({ request, user, supabase }) => {
   const body = await request.json();
   const { nickname, avatarUrl } = body;
 
@@ -75,11 +41,8 @@ export async function PATCH(request: NextRequest) {
     .eq("id", user.id);
 
   if (error) {
-    return NextResponse.json(
-      { success: false, error: error.message },
-      { status: 500 }
-    );
+    throw ApiErrors.internal(error.message);
   }
 
-  return NextResponse.json({ success: true });
-}
+  return { updated: true };
+});

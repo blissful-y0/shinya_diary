@@ -7,8 +7,8 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { toast } from "sonner";
 import MobileLayout from "@/components/layout/MobileLayout";
 import { ImagePlus, X, Loader2 } from "lucide-react";
-import { isValidImageFile } from "@/utils/imageConverter";
-import { formatDateISO } from "@/utils/date";
+import { isValidImageFile } from "@/lib/utils/image";
+import { formatDateISO } from "@/lib/utils/date";
 import {
   getMyDiary,
   checkTodayDiary,

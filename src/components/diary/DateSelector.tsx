@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { ChevronLeft, ChevronRight, Calendar as CalendarIcon } from "lucide-react";
 import { ko } from "date-fns/locale";
-import { formatDateKorean, isToday } from "@/utils/date";
+import { formatDateKorean, isToday } from "@/lib/utils/date";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import * as S from "./DateSelector.styles";

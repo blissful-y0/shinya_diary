@@ -2,7 +2,7 @@ import {
   convertToWebP,
   isValidImageFile,
   type ConversionOptions,
-} from "./imageConverter";
+} from "./image";
 
 export interface UploadResult {
   success: boolean;

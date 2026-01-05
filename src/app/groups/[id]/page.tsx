@@ -11,7 +11,7 @@ import DateSelector from "@/components/diary/DateSelector";
 import DiaryCard from "@/components/diary/DiaryCard";
 import ConfirmDialog from "@/components/common/ConfirmDialog";
 import { Settings, PenSquare, Lock, Loader2 } from "lucide-react";
-import { formatDateISO, isToday } from "@/utils/date";
+import { formatDateISO, isToday } from "@/lib/utils/date";
 import { useGroup, useGroupMembers, useDiariesWithAuth } from "@/lib/swr/hooks";
 import { useRequireAuth } from "@/lib/hooks/useAuth";
 import * as S from "./styles/page.styles";
