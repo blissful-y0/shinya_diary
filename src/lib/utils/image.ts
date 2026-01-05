@@ -1,120 +1,91 @@
-import imageCompression from "browser-image-compression";
+const CF_IMAGES_ACCOUNT_HASH = process.env.NEXT_PUBLIC_CLOUDFLARE_IMAGES_ACCOUNT_HASH;
 
-export interface ConversionOptions {
-  maxSizeMB?: number;
-  maxWidthOrHeight?: number;
-  quality?: number;
+export const ImageVariants = {
+  public: "public",
+  thumbnail: "thumbnail",
+  avatar: "avatar",
+  avatarLarge: "avatar-lg",
+  diary: "diary",
+  diaryThumb: "diary-thumb",
+  cover: "cover",
+  coverThumb: "cover-thumb",
+} as const;
+
+export type ImageVariant = keyof typeof ImageVariants;
+
+export function isCloudflareImageUrl(url: string): boolean {
+  return url.includes("imagedelivery.net");
 }
 
-const DEFAULT_OPTIONS: ConversionOptions = {
-  maxSizeMB: 1,
-  maxWidthOrHeight: 1920,
-  quality: 0.8,
-};
+export function getImageWithVariant(
+  url: string | null | undefined,
+  variant: ImageVariant = "public"
+): string | null {
+  if (!url) return null;
 
-/**
- * Converts any image file to WebP format with compression
- * @param file - The original image file (any format: jpg, png, heic, etc.)
- * @param options - Compression and conversion options
- * @returns Promise<Blob> - WebP formatted blob
- */
-export async function convertToWebP(
-  file: File,
-  options: ConversionOptions = {}
-): Promise<Blob> {
-  const mergedOptions = { ...DEFAULT_OPTIONS, ...options };
+  if (!isCloudflareImageUrl(url)) {
+    return url;
+  }
 
-  // First, compress the image
-  const compressedFile = await imageCompression(file, {
-    maxSizeMB: mergedOptions.maxSizeMB!,
-    maxWidthOrHeight: mergedOptions.maxWidthOrHeight!,
-    useWebWorker: true,
-    fileType: "image/webp",
-  });
-
-  // Convert to WebP using canvas for precise quality control
-  return new Promise((resolve, reject) => {
-    const img = new Image();
-    const url = URL.createObjectURL(compressedFile);
-
-    img.onload = () => {
-      URL.revokeObjectURL(url);
-
-      const canvas = document.createElement("canvas");
-      canvas.width = img.width;
-      canvas.height = img.height;
-
-      const ctx = canvas.getContext("2d");
-      if (!ctx) {
-        reject(new Error("Failed to get canvas context"));
-        return;
-      }
-
-      ctx.drawImage(img, 0, 0);
-
-      canvas.toBlob(
-        (blob) => {
-          if (blob) {
-            resolve(blob);
-          } else {
-            reject(new Error("Failed to convert image to WebP"));
-          }
-        },
-        "image/webp",
-        mergedOptions.quality
-      );
-    };
-
-    img.onerror = () => {
-      URL.revokeObjectURL(url);
-      reject(new Error("Failed to load image"));
-    };
-
-    img.src = url;
-  });
+  const parts = url.split("/");
+  parts[parts.length - 1] = ImageVariants[variant];
+  return parts.join("/");
 }
 
-/**
- * Generates a unique filename for the WebP image
- * @param originalName - Original filename
- * @param userId - User ID for namespacing
- * @returns string - Unique WebP filename
- */
-export function generateWebPFilename(
-  originalName: string,
-  userId: string
-): string {
-  const timestamp = Date.now();
-  const randomStr = Math.random().toString(36).substring(2, 8);
-  const baseName = originalName.replace(/\.[^/.]+$/, "");
-  const sanitizedName = baseName.replace(/[^a-zA-Z0-9가-힣]/g, "_").slice(0, 20);
+export function getOptimizedImageUrl(
+  url: string | null | undefined,
+  options: {
+    width?: number;
+    height?: number;
+    fit?: "scale-down" | "contain" | "cover" | "crop" | "pad";
+    quality?: number;
+    format?: "auto" | "webp" | "avif" | "json";
+  } = {}
+): string | null {
+  if (!url) return null;
 
-  return `${userId}/${timestamp}_${randomStr}_${sanitizedName}.webp`;
+  if (!isCloudflareImageUrl(url)) {
+    return url;
+  }
+
+  const params: string[] = [];
+  if (options.width) params.push(`w=${options.width}`);
+  if (options.height) params.push(`h=${options.height}`);
+  if (options.fit) params.push(`fit=${options.fit}`);
+  if (options.quality) params.push(`q=${options.quality}`);
+  if (options.format) params.push(`f=${options.format}`);
+
+  if (params.length === 0) {
+    return url;
+  }
+
+  const parts = url.split("/");
+  parts[parts.length - 1] = params.join(",");
+  return parts.join("/");
 }
 
-/**
- * Validates if the file is an acceptable image type
- * @param file - File to validate
- * @returns boolean
- */
+export function buildImageDeliveryUrl(imageId: string, variant: ImageVariant = "public"): string {
+  if (!CF_IMAGES_ACCOUNT_HASH) {
+    console.warn("NEXT_PUBLIC_CLOUDFLARE_IMAGES_ACCOUNT_HASH is not set");
+    return "";
+  }
+  return `https://imagedelivery.net/${CF_IMAGES_ACCOUNT_HASH}/${imageId}/${ImageVariants[variant]}`;
+}
+
+const ACCEPTED_IMAGE_TYPES = [
+  "image/jpeg",
+  "image/jpg",
+  "image/png",
+  "image/gif",
+  "image/webp",
+  "image/heic",
+  "image/heif",
+];
+
 export function isValidImageFile(file: File): boolean {
-  const acceptedTypes = [
-    "image/jpeg",
-    "image/jpg",
-    "image/png",
-    "image/gif",
-    "image/webp",
-    "image/heic",
-    "image/heif",
-  ];
-  return acceptedTypes.includes(file.type);
+  return ACCEPTED_IMAGE_TYPES.includes(file.type);
 }
 
-/**
- * Gets the file size in a human-readable format
- * @param bytes - File size in bytes
- * @returns string - Formatted size string
- */
 export function formatFileSize(bytes: number): string {
   if (bytes === 0) return "0 Bytes";
   const k = 1024;
@@ -123,43 +94,31 @@ export function formatFileSize(bytes: number): string {
   return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
 }
 
-/**
- * 이미지 리사이즈 및 WebP 변환
- * 최대 크기를 지정하여 리사이즈
- */
-export async function resizeAndConvertToWebP(
-  file: File,
-  maxWidth: number = 1920,
-  maxHeight: number = 1920,
-  quality: number = 0.85
-): Promise<File> {
+export async function convertToWebP(file: File, quality: number = 0.85): Promise<File> {
+  if (file.type === "image/webp") {
+    return file;
+  }
+
+  if (file.type === "image/gif") {
+    return file;
+  }
+
   return new Promise((resolve, reject) => {
     const img = new Image();
     const canvas = document.createElement("canvas");
     const ctx = canvas.getContext("2d");
 
     img.onload = () => {
-      let { width, height } = img;
-
-      // 비율 유지하면서 리사이즈
-      if (width > maxWidth || height > maxHeight) {
-        const ratio = Math.min(maxWidth / width, maxHeight / height);
-        width = Math.round(width * ratio);
-        height = Math.round(height * ratio);
-      }
-
-      canvas.width = width;
-      canvas.height = height;
+      canvas.width = img.width;
+      canvas.height = img.height;
 
       if (!ctx) {
         reject(new Error("Canvas context not available"));
         return;
       }
 
-      // 이미지 그리기
-      ctx.drawImage(img, 0, 0, width, height);
+      ctx.drawImage(img, 0, 0);
 
-      // WebP로 변환
       canvas.toBlob(
         (blob) => {
           if (!blob) {
@@ -179,17 +138,50 @@ export async function resizeAndConvertToWebP(
       );
     };
 
-    img.onerror = () => {
-      reject(new Error("Failed to load image"));
-    };
+    img.onerror = () => reject(new Error("Failed to load image"));
 
     const reader = new FileReader();
     reader.onload = (e) => {
       img.src = e.target?.result as string;
     };
-    reader.onerror = () => {
-      reject(new Error("Failed to read file"));
-    };
+    reader.onerror = () => reject(new Error("Failed to read file"));
     reader.readAsDataURL(file);
   });
+}
+
+export function getDiaryImageUrl(url: string | null | undefined): string | null {
+  return getOptimizedImageUrl(url, {
+    width: 800,
+    fit: "scale-down",
+    quality: 85,
+    format: "auto",
+  });
+}
+
+export function getDiaryThumbnailUrl(url: string | null | undefined): string | null {
+  return getOptimizedImageUrl(url, {
+    width: 400,
+    fit: "cover",
+    quality: 80,
+    format: "auto",
+  });
+}
+
+export function getAvatarUrl(url: string | null | undefined, size: number = 80): string | null {
+  return getOptimizedImageUrl(url, {
+    width: size,
+    height: size,
+    fit: "cover",
+    quality: 80,
+    format: "auto",
+  });
+}
+
+export function getOriginalImageUrl(url: string | null | undefined): string | null {
+  if (!url) return null;
+  if (!isCloudflareImageUrl(url)) return url;
+  
+  const parts = url.split("/");
+  parts[parts.length - 1] = "public";
+  return parts.join("/");
 }

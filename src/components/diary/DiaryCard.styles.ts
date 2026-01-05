@@ -111,16 +111,22 @@ export const MenuItemDanger = styled(MenuItem)`
 export const ImageContainer = styled.div`
   /* 이미지 컨테이너 */
   width: 100%;
-  aspect-ratio: 1;
+  max-height: 500px;
   background-color: var(--muted);
   overflow: hidden;
+  cursor: pointer;
+  
+  &:hover {
+    opacity: 0.95;
+  }
 `;
 
 export const DiaryImage = styled.img`
   /* 다이어리 이미지 */
   width: 100%;
-  height: 100%;
-  object-fit: cover;
+  height: auto;
+  max-height: 500px;
+  object-fit: contain;
 `;
 
 export const ContentText = styled.p`

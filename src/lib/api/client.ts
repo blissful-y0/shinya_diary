@@ -1,9 +1,4 @@
-/**
- * 클라이언트용 API 헬퍼
- * 모든 API 호출을 위한 공통 함수들
- */
-
-import { convertToWebP } from "@/lib/utils/image";
+import { isValidImageFile, convertToWebP } from "@/lib/utils/image";
 
 interface ApiResponse<T> {
   success: boolean;
@@ -353,12 +348,22 @@ export async function updateMyProfile(data: {
 }
 
 // ============================================
-// Upload API
+// Upload API (Cloudflare Images)
 // ============================================
 
 export async function uploadImage(file: File, folder: string = "diaries") {
   try {
-    // WebP로 변환 (이미 WebP인 경우 그대로 반환)
+    if (!isValidImageFile(file)) {
+      return { 
+        success: false, 
+        error: "지원하지 않는 이미지 형식입니다. (JPG, PNG, GIF, WebP, HEIC 지원)" 
+      };
+    }
+
+    if (file.size > 10 * 1024 * 1024) {
+      return { success: false, error: "파일 크기는 10MB 이하여야 합니다" };
+    }
+
     const webpFile = await convertToWebP(file);
 
     const formData = new FormData();
@@ -371,9 +376,35 @@ export async function uploadImage(file: File, folder: string = "diaries") {
     });
 
     const json = await res.json();
-    return json as ApiResponse<{ url: string }>;
+    return json as ApiResponse<{ url: string; imageId: string }>;
   } catch (error) {
     console.error("Upload Error:", error);
     return { success: false, error: "업로드 실패" };
+  }
+}
+
+export async function getUploadUrl(folder: string = "diaries") {
+  return fetchApi<{ uploadURL: string; imageId: string; deliveryUrl: string }>(
+    `/api/upload?folder=${encodeURIComponent(folder)}`
+  );
+}
+
+export async function uploadImageDirect(
+  uploadURL: string,
+  file: File
+): Promise<boolean> {
+  try {
+    const formData = new FormData();
+    formData.append("file", file);
+
+    const res = await fetch(uploadURL, {
+      method: "POST",
+      body: formData,
+    });
+
+    return res.ok;
+  } catch (error) {
+    console.error("Direct Upload Error:", error);
+    return false;
   }
 }

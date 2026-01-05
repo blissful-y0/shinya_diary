@@ -1,64 +1,112 @@
-import { PutObjectCommand } from "@aws-sdk/client-s3";
-import { r2Client, R2_BUCKET_NAME, R2_PUBLIC_URL } from "@/lib/r2/client";
 import { apiResponse, apiError, requireAuth } from "@/lib/api/utils";
+import { createDirectUploadUrl, getImageUrl } from "@/lib/cloudflare/images";
 import { NextRequest } from "next/server";
 
 export const runtime = "edge";
 
-/**
- * POST /api/upload - 이미지 업로드 (Cloudflare R2)
- *
- * FormData로 file 전송
- * 반환: { url: string } - CDN 공개 URL
- */
 export async function POST(request: NextRequest) {
   const { user, error } = await requireAuth(request);
   if (error) return error;
 
   try {
-    const formData = await request.formData();
-    const file = formData.get("file") as File | null;
-    const folder = (formData.get("folder") as string) || "diaries";
+    const contentType = request.headers.get("content-type") || "";
 
-    if (!file) {
-      return apiError("파일이 필요합니다");
+    if (contentType.includes("application/json")) {
+      const body = await request.json();
+      const { folder = "diaries" } = body;
+
+      const { id, uploadURL } = await createDirectUploadUrl({
+        userId: user!.id,
+        folder,
+        uploadedAt: new Date().toISOString(),
+      });
+
+      return apiResponse({
+        uploadURL,
+        imageId: id,
+        deliveryUrl: getImageUrl(id),
+      });
     }
 
-    // 파일 타입 검증
-    const allowedTypes = ["image/jpeg", "image/png", "image/webp", "image/gif"];
-    if (!allowedTypes.includes(file.type)) {
-      return apiError("지원하지 않는 이미지 형식입니다");
+    if (contentType.includes("multipart/form-data")) {
+      const formData = await request.formData();
+      const file = formData.get("file") as File | null;
+      const folder = (formData.get("folder") as string) || "diaries";
+
+      if (!file) {
+        return apiError("파일이 필요합니다");
+      }
+
+      const allowedTypes = [
+        "image/jpeg",
+        "image/png",
+        "image/webp",
+        "image/gif",
+        "image/heic",
+        "image/heif",
+      ];
+      if (!allowedTypes.includes(file.type)) {
+        return apiError("지원하지 않는 이미지 형식입니다");
+      }
+
+      if (file.size > 10 * 1024 * 1024) {
+        return apiError("파일 크기는 10MB 이하여야 합니다");
+      }
+
+      const { id, uploadURL } = await createDirectUploadUrl({
+        userId: user!.id,
+        folder,
+        originalName: file.name,
+        uploadedAt: new Date().toISOString(),
+      });
+
+      const uploadFormData = new FormData();
+      uploadFormData.append("file", file);
+
+      const uploadResponse = await fetch(uploadURL, {
+        method: "POST",
+        body: uploadFormData,
+      });
+
+      if (!uploadResponse.ok) {
+        const errorText = await uploadResponse.text();
+        console.error("Cloudflare upload failed:", errorText);
+        return apiError("이미지 업로드에 실패했습니다", 500);
+      }
+
+      return apiResponse({ 
+        url: getImageUrl(id),
+        imageId: id,
+      }, 201);
     }
 
-    // 파일 크기 제한 (10MB)
-    if (file.size > 10 * 1024 * 1024) {
-      return apiError("파일 크기는 10MB 이하여야 합니다");
-    }
-
-    // 파일명 생성
-    const ext = file.type.split("/")[1];
-    const filename = `${folder}/${user!.id}/${crypto.randomUUID()}.${ext}`;
-
-    // R2에 업로드 (Edge Runtime에서는 Uint8Array 사용)
-    const arrayBuffer = await file.arrayBuffer();
-    const uint8Array = new Uint8Array(arrayBuffer);
-
-    await r2Client.send(
-      new PutObjectCommand({
-        Bucket: R2_BUCKET_NAME,
-        Key: filename,
-        Body: uint8Array,
-        ContentType: file.type,
-        CacheControl: "public, max-age=31536000", // 1년 캐시
-      })
-    );
-
-    // 공개 URL 반환
-    const publicUrl = `${R2_PUBLIC_URL}/${filename}`;
-
-    return apiResponse({ url: publicUrl }, 201);
+    return apiError("지원하지 않는 Content-Type입니다", 400);
   } catch (err) {
     console.error("Upload error:", err);
     return apiError("업로드 실패", 500);
+  }
+}
+
+export async function GET(request: NextRequest) {
+  const { user, error } = await requireAuth(request);
+  if (error) return error;
+
+  try {
+    const folder = request.nextUrl.searchParams.get("folder") || "diaries";
+
+    const { id, uploadURL } = await createDirectUploadUrl({
+      userId: user!.id,
+      folder,
+      uploadedAt: new Date().toISOString(),
+    });
+
+    return apiResponse({
+      uploadURL,
+      imageId: id,
+      deliveryUrl: getImageUrl(id),
+    });
+  } catch (err) {
+    console.error("Upload URL generation error:", err);
+    return apiError("업로드 URL 생성 실패", 500);
   }
 }
