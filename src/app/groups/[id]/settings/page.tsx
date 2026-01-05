@@ -12,7 +12,7 @@ import ConfirmDialog from "@/components/common/ConfirmDialog";
 import DeleteConfirmDialog from "@/components/common/DeleteConfirmDialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Camera, Copy, Check, Loader2, Trash2, Image } from "lucide-react";
-import { isValidImageFile } from "@/utils/imageConverter";
+import { isValidImageFile } from "@/lib/utils/image";
 import {
   getGroup,
   getGroupMembers,

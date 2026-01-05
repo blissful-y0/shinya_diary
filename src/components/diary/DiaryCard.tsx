@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import CommentSection from "@/components/comment/CommentSection";
-import { formatDistanceToNow } from "@/utils/date";
+import { formatDistanceToNow } from "@/lib/utils/date";
 import { MoreVertical, Pencil, Trash2, MessageCircle } from "lucide-react";
 import * as S from "./DiaryCard.styles";
 
