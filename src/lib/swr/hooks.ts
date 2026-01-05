@@ -3,6 +3,7 @@
 import useSWR from "swr";
 import useSWRMutation from "swr/mutation";
 import type { Group, GroupMember, Diary, Comment, Profile, ProfileStats } from "@/lib/api/client";
+import { isToday } from "@/utils/date";
 
 /**
  * SWR Hooks for API
@@ -60,13 +61,52 @@ export function useGroupMembers(groupId: string | null) {
 // ============================================
 
 export function useDiaries(groupId: string | null, date: string | null) {
+  const isPastDate = date ? !isToday(new Date(date)) : false;
+
   const { data, error, isLoading, mutate } = useSWR<Diary[]>(
-    groupId && date ? `/api/diaries?groupId=${groupId}&date=${date}` : null
+    groupId && date ? `/api/diaries?groupId=${groupId}&date=${date}` : null,
+    {
+      revalidateOnMount: !isPastDate,
+      revalidateIfStale: !isPastDate,
+    }
   );
 
   return {
     diaries: data,
     isLoading,
+    isError: !!error,
+    error,
+    mutate,
+  };
+}
+
+export function useDiariesWithAuth(groupId: string | null, date: string | null, userId: string | null) {
+  const isPastDate = date ? !isToday(new Date(date)) : false;
+  const isTodayDate = !isPastDate;
+
+  const { hasWritten, isLoading: checkLoading } = useTodayDiaryCheck(
+    isTodayDate ? groupId : null,
+    isTodayDate ? date : null
+  );
+
+  const canView = isPastDate || hasWritten;
+
+  const { data, error, isLoading, mutate } = useSWR<Diary[]>(
+    groupId && date && canView ? `/api/diaries?groupId=${groupId}&date=${date}` : null,
+    {
+      revalidateOnMount: !isPastDate,
+      revalidateIfStale: !isPastDate,
+    }
+  );
+
+  const myDiary = data?.find((d) => d.user_id === userId) ?? null;
+
+  return {
+    diaries: data,
+    myDiary,
+    hasWritten: isPastDate ? true : hasWritten,
+    canView,
+    isLoading: (isTodayDate && checkLoading) || isLoading,
     isError: !!error,
     error,
     mutate,

@@ -12,7 +12,7 @@ import DiaryCard from "@/components/diary/DiaryCard";
 import ConfirmDialog from "@/components/common/ConfirmDialog";
 import { Settings, PenSquare, Lock, Loader2 } from "lucide-react";
 import { formatDateISO, isToday } from "@/utils/date";
-import { useGroup, useGroupMembers, useDiaries } from "@/lib/swr/hooks";
+import { useGroup, useGroupMembers, useDiariesWithAuth } from "@/lib/swr/hooks";
 import { useRequireAuth } from "@/lib/hooks/useAuth";
 import * as S from "./styles/page.styles";
 
@@ -45,7 +45,13 @@ export default function GroupDetailPage({ params }: GroupDetailPageProps) {
   // SWR hooks
   const { group, isLoading: groupLoading, isError: groupError } = useGroup(groupId);
   const { members } = useGroupMembers(groupId);
-  const { diaries, isLoading: diariesLoading, mutate: mutateDiaries } = useDiaries(groupId, dateStr);
+  const {
+    diaries,
+    hasWritten: hasWrittenToday,
+    canView,
+    isLoading: diariesLoading,
+    mutate: mutateDiaries,
+  } = useDiariesWithAuth(groupId, dateStr, profile?.id ?? null);
 
   // 그룹 에러 시 리다이렉트
   useEffect(() => {
@@ -65,13 +71,6 @@ export default function GroupDetailPage({ params }: GroupDetailPageProps) {
       avatar_url: myMember.avatar_url || profile.avatar_url,
     };
   }, [members, profile]);
-
-  // 오늘 작성 여부 확인
-  const hasWrittenToday = useMemo(() => {
-    if (!isToday(selectedDate)) return true;
-    if (!diaries || !profile) return false;
-    return diaries.some((d) => d.user_id === profile.id);
-  }, [selectedDate, diaries, profile]);
 
   // 다이어리 목록 변환
   const diariesWithMeta = useMemo(() => {
@@ -110,7 +109,7 @@ export default function GroupDetailPage({ params }: GroupDetailPageProps) {
     </Link>
   );
 
-  const showLocked = isToday(selectedDate) && !hasWrittenToday;
+  const showLocked = isToday(selectedDate) && !canView;
 
   return (
     <MobileLayout

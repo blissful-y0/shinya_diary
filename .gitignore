@@ -42,3 +42,6 @@ next-env.d.ts
 supabase/.temp/
 .env.production
 .dev.vars
+
+# Auto Claude data directory
+.auto-claude/
