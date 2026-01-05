@@ -6,8 +6,9 @@ import { use, useState, useEffect, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { toast } from "sonner";
 import MobileLayout from "@/components/layout/MobileLayout";
+import ImageLightbox from "@/components/common/ImageLightbox";
 import { ImagePlus, X, Loader2 } from "lucide-react";
-import { isValidImageFile } from "@/lib/utils/image";
+import { isValidImageFile, getDiaryImageUrl, getOriginalImageUrl } from "@/lib/utils/image";
 import { formatDateISO } from "@/lib/utils/date";
 import {
   getMyDiary,
@@ -48,6 +49,7 @@ export default function WritePage({ params }: WritePageProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [diaryId, setDiaryId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [showLightbox, setShowLightbox] = useState(false);
 
   /* 초기화: 수정 모드 또는 기존 다이어리 확인 */
   useEffect(() => {
@@ -198,6 +200,20 @@ export default function WritePage({ params }: WritePageProps) {
   const canSubmit =
     (content.trim() || imageFile || existingImageUrl) && !isSubmitting;
 
+  /* 이미지 미리보기 URL (최적화된 버전) */
+  const previewImageUrl = imagePreview
+    ? imageFile
+      ? imagePreview // 새로 선택한 이미지는 base64
+      : getDiaryImageUrl(imagePreview) // 기존 이미지는 최적화
+    : null;
+
+  /* 원본 이미지 URL (라이트박스용) */
+  const originalImageUrl = imagePreview
+    ? imageFile
+      ? imagePreview // 새로 선택한 이미지는 base64 그대로
+      : getOriginalImageUrl(imagePreview) // 기존 이미지는 원본
+    : null;
+
   if (isLoading) {
     return (
       <MobileLayout
@@ -221,9 +237,16 @@ export default function WritePage({ params }: WritePageProps) {
       <S.Container>
         {/* 이미지 업로드 영역 */}
         <S.ImageUploadArea onClick={() => fileInputRef.current?.click()}>
-          {imagePreview ? (
+          {previewImageUrl ? (
             <S.ImagePreviewContainer>
-              <S.PreviewImage src={imagePreview} alt="미리보기" />
+              <S.PreviewImage
+                src={previewImageUrl}
+                alt="미리보기"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setShowLightbox(true);
+                }}
+              />
               <S.RemoveImageButton
                 onClick={(e) => {
                   e.stopPropagation();
@@ -267,6 +290,15 @@ export default function WritePage({ params }: WritePageProps) {
           )}
         </S.SubmitButton>
       </S.Container>
+
+      {/* 이미지 라이트박스 */}
+      {showLightbox && originalImageUrl && (
+        <ImageLightbox
+          src={originalImageUrl}
+          alt="다이어리 이미지"
+          onClose={() => setShowLightbox(false)}
+        />
+      )}
     </MobileLayout>
   );
 }

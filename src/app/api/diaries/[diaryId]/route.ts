@@ -17,6 +17,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     .from("diaries")
     .select("id, group_id, user_id, content, image_url, date, created_at, sticker_data")
     .eq("id", diaryId)
+    .is("deleted_at", null)
     .single();
 
   if (queryError || !diary) {
@@ -57,6 +58,31 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
 
   if (updateError) {
     return apiError(updateError.message, 500);
+  }
+
+  if (!data || data.length === 0) {
+    return apiError("권한이 없습니다", 403);
+  }
+
+  return apiResponse({ success: true });
+}
+
+export async function DELETE(request: NextRequest, { params }: RouteParams) {
+  const { user, supabase, error } = await requireAuth(request);
+  if (error) return error;
+
+  const { diaryId } = await params;
+
+  const { data, error: deleteError } = await supabase
+    .from("diaries")
+    .update({ deleted_at: new Date().toISOString() })
+    .eq("id", diaryId)
+    .eq("user_id", user!.id)
+    .is("deleted_at", null)
+    .select("id");
+
+  if (deleteError) {
+    return apiError(deleteError.message, 500);
   }
 
   if (!data || data.length === 0) {

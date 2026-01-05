@@ -22,6 +22,7 @@ export async function GET(request: NextRequest) {
     .select("id, group_id, user_id, content, image_url, date, created_at, sticker_data")
     .eq("group_id", groupId)
     .eq("date", date)
+    .is("deleted_at", null)
     .order("created_at", { ascending: false });
 
   if (queryError) {
@@ -81,6 +82,7 @@ export async function POST(request: NextRequest) {
       .eq("group_id", groupId)
       .eq("user_id", user!.id)
       .eq("date", date)
+      .is("deleted_at", null)
       .single(),
   ]);
 

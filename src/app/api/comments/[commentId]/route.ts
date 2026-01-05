@@ -24,6 +24,7 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
     .update({ content })
     .eq("id", commentId)
     .eq("user_id", user!.id)
+    .is("deleted_at", null)
     .select("id");
 
   if (updateError) {
@@ -45,9 +46,10 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
 
   const { data, error: deleteError } = await supabase
     .from("comments")
-    .delete()
+    .update({ deleted_at: new Date().toISOString() })
     .eq("id", commentId)
     .eq("user_id", user!.id)
+    .is("deleted_at", null)
     .select("id");
 
   if (deleteError) {

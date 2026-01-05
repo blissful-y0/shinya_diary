@@ -14,6 +14,7 @@ import { Settings, PenSquare, Lock, Loader2 } from "lucide-react";
 import { formatDateISO, isToday } from "@/lib/utils/date";
 import { useGroup, useGroupMembers, useDiariesWithAuth } from "@/lib/swr/hooks";
 import { useRequireAuth } from "@/lib/hooks/useAuth";
+import { deleteDiary } from "@/lib/api/client";
 import * as S from "./styles/page.styles";
 
 /* =============================================
@@ -95,9 +96,19 @@ export default function GroupDetailPage({ params }: GroupDetailPageProps) {
 
   /* 다이어리 삭제 실행 */
   const handleDeleteDiary = async () => {
-    // TODO: Add delete diary API
-    mutateDiaries();
-    toast.success("일기가 삭제되었습니다.");
+    try {
+      const result = await deleteDiary(deleteDialog.diaryId);
+      if (result.success) {
+        mutateDiaries();
+        toast.success("일기가 삭제되었습니다.");
+        setDeleteDialog({ open: false, diaryId: "" });
+      } else {
+        toast.error(result.error || "삭제에 실패했습니다.");
+      }
+    } catch (error) {
+      console.error("일기 삭제 실패:", error);
+      toast.error("삭제에 실패했습니다.");
+    }
   };
 
   /* 헤더 우측 버튼 - 모든 멤버가 설정 페이지 접근 가능 */
