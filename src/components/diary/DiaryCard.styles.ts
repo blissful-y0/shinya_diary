@@ -1,70 +1,119 @@
-import styled from "styled-components";
+import styled, { keyframes } from "styled-components";
 
-/* =============================================
-   DiaryCard 스타일
-   - 다이어리 카드 레이아웃
-   ============================================= */
+const fadeIn = keyframes`
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+`;
+
+const menuSlide = keyframes`
+  from {
+    opacity: 0;
+    transform: translateY(-4px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+`;
 
 export const CardContainer = styled.article`
-  /* 카드 컨테이너 */
-  background-color: var(--card);
-  border: 1px solid var(--border);
-  border-radius: 16px;
+  background-color: #ffffff;
+  border: 1px solid #e5e5e5;
+  border-radius: 2px;
   overflow: hidden;
+  animation: ${fadeIn} 0.6s ease-out;
+  transition: box-shadow 0.3s ease;
+  margin-bottom: 24px;
+  position: relative;
+  
+  box-shadow: 
+    0 1px 2px rgba(0, 0, 0, 0.05),
+    0 2px 8px rgba(0, 0, 0, 0.02);
+
+  &:hover {
+    box-shadow: 
+      0 4px 12px rgba(0, 0, 0, 0.08),
+      0 2px 4px rgba(0, 0, 0, 0.04);
+  }
+
+  &::before {
+    content: '';
+    position: absolute;
+    left: 24px;
+    top: 0;
+    bottom: 0;
+    width: 1px;
+    background-color: #f0f0f0;
+    z-index: 1;
+    pointer-events: none;
+  }
 `;
 
 export const CardHeader = styled.header`
-  /* 카드 헤더 */
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 16px;
+  gap: 14px;
+  padding: 24px 24px 16px 40px;
+  border-bottom: 1px solid transparent;
+  position: relative;
+  z-index: 2;
 `;
 
 export const AuthorInfo = styled.div`
-  /* 작성자 정보 */
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 4px;
 `;
 
 export const AuthorName = styled.span`
-  /* 작성자 이름 */
+  font-family: var(--font-sans);
   font-size: 15px;
-  font-weight: 600;
+  font-weight: 700;
   color: var(--foreground);
+  letter-spacing: 0.02em;
 `;
 
 export const PostTime = styled.span`
-  /* 작성 시간 */
-  font-size: 12px;
-  color: var(--muted-foreground);
+  font-family: var(--font-sans);
+  font-size: 11px;
+  font-weight: 400;
+  color: #a3a3a3;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
 `;
 
 export const MenuWrapper = styled.div`
-  /* 메뉴 래퍼 */
   position: relative;
 `;
 
 export const MenuButton = styled.button`
-  /* 메뉴 버튼 */
   display: flex;
   align-items: center;
   justify-content: center;
   width: 32px;
   height: 32px;
   border-radius: 50%;
-  color: var(--muted-foreground);
-  transition: background-color 0.2s;
-
+  color: #a3a3a3;
+  transition: all 0.2s ease;
+  
   &:hover {
-    background-color: var(--accent);
+    color: var(--foreground);
+    background-color: #f5f5f5;
+  }
+
+  &:active {
+    transform: scale(0.95);
   }
 `;
 
 export const MenuOverlay = styled.div`
-  /* 메뉴 오버레이 */
   position: fixed;
   top: 0;
   left: 0;
@@ -74,90 +123,122 @@ export const MenuOverlay = styled.div`
 `;
 
 export const MenuDropdown = styled.div`
-  /* 메뉴 드롭다운 */
   position: absolute;
-  top: 100%;
+  top: calc(100% + 4px);
   right: 0;
-  z-index: 1000;
-  min-width: 120px;
-  background-color: var(--card);
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  z-index: 1001;
+  min-width: 140px;
+  background-color: #ffffff;
+  border: 1px solid #e5e5e5;
+  border-radius: 4px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
   overflow: hidden;
+  animation: ${menuSlide} 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 `;
 
 export const MenuItem = styled.button`
-  /* 메뉴 아이템 */
   width: 100%;
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
   padding: 12px 16px;
-  font-size: 14px;
+  font-size: 13px;
+  font-family: var(--font-sans);
   color: var(--foreground);
-  transition: background-color 0.2s;
-
+  letter-spacing: 0.01em;
+  transition: background-color 0.15s ease;
+  
   &:hover {
-    background-color: var(--accent);
+    background-color: #f9f9f9;
+  }
+
+  svg {
+    opacity: 0.5;
+    width: 14px;
+    height: 14px;
   }
 `;
 
 export const MenuItemDanger = styled(MenuItem)`
-  /* 위험 메뉴 아이템 (삭제) */
-  color: var(--destructive);
+  color: #737373;
+
+  &:hover {
+    color: #171717;
+    background-color: #fff1f2;
+  }
 `;
 
 export const ImageContainer = styled.div`
-  /* 이미지 컨테이너 */
   width: 100%;
-  max-height: 500px;
-  background-color: var(--muted);
+  max-height: 520px;
+  background-color: #fafafa;
   overflow: hidden;
   cursor: pointer;
+  margin: 8px 0 24px;
+  border-top: 1px solid transparent;
+  border-bottom: 1px solid transparent;
+  position: relative;
+  z-index: 2;
   
-  &:hover {
-    opacity: 0.95;
+  padding: 0; 
+  
+  &:active {
+    opacity: 0.98;
   }
 `;
 
 export const DiaryImage = styled.img`
-  /* 다이어리 이미지 */
   width: 100%;
   height: auto;
-  max-height: 500px;
+  max-height: 520px;
   object-fit: contain;
+  display: block;
 `;
 
 export const ContentText = styled.p`
-  /* 내용 텍스트 */
-  padding: 16px;
-  font-size: 15px;
-  line-height: 1.6;
-  color: var(--foreground);
+  padding: 0 32px 32px 40px;
+  font-family: var(--font-sans);
+  font-size: 16px;
+  font-weight: 400;
+  line-height: 1.85;
+  letter-spacing: 0.01em;
+  color: #262626;
   white-space: pre-wrap;
   word-break: break-word;
+  position: relative;
+  z-index: 2;
+
+  font-feature-settings: "kern" 1, "liga" 1;
 `;
 
 export const CommentToggle = styled.button`
-  /* 코멘트 토글 버튼 */
   display: flex;
   align-items: center;
-  gap: 6px;
-  padding: 12px 16px;
-  font-size: 13px;
-  font-weight: 500;
-  color: var(--muted-foreground);
-  border-top: 1px solid var(--border);
-  transition: color 0.2s, background-color 0.2s;
+  gap: 8px;
+  padding: 16px 24px 16px 40px;
+  font-size: 12px;
+  font-family: var(--font-sans);
+  color: #737373;
+  border-top: 1px solid #f5f5f5;
+  transition: all 0.2s ease;
   width: 100%;
+  letter-spacing: 0.03em;
+  position: relative;
+  z-index: 2;
 
   &:hover {
     color: var(--foreground);
-    background-color: var(--accent);
+    background-color: #fafafa;
+  }
+
+  svg {
+    opacity: 0.6;
+    width: 16px;
+    height: 16px;
   }
 
   span {
-    color: var(--primary);
+    font-weight: 500;
+    color: var(--foreground);
   }
 `;

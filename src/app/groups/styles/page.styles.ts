@@ -1,86 +1,171 @@
-import styled from "styled-components";
-import { Button } from "@/components/ui/button";
+import styled, { keyframes } from "styled-components";
 
-/* =============================================
-   그룹 목록 페이지 스타일
-   ============================================= */
+const floatUp = keyframes`
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+`;
+
+const fadeIn = keyframes`
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+`;
+
+const drawLine = keyframes`
+  from {
+    width: 0;
+  }
+  to {
+    width: 24px;
+  }
+`;
 
 export const Container = styled.div`
-  /* 페이지 컨테이너 */
-  padding: 16px;
+  padding: 24px 20px;
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: 32px;
+  animation: ${fadeIn} 0.5s ease-out;
+  background-color: #ffffff;
+  min-height: 100vh;
 `;
 
 export const ActionButtons = styled.div`
-  /* 액션 버튼 그룹 */
   display: flex;
   gap: 12px;
+  animation: ${floatUp} 0.6s cubic-bezier(0.22, 1, 0.36, 1);
 `;
 
-export const ActionButton = styled(Button)`
-  /* 액션 버튼 */
+export const ActionButton = styled.button<{ variant?: "outline" | "solid" }>`
   flex: 1;
-  height: 48px;
+  height: 52px;
   font-size: 14px;
+  font-weight: 500;
+  letter-spacing: 0.02em;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
-  border-radius: 12px;
+  gap: 10px;
+  border-radius: 4px; /* Sharper corners */
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+  min-height: 48px;
+  font-family: var(--font-sans);
+  
+  ${({ variant }) =>
+    variant === "outline"
+      ? `
+    background: transparent;
+    color: #171717;
+    border: 1px solid #e5e5e5;
+    
+    &:hover {
+      border-color: #171717;
+      background: #fafafa;
+    }
+    
+    &:active {
+      transform: scale(0.99);
+    }
+  `
+      : `
+    background: #171717;
+    color: #ffffff;
+    border: 1px solid #171717;
+    
+    &:hover {
+      background: #000000;
+    }
+    
+    &:active {
+      transform: scale(0.99);
+    }
+  `}
+  
+  svg {
+    opacity: 0.9;
+    width: 18px;
+    height: 18px;
+  }
 `;
 
 export const GroupList = styled.div`
-  /* 그룹 리스트 컨테이너 */
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 20px;
+  animation: ${floatUp} 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+  animation-delay: 0.1s;
+  animation-fill-mode: both;
 `;
 
 export const LoadingText = styled.p`
-  /* 로딩 텍스트 */
   text-align: center;
   padding: 48px 0;
-  color: var(--muted-foreground);
+  color: #a3a3a3;
+  font-size: 14px;
+  letter-spacing: 0.02em;
+  font-weight: 300;
 `;
 
 export const LoadingContainer = styled.div`
-  /* 로딩 컨테이너 */
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 48px 0;
-  color: var(--muted-foreground);
+  padding: 64px 0;
+  color: #a3a3a3;
+  animation: ${fadeIn} 0.3s ease-out;
 `;
 
 export const EmptyState = styled.div`
-  /* 빈 상태 표시 */
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 48px 24px;
+  padding: 80px 24px;
   text-align: center;
+  animation: ${floatUp} 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+  animation-delay: 0.15s;
+  animation-fill-mode: both;
 `;
 
 export const EmptyIcon = styled.div`
-  /* 빈 상태 아이콘 */
-  color: var(--muted-foreground);
-  margin-bottom: 16px;
+  color: #d4d4d4;
+  opacity: 1;
+  margin-bottom: 24px;
+  
+  &::after {
+    content: "";
+    display: block;
+    width: 24px;
+    height: 1px;
+    background: #171717;
+    margin: 24px auto 0;
+    animation: ${drawLine} 0.6s ease-out 0.4s both;
+  }
 `;
 
 export const EmptyTitle = styled.h3`
-  /* 빈 상태 제목 */
   font-size: 18px;
   font-weight: 600;
-  color: var(--foreground);
-  margin-bottom: 8px;
+  color: #171717;
+  margin-bottom: 12px;
+  letter-spacing: 0.02em;
+  font-family: var(--font-sans);
 `;
 
 export const EmptyText = styled.p`
-  /* 빈 상태 설명 */
   font-size: 14px;
-  color: var(--muted-foreground);
-  line-height: 1.6;
+  color: #737373;
+  line-height: 1.8;
+  font-weight: 300;
+  letter-spacing: 0.01em;
 `;

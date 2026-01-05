@@ -1,9 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import MobileLayout from "@/components/layout/MobileLayout";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Settings, LogOut, ChevronRight } from "lucide-react";
+import { LogOut, ChevronRight } from "lucide-react";
 import { updateMyProfile } from "@/lib/api/client";
 import { useRequireAuth } from "@/lib/hooks/useAuth";
 import { EditProfileModal } from "@/components/profile/EditProfileModal";
@@ -22,6 +22,11 @@ export default function ProfilePage() {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+
+  // 페이지 마운트 시 프로필 새로고침
+  useEffect(() => {
+    refreshProfile();
+  }, [refreshProfile]);
 
   const handleLogout = async () => {
     await signOut();
