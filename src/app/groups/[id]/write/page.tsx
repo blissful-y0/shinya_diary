@@ -16,7 +16,7 @@ import {
   updateDiary,
   uploadImage,
 } from "@/lib/api/client";
-import { createClient } from "@/lib/supabase/client";
+import { useRequireAuth } from "@/lib/hooks/useAuth";
 import * as S from "./styles/page.styles";
 
 /* =============================================
@@ -34,6 +34,7 @@ export default function WritePage({ params }: WritePageProps) {
   const { id: groupId } = use(params);
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { profile, isLoading: authLoading } = useRequireAuth();
   const editDiaryId = searchParams.get("edit");
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -41,6 +42,7 @@ export default function WritePage({ params }: WritePageProps) {
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [existingImageUrl, setExistingImageUrl] = useState<string | null>(null);
+  const [imageDeleted, setImageDeleted] = useState(false); // 이미지 삭제 여부 추적
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [uploadProgress, setUploadProgress] = useState("");
   const [isEditing, setIsEditing] = useState(false);
@@ -50,15 +52,7 @@ export default function WritePage({ params }: WritePageProps) {
   /* 초기화: 수정 모드 또는 기존 다이어리 확인 */
   useEffect(() => {
     const init = async () => {
-      const supabase = createClient();
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-
-      if (!user) {
-        router.replace("/login");
-        return;
-      }
+      if (!profile || authLoading) return;
 
       const today = formatDateISO(new Date());
 
@@ -95,7 +89,7 @@ export default function WritePage({ params }: WritePageProps) {
     };
 
     init();
-  }, [groupId, editDiaryId, router]);
+  }, [groupId, editDiaryId, router, profile, authLoading]);
 
   /* 이미지 선택 처리 */
   const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -109,6 +103,7 @@ export default function WritePage({ params }: WritePageProps) {
 
     setImageFile(file);
     setExistingImageUrl(null);
+    setImageDeleted(false); // 새 이미지 선택 시 삭제 상태 리셋
 
     /* 미리보기 생성 */
     const reader = new FileReader();
@@ -123,6 +118,7 @@ export default function WritePage({ params }: WritePageProps) {
     setImageFile(null);
     setImagePreview(null);
     setExistingImageUrl(null);
+    setImageDeleted(true); // 이미지 삭제 명시적 추적
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
     }
@@ -160,7 +156,8 @@ export default function WritePage({ params }: WritePageProps) {
         setUploadProgress("수정 중...");
         const updateRes = await updateDiary(diaryId, {
           content: content.trim() || undefined,
-          imageUrl: imageUrl || undefined,
+          // 이미지 삭제 시 명시적으로 null 전달, 그 외에는 새 URL 또는 기존 URL
+          imageUrl: imageDeleted ? null : (imageUrl || undefined),
         });
 
         if (!updateRes.success) {

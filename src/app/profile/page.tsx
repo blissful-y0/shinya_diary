@@ -1,9 +1,13 @@
 "use client";
 
+import { useState } from "react";
 import MobileLayout from "@/components/layout/MobileLayout";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Settings, LogOut, ChevronRight } from "lucide-react";
-import { signOut } from "@/lib/supabase/auth";
+import { updateMyProfile } from "@/lib/api/client";
+import { useRequireAuth } from "@/lib/hooks/useAuth";
+import { EditProfileModal } from "@/components/profile/EditProfileModal";
+import DeleteConfirmDialog from "@/components/common/DeleteConfirmDialog";
 import * as S from "./styles/page.styles";
 
 /* =============================================
@@ -13,52 +17,78 @@ import * as S from "./styles/page.styles";
    ============================================= */
 
 export default function ProfilePage() {
-  /* 로그아웃 핸들러 */
+  const { profile, stats, isLoading, signOut, deleteAccount, refreshProfile } =
+    useRequireAuth();
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+
   const handleLogout = async () => {
     await signOut();
-    window.location.href = "/login";
   };
 
-  /* 설정 버튼 */
-  const headerRight = (
-    <S.SettingsButton>
-      <Settings size={20} />
-    </S.SettingsButton>
-  );
+  const handleDeleteAccount = async () => {
+    setIsDeleting(true);
+    await deleteAccount();
+  };
+
+  const handleProfileUpdate = async (
+    nickname: string,
+    avatarUrl: string | null
+  ) => {
+    const result = await updateMyProfile({ nickname, avatarUrl });
+    if (result.success) {
+      await refreshProfile();
+    }
+    return result.success;
+  };
+
+  const getInitials = (name: string | null, email: string) => {
+    if (name) return name.charAt(0).toUpperCase();
+    return email.charAt(0).toUpperCase();
+  };
+
+  if (isLoading) {
+    return (
+      <MobileLayout headerTitle="프로필">
+        <S.Container>
+          <S.LoadingContainer>로딩 중...</S.LoadingContainer>
+        </S.Container>
+      </MobileLayout>
+    );
+  }
 
   return (
-    <MobileLayout headerTitle="프로필" headerRight={headerRight}>
+    <MobileLayout headerTitle="프로필">
       <S.Container>
         {/* 프로필 헤더 */}
         <S.ProfileHeader>
           <Avatar className="w-20 h-20">
-            <AvatarImage src="" alt="프로필 이미지" />
-            <AvatarFallback>U</AvatarFallback>
+            <AvatarImage src={profile?.avatar_url || ""} alt="프로필 이미지" />
+            <AvatarFallback>
+              {getInitials(profile?.nickname || null, profile?.email || "U")}
+            </AvatarFallback>
           </Avatar>
           <S.ProfileInfo>
-            <S.ProfileName>로그인이 필요해요</S.ProfileName>
-            <S.ProfileEmail>로그인 후 프로필을 확인하세요</S.ProfileEmail>
+            <S.ProfileName>
+              {profile?.nickname || "닉네임을 설정해주세요"}
+            </S.ProfileName>
+            <S.ProfileEmail>{profile?.email}</S.ProfileEmail>
           </S.ProfileInfo>
-          <S.EditProfileButton variant="outline" size="sm">
+          <S.EditProfileButton
+            variant="outline"
+            size="sm"
+            onClick={() => setIsEditModalOpen(true)}
+          >
             프로필 수정
           </S.EditProfileButton>
         </S.ProfileHeader>
 
-        {/* 통계 */}
+        {/* 참여 그룹 */}
         <S.StatsCard>
           <S.StatItem>
-            <S.StatValue>0</S.StatValue>
-            <S.StatLabel>작성한 일기</S.StatLabel>
-          </S.StatItem>
-          <S.StatDivider />
-          <S.StatItem>
-            <S.StatValue>0</S.StatValue>
+            <S.StatValue>{stats.groupCount}</S.StatValue>
             <S.StatLabel>참여 그룹</S.StatLabel>
-          </S.StatItem>
-          <S.StatDivider />
-          <S.StatItem>
-            <S.StatValue>0</S.StatValue>
-            <S.StatLabel>연속 작성</S.StatLabel>
           </S.StatItem>
         </S.StatsCard>
 
@@ -87,7 +117,38 @@ export default function ProfilePage() {
           <LogOut size={18} />
           로그아웃
         </S.LogoutButton>
+
+        {/* 회원 탈퇴 */}
+        <S.DeleteAccountButton
+          variant="ghost"
+          onClick={() => setIsDeleteDialogOpen(true)}
+          disabled={isDeleting}
+        >
+          회원 탈퇴
+        </S.DeleteAccountButton>
       </S.Container>
+
+      {/* 프로필 수정 모달 */}
+      {profile && (
+        <EditProfileModal
+          isOpen={isEditModalOpen}
+          onClose={() => setIsEditModalOpen(false)}
+          currentNickname={profile.nickname || ""}
+          currentAvatarUrl={profile.avatar_url}
+          onSave={handleProfileUpdate}
+        />
+      )}
+
+      {/* 회원 탈퇴 확인 다이얼로그 */}
+      <DeleteConfirmDialog
+        open={isDeleteDialogOpen}
+        onOpenChange={setIsDeleteDialogOpen}
+        title="회원 탈퇴"
+        description="정말로 탈퇴하시겠습니까? 모든 데이터(다이어리, 그룹 등)가 영구적으로 삭제되며, 이 작업은 되돌릴 수 없습니다."
+        confirmText="회원탈퇴"
+        confirmLabel="탈퇴하려면 '회원탈퇴'를 입력하세요"
+        onConfirm={handleDeleteAccount}
+      />
     </MobileLayout>
   );
 }

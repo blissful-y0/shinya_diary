@@ -26,7 +26,7 @@ import {
   type GroupMember,
   type JoinRequest,
 } from "@/lib/api/client";
-import { createClient } from "@/lib/supabase/client";
+import { useRequireAuth } from "@/lib/hooks/useAuth";
 import * as S from "./styles/page.styles";
 
 /* =============================================
@@ -42,6 +42,7 @@ interface SettingsPageProps {
 export default function GroupSettingsPage({ params }: SettingsPageProps) {
   const { id: groupId } = use(params);
   const router = useRouter();
+  const { profile, isLoading: authLoading } = useRequireAuth();
   const groupIconInputRef = useRef<HTMLInputElement>(null);
   const coverImageInputRef = useRef<HTMLInputElement>(null);
   const profileAvatarInputRef = useRef<HTMLInputElement>(null);
@@ -62,7 +63,6 @@ export default function GroupSettingsPage({ params }: SettingsPageProps) {
   >([]);
 
   /* 내 그룹 프로필 */
-  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [myNickname, setMyNickname] = useState("");
   const [myAvatarFile, setMyAvatarFile] = useState<File | null>(null);
   const [myAvatarPreview, setMyAvatarPreview] = useState<string | null>(null);
@@ -85,19 +85,9 @@ export default function GroupSettingsPage({ params }: SettingsPageProps) {
   /* 데이터 로드 */
   useEffect(() => {
     const loadData = async () => {
+      if (!profile || authLoading) return;
+
       setIsLoading(true);
-
-      const supabase = createClient();
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-
-      if (!user) {
-        router.replace("/login");
-        return;
-      }
-
-      setCurrentUserId(user.id);
 
       /* 그룹 정보 */
       const groupRes = await getGroup(groupId);
@@ -112,7 +102,7 @@ export default function GroupSettingsPage({ params }: SettingsPageProps) {
       setGroupIconPreview(group.icon_url);
       setCoverImagePreview(group.cover_image_url);
       setInviteCode(group.invite_code);
-      setIsOwner(group.owner_id === user.id);
+      setIsOwner(group.owner_id === profile.id);
 
       /* 멤버 목록 */
       const membersRes = await getGroupMembers(groupId);
@@ -129,7 +119,7 @@ export default function GroupSettingsPage({ params }: SettingsPageProps) {
 
         /* 내 프로필 찾기 */
         const myProfile = membersRes.data.find(
-          (m: GroupMember) => m.user_id === user.id
+          (m: GroupMember) => m.user_id === profile.id
         );
         if (myProfile) {
           setMyNickname(myProfile.nickname || "");
@@ -138,7 +128,7 @@ export default function GroupSettingsPage({ params }: SettingsPageProps) {
       }
 
       /* 방장이면 가입 요청 목록 조회 */
-      if (group.owner_id === user.id) {
+      if (group.owner_id === profile.id) {
         const requestsRes = await getJoinRequests(groupId);
         if (requestsRes.success && requestsRes.data) {
           setJoinRequests(
@@ -158,7 +148,7 @@ export default function GroupSettingsPage({ params }: SettingsPageProps) {
     };
 
     loadData();
-  }, [groupId, router]);
+  }, [groupId, router, profile, authLoading]);
 
   /* 프로필 아바타 선택 */
   const handleProfileAvatarSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -221,7 +211,7 @@ export default function GroupSettingsPage({ params }: SettingsPageProps) {
       return;
     }
 
-    if (!currentUserId) return;
+    if (!profile) return;
 
     setIsSavingProfile(true);
 
@@ -235,7 +225,7 @@ export default function GroupSettingsPage({ params }: SettingsPageProps) {
         }
       }
 
-      const res = await updateGroupProfile(groupId, currentUserId, {
+      const res = await updateGroupProfile(groupId, profile.id, {
         nickname: myNickname.trim(),
         avatarUrl,
       });

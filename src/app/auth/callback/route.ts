@@ -13,6 +13,23 @@ export async function GET(request: Request) {
     const { error } = await supabase.auth.exchangeCodeForSession(code);
 
     if (!error) {
+      // OAuth 사용자 정보로 프로필 업데이트
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        const metadata = user.user_metadata;
+        const avatarUrl = metadata?.avatar_url || metadata?.picture || null;
+        const nickname = metadata?.full_name || metadata?.name || null;
+
+        await supabase
+          .from("profiles")
+          .update({
+            avatar_url: avatarUrl,
+            nickname: nickname,
+          })
+          .eq("id", user.id)
+          .is("avatar_url", null); // 기존 avatar가 없는 경우만 업데이트
+      }
+
       const forwardedHost = request.headers.get("x-forwarded-host");
       const isLocalEnv = process.env.NODE_ENV === "development";
 

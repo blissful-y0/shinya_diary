@@ -1,6 +1,6 @@
 "use client";
 
-import { signInWithGoogle } from "@/lib/supabase/auth";
+import { signInWithGoogle } from "@/lib/api/client";
 import * as S from "./styles/page.styles";
 
 /* =============================================
@@ -12,9 +12,9 @@ import * as S from "./styles/page.styles";
 export default function LoginPage() {
   /* Google 로그인 핸들러 */
   const handleGoogleLogin = async () => {
-    const { error } = await signInWithGoogle();
-    if (error) {
-      console.error("로그인 실패:", error.message);
+    const result = await signInWithGoogle();
+    if (!result.success) {
+      console.error("로그인 실패:", result.error);
     }
   };
 

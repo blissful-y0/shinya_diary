@@ -20,29 +20,33 @@ export async function GET(request: NextRequest) {
 
   const supabase = await createClient();
 
-  const { data, error: queryError } = await supabase
+  // 댓글 조회
+  const { data: comments, error: queryError } = await supabase
     .from("comments")
-    .select(`
-      *,
-      author:group_members!inner(
-        nickname,
-        avatar_url,
-        user_id
-      )
-    `)
+    .select("id, diary_id, user_id, content, created_at, updated_at")
     .eq("diary_id", diaryId)
-    .eq("group_members.group_id", groupId)
     .order("created_at", { ascending: true });
 
   if (queryError) {
-    return apiError("댓글 조회 실패", 500);
+    console.error("Comment query error:", queryError);
+    return apiError(`댓글 조회 실패: ${queryError.message}`, 500);
   }
 
-  const result = (data || []).map((c) => ({
+  // 작성자 정보 별도 조회
+  const userIds = [...new Set(comments?.map(c => c.user_id) || [])];
+  const { data: members } = await supabase
+    .from("group_members")
+    .select("user_id, nickname, avatar_url")
+    .eq("group_id", groupId)
+    .in("user_id", userIds.length > 0 ? userIds : ["none"]);
+
+  const memberMap = new Map(members?.map(m => [m.user_id, m]) || []);
+
+  const result = (comments || []).map((c) => ({
     ...c,
     author: {
-      nickname: c.author.nickname || "익명",
-      avatar_url: c.author.avatar_url,
+      nickname: memberMap.get(c.user_id)?.nickname || "익명",
+      avatar_url: memberMap.get(c.user_id)?.avatar_url || null,
     },
     isOwn: c.user_id === user!.id,
   }));

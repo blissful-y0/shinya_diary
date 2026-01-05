@@ -24,6 +24,7 @@ interface DiaryCardProps {
   createdAt: string;
   isOwn?: boolean;
   commentCount?: number;
+  currentUserAuthor?: { nickname: string; avatar_url: string | null } | null;
   onEdit?: () => void;
   onDelete?: () => void;
 }
@@ -38,6 +39,7 @@ export default function DiaryCard({
   createdAt,
   isOwn = false,
   commentCount = 0,
+  currentUserAuthor,
   onEdit,
   onDelete,
 }: DiaryCardProps) {
@@ -119,7 +121,11 @@ export default function DiaryCard({
 
       {/* 코멘트 섹션 */}
       {showComments && (
-        <CommentSection diaryId={id} groupId={groupId} />
+        <CommentSection
+          diaryId={id}
+          groupId={groupId}
+          currentUserAuthor={currentUserAuthor}
+        />
       )}
     </S.CardContainer>
   );

@@ -1,6 +1,7 @@
 "use client";
 
 import MobileLayout from "@/components/layout/MobileLayout";
+import { useRequireAuth } from "@/lib/hooks/useAuth";
 import * as S from "./styles/page.styles";
 
 /* =============================================
@@ -10,6 +11,20 @@ import * as S from "./styles/page.styles";
    ============================================= */
 
 export default function HomePage() {
+  const { isLoading } = useRequireAuth();
+
+  if (isLoading) {
+    return (
+      <MobileLayout headerTitle="Shinya Diary">
+        <S.Container>
+          <S.PlaceholderCard>
+            <S.PlaceholderText>로딩 중...</S.PlaceholderText>
+          </S.PlaceholderCard>
+        </S.Container>
+      </MobileLayout>
+    );
+  }
+
   return (
     <MobileLayout headerTitle="Shinya Diary">
       <S.Container>

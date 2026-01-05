@@ -22,7 +22,7 @@ export async function GET(request: NextRequest) {
 
   const { data, error: queryError } = await supabase
     .from("diaries")
-    .select("*")
+    .select("id, group_id, user_id, content, image_url, date, created_at, sticker_data")
     .eq("group_id", groupId)
     .eq("user_id", user!.id)
     .eq("date", date)
