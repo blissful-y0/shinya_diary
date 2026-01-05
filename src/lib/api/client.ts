@@ -45,12 +45,8 @@ export async function getCurrentUser() {
   return fetchApi<CurrentUser>("/api/auth/me");
 }
 
-export async function signInWithGoogle() {
-  const result = await fetchApi<{ url: string }>("/api/auth/google");
-  if (result.success && result.data?.url) {
-    window.location.href = result.data.url;
-  }
-  return result;
+export function signInWithGoogle() {
+  window.location.href = "/api/auth/google";
 }
 
 export async function signOut() {

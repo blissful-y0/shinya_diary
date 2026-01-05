@@ -1,4 +1,3 @@
-import { createClient } from "@/lib/supabase/server";
 import { apiResponse, apiError, requireAuth } from "@/lib/api/utils";
 import { NextRequest } from "next/server";
 
@@ -8,17 +7,12 @@ interface RouteParams {
   params: Promise<{ diaryId: string }>;
 }
 
-/**
- * GET /api/diaries/[diaryId] - 다이어리 상세 조회
- */
 export async function GET(request: NextRequest, { params }: RouteParams) {
-  const { error } = await requireAuth();
+  const { supabase, error } = await requireAuth(request);
   if (error) return error;
 
   const { diaryId } = await params;
-  const supabase = await createClient();
 
-  // 다이어리 조회
   const { data: diary, error: queryError } = await supabase
     .from("diaries")
     .select("id, group_id, user_id, content, image_url, date, created_at, sticker_data")
@@ -29,7 +23,6 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     return apiError("다이어리를 찾을 수 없습니다", 404);
   }
 
-  // 작성자 정보 조회
   const { data: member } = await supabase
     .from("group_members")
     .select("nickname, avatar_url")
@@ -43,23 +36,18 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
   });
 }
 
-/**
- * PATCH /api/diaries/[diaryId] - 다이어리 수정
- */
 export async function PATCH(request: NextRequest, { params }: RouteParams) {
-  const { user, error } = await requireAuth();
+  const { user, supabase, error } = await requireAuth(request);
   if (error) return error;
 
   const { diaryId } = await params;
   const body = await request.json();
-  const supabase = await createClient();
 
   const updateData: Record<string, unknown> = {};
   if (body.content !== undefined) updateData.content = body.content;
   if (body.imageUrl !== undefined) updateData.image_url = body.imageUrl;
   if (body.stickerData !== undefined) updateData.sticker_data = body.stickerData;
 
-  // user_id 조건으로 권한 확인 + 업데이트를 한 번에 처리
   const { data, error: updateError } = await supabase
     .from("diaries")
     .update(updateData)

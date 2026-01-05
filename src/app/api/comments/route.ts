@@ -1,14 +1,10 @@
-import { createClient } from "@/lib/supabase/server";
 import { apiResponse, apiError, requireAuth } from "@/lib/api/utils";
 import { NextRequest } from "next/server";
 
 export const runtime = "edge";
 
-/**
- * GET /api/comments?diaryId=&groupId= - 댓글 목록 조회
- */
 export async function GET(request: NextRequest) {
-  const { user, error } = await requireAuth();
+  const { user, supabase, error } = await requireAuth(request);
   if (error) return error;
 
   const diaryId = request.nextUrl.searchParams.get("diaryId");
@@ -18,9 +14,17 @@ export async function GET(request: NextRequest) {
     return apiError("diaryId와 groupId는 필수입니다");
   }
 
-  const supabase = await createClient();
+  const { data: membership } = await supabase
+    .from("group_members")
+    .select("id")
+    .eq("group_id", groupId)
+    .eq("user_id", user!.id)
+    .single();
 
-  // 댓글 조회
+  if (!membership) {
+    return apiError("그룹 멤버가 아닙니다", 403);
+  }
+
   const { data: comments, error: queryError } = await supabase
     .from("comments")
     .select("id, diary_id, user_id, content, created_at, updated_at")
@@ -32,7 +36,6 @@ export async function GET(request: NextRequest) {
     return apiError(`댓글 조회 실패: ${queryError.message}`, 500);
   }
 
-  // 작성자 정보 별도 조회
   const userIds = [...new Set(comments?.map(c => c.user_id) || [])];
   const { data: members } = await supabase
     .from("group_members")
@@ -54,11 +57,8 @@ export async function GET(request: NextRequest) {
   return apiResponse(result);
 }
 
-/**
- * POST /api/comments - 댓글 작성
- */
 export async function POST(request: NextRequest) {
-  const { user, error } = await requireAuth();
+  const { user, supabase, error } = await requireAuth(request);
   if (error) return error;
 
   const body = await request.json();
@@ -68,7 +68,26 @@ export async function POST(request: NextRequest) {
     return apiError("diaryId와 content는 필수입니다");
   }
 
-  const supabase = await createClient();
+  const { data: diary } = await supabase
+    .from("diaries")
+    .select("group_id")
+    .eq("id", diaryId)
+    .single();
+
+  if (!diary) {
+    return apiError("다이어리를 찾을 수 없습니다", 404);
+  }
+
+  const { data: membership } = await supabase
+    .from("group_members")
+    .select("id")
+    .eq("group_id", diary.group_id)
+    .eq("user_id", user!.id)
+    .single();
+
+  if (!membership) {
+    return apiError("그룹 멤버가 아닙니다", 403);
+  }
 
   const { data, error: insertError } = await supabase
     .from("comments")

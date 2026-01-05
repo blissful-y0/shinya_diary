@@ -10,12 +10,8 @@ import * as S from "./styles/page.styles";
    ============================================= */
 
 export default function LoginPage() {
-  /* Google 로그인 핸들러 */
-  const handleGoogleLogin = async () => {
-    const result = await signInWithGoogle();
-    if (!result.success) {
-      console.error("로그인 실패:", result.error);
-    }
+  const handleGoogleLogin = () => {
+    signInWithGoogle();
   };
 
   return (

@@ -1,13 +1,10 @@
-import { createClient } from "@/lib/supabase/server";
-import { NextResponse } from "next/server";
+import { createEdgeClient } from "@/lib/supabase/edge";
+import { NextRequest, NextResponse } from "next/server";
 
 export const runtime = "edge";
 
-/**
- * POST /api/auth/signout - 로그아웃
- */
-export async function POST() {
-  const supabase = await createClient();
+export async function POST(request: NextRequest) {
+  const supabase = createEdgeClient(request);
 
   const { error } = await supabase.auth.signOut();
 

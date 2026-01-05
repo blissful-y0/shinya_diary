@@ -1,14 +1,10 @@
-import { createClient } from "@/lib/supabase/server";
 import { apiResponse, apiError, requireAuth } from "@/lib/api/utils";
 import { NextRequest } from "next/server";
 
 export const runtime = "edge";
 
-/**
- * GET /api/diaries/check?groupId=&date= - 오늘 작성 여부 확인
- */
 export async function GET(request: NextRequest) {
-  const { user, error } = await requireAuth();
+  const { user, supabase, error } = await requireAuth(request);
   if (error) return error;
 
   const groupId = request.nextUrl.searchParams.get("groupId");
@@ -17,8 +13,6 @@ export async function GET(request: NextRequest) {
   if (!groupId || !date) {
     return apiError("groupId와 date는 필수입니다");
   }
-
-  const supabase = await createClient();
 
   const { data, error: queryError } = await supabase
     .from("diaries")

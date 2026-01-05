@@ -1,16 +1,10 @@
-import { createClient } from "@/lib/supabase/server";
 import { apiResponse, apiError, requireAuth } from "@/lib/api/utils";
 import { NextRequest } from "next/server";
 
 export const runtime = "edge";
 
-/**
- * GET /api/diaries?groupId=&date= - 날짜별 다이어리 목록 조회
- *
- * Read-after-Write: 오늘 날짜는 자신이 작성해야 다른 사람 글을 볼 수 있음
- */
 export async function GET(request: NextRequest) {
-  const { user, error } = await requireAuth();
+  const { user, supabase, error } = await requireAuth(request);
   if (error) return error;
 
   const groupId = request.nextUrl.searchParams.get("groupId");
@@ -20,13 +14,9 @@ export async function GET(request: NextRequest) {
     return apiError("groupId와 date는 필수입니다");
   }
 
-  const supabase = await createClient();
-
-  // 오늘 날짜인지 확인
   const today = new Date().toISOString().split("T")[0];
   const isToday = date === today;
 
-  // 다이어리 목록 조회 (한 번의 쿼리로 작성 여부도 확인)
   const { data: allDiaries, error: queryError } = await supabase
     .from("diaries")
     .select("id, group_id, user_id, content, image_url, date, created_at, sticker_data")
@@ -39,15 +29,12 @@ export async function GET(request: NextRequest) {
     return apiError(`다이어리 조회 실패: ${queryError.message}`, 500);
   }
 
-  // 내 다이어리 존재 여부 확인
   const hasWrittenToday = allDiaries?.some(d => d.user_id === user!.id) || false;
 
-  // 오늘인데 안 썼으면 빈 배열 반환
   if (isToday && !hasWrittenToday) {
     return apiResponse([], 200, { hasWrittenToday: false });
   }
 
-  // 작성자 정보 조회
   const userIds = [...new Set(allDiaries?.map(d => d.user_id) || [])];
 
   if (userIds.length === 0) {
@@ -70,11 +57,8 @@ export async function GET(request: NextRequest) {
   return apiResponse(data, 200, { hasWrittenToday });
 }
 
-/**
- * POST /api/diaries - 다이어리 작성
- */
 export async function POST(request: NextRequest) {
-  const { user, error } = await requireAuth();
+  const { user, supabase, error } = await requireAuth(request);
   if (error) return error;
 
   const body = await request.json();
@@ -84,9 +68,6 @@ export async function POST(request: NextRequest) {
     return apiError("groupId와 date는 필수입니다");
   }
 
-  const supabase = await createClient();
-
-  // 멤버 확인과 기존 작성 여부를 병렬로 확인
   const [memberResult, existingResult] = await Promise.all([
     supabase
       .from("group_members")

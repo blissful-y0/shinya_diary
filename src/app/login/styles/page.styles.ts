@@ -4,14 +4,14 @@ import { Button } from "@/components/ui/button";
 /* =============================================
    로그인 페이지 스타일
    - 타겟: 1020 여성
-   - 컨셉: 심플하면서 귀여운 감성
+   - 컨셉: 미니멀 화이트/블랙 모노톤 + 세련된 타이포그래피
    ============================================= */
 
 /* 부드러운 떠오르는 애니메이션 */
 const floatUp = keyframes`
   from {
     opacity: 0;
-    transform: translateY(20px);
+    transform: translateY(24px);
   }
   to {
     opacity: 1;
@@ -19,182 +19,188 @@ const floatUp = keyframes`
   }
 `;
 
-/* 로고 반짝임 효과 */
-const shimmer = keyframes`
-  0% {
-    background-position: -200% center;
+/* 페이드인 애니메이션 */
+const fadeIn = keyframes`
+  from {
+    opacity: 0;
   }
-  100% {
-    background-position: 200% center;
+  to {
+    opacity: 1;
+  }
+`;
+
+/* 로고 숨쉬기 효과 - 섬세하게 */
+const breathe = keyframes`
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.02);
+  }
+`;
+
+/* 라인 드로잉 애니메이션 */
+const drawLine = keyframes`
+  from {
+    width: 0;
+  }
+  to {
+    width: 40px;
   }
 `;
 
 export const Container = styled.div`
-  /* 전체 컨테이너 - 따뜻한 그라데이션 배경 */
   display: flex;
   flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
   min-height: 100vh;
   min-height: 100dvh;
-  max-width: 480px;
-  margin: 0 auto;
-  padding: 0 28px;
-  background: linear-gradient(
-    180deg,
-    #fffbf5 0%,
-    #fff8f0 50%,
-    #fff5eb 100%
-  );
+  width: 100%;
+  background: #ffffff;
+  position: relative;
+  overflow: hidden;
+  padding: env(safe-area-inset-top, 0px) 0 0 0;
 `;
 
 export const BrandingSection = styled.section`
-  /* 브랜딩 영역 - 부드러운 등장 효과 */
   flex: 1;
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
   text-align: center;
-  padding-top: 40px;
-  animation: ${floatUp} 0.8s ease-out;
+  padding: 80px 32px 48px;
+  max-width: 400px;
+  width: 100%;
+  animation: ${floatUp} 0.8s cubic-bezier(0.22, 1, 0.36, 1);
+  position: relative;
+  z-index: 1;
 `;
 
 export const Logo = styled.div`
-  /* 로고 - 파스텔 그라데이션과 부드러운 그림자 */
   width: 88px;
   height: 88px;
-  background: linear-gradient(
-    135deg,
-    #e8b4b8 0%,
-    #f5d5d8 50%,
-    #a8c5d8 100%
-  );
+  background: #000000;
   border-radius: 28px;
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 36px;
-  font-weight: 600;
-  color: white;
-  margin-bottom: 20px;
-  box-shadow: 
-    0 8px 24px rgba(232, 180, 184, 0.35),
-    0 2px 8px rgba(168, 197, 216, 0.2);
+  font-weight: 300;
+  font-style: italic;
+  color: #ffffff;
+  margin-bottom: 32px;
   position: relative;
-  letter-spacing: -1px;
+  letter-spacing: -2px;
+  animation: ${breathe} 4s ease-in-out infinite;
   
-  /* 은은한 빛남 효과 */
-  &::after {
-    content: '';
-    position: absolute;
-    inset: 0;
-    border-radius: 28px;
-    background: linear-gradient(
-      90deg,
-      transparent 0%,
-      rgba(255, 255, 255, 0.4) 50%,
-      transparent 100%
-    );
-    background-size: 200% 100%;
-    animation: ${shimmer} 3s ease-in-out infinite;
-  }
+  /* 미니멀 그림자 */
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.08);
 `;
 
 export const AppName = styled.h1`
-  /* 앱 이름 - 세련된 타이포그래피 */
   font-size: 28px;
-  font-weight: 700;
-  color: #3d3d3d;
-  margin-bottom: 10px;
-  letter-spacing: -0.5px;
+  font-weight: 300;
+  color: #000000;
+  margin-bottom: 16px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  animation: ${fadeIn} 0.6s ease-out 0.2s both;
 `;
 
 export const Tagline = styled.p`
-  /* 태그라인 - 부드러운 색상 */
+  font-size: 14px;
+  color: #666666;
+  font-weight: 400;
+  letter-spacing: 0.5px;
+  animation: ${fadeIn} 0.6s ease-out 0.3s both;
+  position: relative;
+  
+  /* 데코레이션 라인 */
+  &::after {
+    content: "";
+    display: block;
+    width: 40px;
+    height: 1px;
+    background: #000000;
+    margin: 24px auto 0;
+    animation: ${drawLine} 0.8s ease-out 0.6s both;
+  }
+`;
+
+export const LoginSection = styled.section`
+  padding: 0 32px calc(48px + env(safe-area-inset-bottom, 0px));
+  max-width: 400px;
+  width: 100%;
+  animation: ${floatUp} 0.8s cubic-bezier(0.22, 1, 0.36, 1) 0.15s both;
+  position: relative;
+  z-index: 1;
+`;
+
+export const Description = styled.p`
+  text-align: center;
   font-size: 15px;
-  color: #9b9b9b;
+  color: #888888;
+  line-height: 1.7;
+  margin-bottom: 28px;
   font-weight: 400;
   letter-spacing: -0.2px;
 `;
 
-export const LoginSection = styled.section`
-  /* 로그인 버튼 영역 */
-  padding-bottom: calc(56px + env(safe-area-inset-bottom, 0px));
-  animation: ${floatUp} 0.8s ease-out 0.2s both;
-`;
-
-export const Description = styled.p`
-  /* 설명 텍스트 - 따뜻한 톤 */
-  text-align: center;
-  font-size: 15px;
-  color: #7a7a7a;
-  line-height: 1.7;
-  margin-bottom: 28px;
-  font-weight: 400;
-`;
-
 export const GoogleButton = styled(Button)`
-  /* Google 로그인 버튼 - 부드럽고 귀여운 스타일 */
   width: 100%;
   height: 56px;
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 500;
-  background-color: #ffffff;
-  color: #3d3d3d;
-  border: 1.5px solid #f0e8e0;
+  background-color: #000000;
+  color: #ffffff;
+  border: none;
   border-radius: 16px;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 12px;
-  box-shadow: 
-    0 2px 8px rgba(0, 0, 0, 0.04),
-    0 4px 16px rgba(232, 180, 184, 0.08);
-  transition: all 0.25s ease;
-  letter-spacing: -0.2px;
+  transition: all 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+  letter-spacing: 0.5px;
 
   &:hover {
-    background-color: #fffaf8;
-    border-color: #e8b4b8;
+    background-color: #1a1a1a;
     transform: translateY(-2px);
-    box-shadow: 
-      0 4px 12px rgba(0, 0, 0, 0.06),
-      0 8px 24px rgba(232, 180, 184, 0.15);
+    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.15);
   }
 
   &:active {
     transform: translateY(0);
-    box-shadow: 
-      0 2px 8px rgba(0, 0, 0, 0.04),
-      0 4px 16px rgba(232, 180, 184, 0.08);
+    box-shadow: none;
   }
 `;
 
 export const GoogleIcon = styled.span`
-  /* Google 아이콘 래퍼 */
   display: flex;
   align-items: center;
   justify-content: center;
+  background: #ffffff;
+  border-radius: 4px;
+  padding: 2px;
 `;
 
 export const Terms = styled.p`
-  /* 약관 동의 텍스트 */
   margin-top: 20px;
   text-align: center;
-  font-size: 12px;
-  color: #b0b0b0;
+  font-size: 11px;
+  color: #aaaaaa;
   line-height: 1.6;
-  letter-spacing: -0.1px;
+  letter-spacing: 0;
 `;
 
 export const TermsLink = styled.a`
-  /* 약관 링크 - 부드러운 핑크 톤 */
-  color: #d4a5a9;
+  color: #666666;
   text-decoration: none;
   font-weight: 500;
   transition: color 0.2s ease;
-  
+
   &:hover {
-    color: #e8b4b8;
-    text-decoration: underline;
+    color: #000000;
   }
 `;

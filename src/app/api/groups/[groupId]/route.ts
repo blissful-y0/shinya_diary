@@ -1,4 +1,3 @@
-import { createClient } from "@/lib/supabase/server";
 import { apiResponse, apiError, requireAuth } from "@/lib/api/utils";
 import { NextRequest } from "next/server";
 
@@ -8,15 +7,22 @@ interface RouteParams {
   params: Promise<{ groupId: string }>;
 }
 
-/**
- * GET /api/groups/[groupId] - 그룹 상세 조회
- */
 export async function GET(request: NextRequest, { params }: RouteParams) {
-  const { error } = await requireAuth();
+  const { user, supabase, error } = await requireAuth(request);
   if (error) return error;
 
   const { groupId } = await params;
-  const supabase = await createClient();
+
+  const { data: membership } = await supabase
+    .from("group_members")
+    .select("id")
+    .eq("group_id", groupId)
+    .eq("user_id", user!.id)
+    .single();
+
+  if (!membership) {
+    return apiError("그룹 멤버가 아닙니다", 403);
+  }
 
   const { data, error: queryError } = await supabase
     .from("groups")
@@ -35,18 +41,13 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
   return apiResponse(data);
 }
 
-/**
- * PATCH /api/groups/[groupId] - 그룹 수정
- */
 export async function PATCH(request: NextRequest, { params }: RouteParams) {
-  const { user, error } = await requireAuth();
+  const { user, supabase, error } = await requireAuth(request);
   if (error) return error;
 
   const { groupId } = await params;
   const body = await request.json();
-  const supabase = await createClient();
 
-  // 방장 확인
   const { data: group } = await supabase
     .from("groups")
     .select("owner_id")
@@ -74,17 +75,12 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
   return apiResponse({ success: true });
 }
 
-/**
- * DELETE /api/groups/[groupId] - 그룹 삭제
- */
 export async function DELETE(request: NextRequest, { params }: RouteParams) {
-  const { user, error } = await requireAuth();
+  const { user, supabase, error } = await requireAuth(request);
   if (error) return error;
 
   const { groupId } = await params;
-  const supabase = await createClient();
 
-  // 방장 확인
   const { data: group } = await supabase
     .from("groups")
     .select("owner_id")
