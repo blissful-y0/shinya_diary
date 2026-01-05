@@ -1,22 +1,15 @@
 import styled from "styled-components";
 
-/* =============================================
-   DateSelector 스타일
-   - 날짜 선택 네비게이션
-   ============================================= */
-
 export const Container = styled.div`
-  /* 컨테이너 */
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 12px 16px;
-  background-color: var(--card);
-  border-bottom: 1px solid var(--border);
+  padding: 16px 20px;
+  background-color: #ffffff;
+  border-bottom: 1px solid #e5e5e5;
 `;
 
 export const NavButton = styled.button<{ disabled?: boolean }>`
-  /* 네비게이션 버튼 */
   display: flex;
   align-items: center;
   justify-content: center;
@@ -24,47 +17,60 @@ export const NavButton = styled.button<{ disabled?: boolean }>`
   height: 36px;
   border-radius: 50%;
   color: ${({ disabled }) =>
-    disabled ? "var(--muted-foreground)" : "var(--foreground)"};
+    disabled ? "#a3a3a3" : "#171717"};
   opacity: ${({ disabled }) => (disabled ? 0.4 : 1)};
   cursor: ${({ disabled }) => (disabled ? "not-allowed" : "pointer")};
-  transition: background-color 0.2s;
+  transition: all 0.2s ease;
+  border: 1px solid transparent;
 
   &:hover:not(:disabled) {
-    background-color: var(--accent);
+    background-color: #fafafa;
+    border-color: #e5e5e5;
+  }
+  
+  &:active:not(:disabled) {
+    transform: scale(0.96);
   }
 `;
 
 export const DateDisplay = styled.button`
-  /* 날짜 표시 영역 (클릭 가능) */
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 8px 12px;
-  border-radius: 8px;
+  padding: 8px 16px;
+  border-radius: 20px; /* Pill shape */
   cursor: pointer;
-  transition: background-color 0.2s;
-  color: var(--muted-foreground);
+  transition: all 0.2s ease;
+  color: #737373;
   position: relative;
+  background-color: #fafafa;
+  border: 1px solid #e5e5e5;
 
   &:hover {
-    background-color: var(--accent);
+    background-color: #f5f5f5;
+    border-color: #d4d4d4;
+  }
+  
+  &:active {
+    transform: scale(0.98);
   }
 `;
 
 export const DateText = styled.span`
-  /* 날짜 텍스트 */
   font-size: 16px;
   font-weight: 600;
-  color: var(--foreground);
+  color: #171717;
+  font-family: var(--font-sans);
+  letter-spacing: 0.02em;
 `;
 
 export const TodayBadge = styled.span`
-  /* 오늘 뱃지 */
   padding: 2px 8px;
   font-size: 11px;
   font-weight: 600;
-  color: white;
-  background-color: var(--primary);
+  color: #ffffff;
+  background-color: #171717;
   border-radius: 10px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
 `;
-

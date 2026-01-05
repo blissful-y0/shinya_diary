@@ -286,7 +286,7 @@ export default function GroupSettingsPage({ params }: SettingsPageProps) {
 
   /* 가입 요청 승인 */
   const handleApproveRequest = async (requestId: string) => {
-    const request = joinRequests.find((r) => r.id === requestId);
+    const request = joinRequests.find((r: JoinRequest) => r.id === requestId);
     const nickname = request?.user.nickname || "새 멤버";
 
     const res = await handleJoinRequest(groupId, requestId, "approve", nickname);

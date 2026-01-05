@@ -1,51 +1,43 @@
 import styled from "styled-components";
 import { Button } from "@/components/ui/button";
 
-/* =============================================
-   CommentSection 스타일
-   ============================================= */
-
 export const Container = styled.div`
-  /* 컨테이너 */
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  padding: 12px 16px 16px;
-  border-top: 1px solid var(--border);
-  background-color: var(--card);
+  gap: 20px;
+  padding: 24px 20px 24px;
+  border-top: 1px solid #f0f0f0;
+  background: #fafafa;
 `;
 
 export const CommentList = styled.div`
-  /* 코멘트 목록 */
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 24px;
 `;
 
 export const EmptyState = styled.p`
-  /* 빈 상태 */
   font-size: 13px;
-  color: var(--muted-foreground);
+  font-weight: 400;
+  letter-spacing: 0.02em;
+  color: #a3a3a3;
   text-align: center;
-  padding: 8px 0;
+  padding: 24px 0;
+  font-style: normal;
+  font-family: var(--font-sans);
 `;
 
-/* =============================================
-   CommentItem 스타일
-   ============================================= */
-
 export const CommentItem = styled.div`
-  /* 코멘트 아이템 */
   display: flex;
-  gap: 10px;
+  gap: 12px;
 `;
 
 export const Avatar = styled.div`
-  /* 아바타 */
   width: 32px;
   height: 32px;
   border-radius: 50%;
-  background-color: var(--muted);
+  background: #f0f0f0;
+  border: 1px solid #e5e5e5;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -54,160 +46,188 @@ export const Avatar = styled.div`
 `;
 
 export const AvatarImage = styled.img`
-  /* 아바타 이미지 */
   width: 100%;
   height: 100%;
   object-fit: cover;
 `;
 
 export const AvatarPlaceholder = styled.span`
-  /* 아바타 플레이스홀더 */
   font-size: 12px;
-  font-weight: 600;
-  color: var(--muted-foreground);
+  font-weight: 500;
+  color: #a3a3a3;
 `;
 
 export const CommentBody = styled.div`
-  /* 코멘트 본문 */
   flex: 1;
   min-width: 0;
 `;
 
 export const CommentHeader = styled.div`
-  /* 코멘트 헤더 */
   display: flex;
   align-items: center;
   gap: 8px;
-  margin-bottom: 2px;
+  margin-bottom: 4px;
 `;
 
 export const Nickname = styled.span`
-  /* 닉네임 */
   font-size: 13px;
   font-weight: 600;
-  color: var(--foreground);
+  letter-spacing: 0.01em;
+  color: #171717;
 `;
 
 export const TimeAgo = styled.span`
-  /* 시간 */
   font-size: 11px;
-  color: var(--muted-foreground);
+  font-weight: 400;
+  letter-spacing: 0.02em;
+  color: #a3a3a3;
 `;
 
 export const EditedBadge = styled.span`
-  /* 수정됨 뱃지 */
   font-size: 10px;
-  color: var(--muted-foreground);
+  font-weight: 300;
+  color: #a3a3a3;
 `;
 
 export const Content = styled.p`
-  /* 내용 */
   font-size: 14px;
-  color: var(--foreground);
-  line-height: 1.5;
+  font-weight: 400;
+  letter-spacing: 0.01em;
+  color: #404040;
+  line-height: 1.6;
   word-break: break-word;
+  font-family: var(--font-sans);
 `;
 
 export const Actions = styled.div`
-  /* 액션 버튼들 */
   display: flex;
-  gap: 8px;
-  margin-top: 4px;
+  align-items: baseline;
+  gap: 12px;
+  margin-top: 6px;
 `;
 
 export const ActionButton = styled.button`
-  /* 액션 버튼 */
-  font-size: 12px;
-  color: var(--muted-foreground);
+  font-size: 11px;
+  font-weight: 400;
+  color: #a3a3a3;
   cursor: pointer;
-  transition: color 0.2s;
+  padding: 4px 0;
+  height: 24px;
+  line-height: 1;
+  transition: all 0.2s ease;
 
   &:hover {
-    color: var(--foreground);
+    color: #171717;
   }
 `;
 
-/* =============================================
-   CommentInput 스타일
-   ============================================= */
-
 export const InputContainer = styled.div`
-  /* 입력 컨테이너 */
   display: flex;
-  gap: 8px;
-  align-items: center;
+  gap: 12px;
+  align-items: flex-start;
+  margin-top: 8px;
 `;
 
 export const InputWrapper = styled.div`
-  /* 입력 래퍼 */
   flex: 1;
   position: relative;
 `;
 
 export const TextArea = styled.textarea`
-  /* 텍스트 영역 */
   width: 100%;
-  min-height: 36px;
-  max-height: 100px;
-  padding: 8px 12px;
+  min-height: 44px;
+  max-height: 120px;
+  padding: 12px 16px;
   font-size: 14px;
-  border: 1px solid var(--border);
-  border-radius: 18px;
-  background-color: var(--background);
-  color: var(--foreground);
+  font-weight: 400;
+  border: 1px solid #e5e5e5;
+  border-radius: 22px; /* Pill shape input */
+  background: #ffffff;
+  color: #171717;
   resize: none;
   outline: none;
-  transition: border-color 0.2s;
+  transition: all 0.2s ease;
   font-family: inherit;
-
+  
   &:focus {
-    border-color: var(--primary);
+    border-color: #171717;
+    background: #ffffff;
   }
 
   &::placeholder {
-    color: var(--muted-foreground);
+    color: #d4d4d4;
+  }
+
+  /* Hide scrollbar */
+  scrollbar-width: none;
+  &::-webkit-scrollbar {
+    display: none;
   }
 `;
 
 export const SubmitButton = styled(Button)`
-  /* 전송 버튼 */
-  width: 36px;
-  height: 36px;
+  width: 44px;
+  height: 44px;
   border-radius: 50%;
   padding: 0;
   flex-shrink: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-bottom: 4px;
+  background: #171717;
+  color: #fff;
+  border: none;
+  transition: all 0.2s ease;
+
+  &:hover {
+    background: #000000;
+    transform: scale(1.05);
+  }
+
+  &:active {
+    transform: scale(0.95);
+  }
+
+  &:disabled {
+    background: #e5e5e5;
+    color: #ffffff;
+  }
 `;
 
 export const EditInputContainer = styled.div`
-  /* 수정 입력 컨테이너 */
   display: flex;
   flex-direction: column;
   gap: 8px;
-  margin-top: 4px;
+  margin-top: 8px;
 `;
 
 export const EditTextArea = styled.textarea`
-  /* 수정 텍스트 영역 */
   width: 100%;
   min-height: 60px;
-  padding: 8px 12px;
+  padding: 12px 16px;
   font-size: 14px;
-  border: 1px solid var(--primary);
+  font-weight: 400;
+  border: 1px solid #e5e5e5;
   border-radius: 8px;
-  background-color: var(--background);
-  color: var(--foreground);
+  background: #ffffff;
+  color: #171717;
   resize: none;
   outline: none;
   font-family: inherit;
+  transition: all 0.2s ease;
+
+  &:focus {
+    border-color: #171717;
+  }
 `;
 
 export const EditActions = styled.div`
-  /* 수정 액션 버튼들 */
   display: flex;
   justify-content: flex-end;
+  align-items: center;
   gap: 8px;
+
+  button {
+    margin: 0;
+  }
 `;

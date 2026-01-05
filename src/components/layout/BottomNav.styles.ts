@@ -1,61 +1,82 @@
 import styled from "styled-components";
 import Link from "next/link";
 
-/* =============================================
-   BottomNav 스타일
-   - 고정 하단 네비게이션
-   ============================================= */
-
 export const NavContainer = styled.nav`
-  /* 고정 하단 네비게이션 */
   position: fixed;
   bottom: 0;
   left: 50%;
   transform: translateX(-50%);
   width: 100%;
   max-width: 480px;
-  background-color: var(--background);
-  border-top: 1px solid var(--border);
+  background-color: #ffffff;
+  border-top: 1px solid #e5e5e5;
   padding-bottom: env(safe-area-inset-bottom, 0px);
   z-index: 100;
 `;
 
 export const NavContent = styled.div`
-  /* 네비게이션 내부 레이아웃 */
   display: flex;
   justify-content: space-around;
   align-items: center;
-  height: 64px;
+  height: 56px;
+  padding: 0 16px;
 `;
 
 export const NavItem = styled(Link)<{ $active: boolean }>`
-  /* 네비게이션 아이템 */
+  position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  flex: 1;
+  min-width: 64px;
   height: 100%;
-  color: ${({ $active }) =>
-    $active ? "var(--primary)" : "var(--muted-foreground)"};
+  color: ${({ $active }) => ($active ? "#000000" : "#d4d4d4")};
   text-decoration: none;
-  transition: color 0.2s;
+  transition: all 0.2s ease;
 
   &:active {
-    transform: scale(0.95);
+    transform: scale(0.96);
+  }
+
+  /* Active dot indicator */
+  &::after {
+    content: "";
+    position: absolute;
+    bottom: 6px;
+    width: 4px;
+    height: 4px;
+    background-color: #000000;
+    border-radius: 50%;
+    opacity: ${({ $active }) => ($active ? 1 : 0)};
+    transition: opacity 0.2s ease;
   }
 `;
 
 export const IconWrapper = styled.div`
-  /* 아이콘 래퍼 */
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-bottom: 2px;
+  transition: transform 0.2s ease;
+
+  ${NavItem}:active & {
+    transform: scale(0.9);
+  }
+
+  svg {
+    width: 24px;
+    height: 24px;
+    stroke-width: 2px;
+  }
 `;
 
 export const NavLabel = styled.span`
-  /* 네비게이션 레이블 */
-  font-size: 11px;
-  font-weight: 500;
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 `;

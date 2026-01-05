@@ -1,5 +1,4 @@
 import type { Metadata, Viewport } from "next";
-import { Noto_Sans_KR } from "next/font/google";
 import StyledComponentsRegistry from "@/lib/registry";
 import JotaiProvider from "@/components/providers/JotaiProvider";
 import { SWRProvider } from "@/lib/swr/config";
@@ -12,14 +11,6 @@ import "./globals.css";
    - styled-components SSR 지원
    - 모바일 최적화 뷰포트 설정
    ============================================= */
-
-/* 한국어 폰트 설정 */
-const notoSansKR = Noto_Sans_KR({
-  variable: "--font-noto-sans-kr",
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
-  display: "swap",
-});
 
 /* 메타데이터 */
 export const metadata: Metadata = {
@@ -48,7 +39,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="ko" className={notoSansKR.variable}>
+    <html lang="ko">
       <body>
         <JotaiProvider>
           <SWRProvider>

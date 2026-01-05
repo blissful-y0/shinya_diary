@@ -2,68 +2,79 @@ import styled from "styled-components";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 
-/* =============================================
-   다이어리 작성/수정 페이지 스타일
-   ============================================= */
-
 export const Container = styled.div`
-  /* 페이지 컨테이너 */
   display: flex;
   flex-direction: column;
   height: 100%;
-  padding: 16px;
-  gap: 16px;
+  padding: 24px 20px;
+  gap: 24px;
+  background-color: #ffffff;
 `;
 
 export const SubmitButton = styled(Button)`
-  /* 제출 버튼 (하단 고정) */
   width: 100%;
-  height: 52px;
+  height: 56px;
   font-size: 16px;
-  font-weight: 600;
-  border-radius: 12px;
+  font-weight: 500;
+  border-radius: 4px;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
   margin-top: auto;
+  background-color: #171717;
+  color: #ffffff;
+  letter-spacing: 0.02em;
+  transition: all 0.2s ease;
+
+  &:hover {
+    background-color: #000000;
+    transform: translateY(-1px);
+  }
+
+  &:active {
+    transform: translateY(0);
+  }
 
   &:disabled {
     opacity: 0.5;
+    background-color: #a3a3a3;
   }
 `;
 
 export const ImageUploadArea = styled.div`
-  /* 이미지 업로드 영역 */
-  aspect-ratio: 1;
-  background-color: var(--muted);
-  border-radius: 16px;
+  aspect-ratio: 16/9;
+  background-color: #fafafa;
+  border: 1px dashed #e5e5e5;
+  border-radius: 4px;
   overflow: hidden;
   cursor: pointer;
-  transition: background-color 0.2s;
+  transition: all 0.2s ease;
   position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 
   &:hover {
-    background-color: var(--accent);
+    background-color: #f5f5f5;
+    border-color: #a3a3a3;
   }
 `;
 
 export const ImagePreviewContainer = styled.div`
-  /* 이미지 미리보기 컨테이너 */
   width: 100%;
   height: 100%;
   position: relative;
 `;
 
 export const PreviewImage = styled.img`
-  /* 미리보기 이미지 */
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain;
+  background-color: #f5f5f5;
 `;
 
 export const RemoveImageButton = styled.button`
-  /* 이미지 제거 버튼 */
   position: absolute;
   top: 12px;
   right: 12px;
@@ -76,6 +87,7 @@ export const RemoveImageButton = styled.button`
   align-items: center;
   justify-content: center;
   transition: background-color 0.2s;
+  backdrop-filter: blur(4px);
 
   &:hover {
     background-color: rgba(0, 0, 0, 0.8);
@@ -83,50 +95,58 @@ export const RemoveImageButton = styled.button`
 `;
 
 export const UploadPlaceholder = styled.div`
-  /* 업로드 플레이스홀더 */
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   height: 100%;
-  color: var(--muted-foreground);
+  color: #a3a3a3;
   gap: 12px;
 `;
 
 export const UploadText = styled.span`
-  /* 업로드 텍스트 */
   font-size: 14px;
+  font-weight: 400;
+  letter-spacing: 0.01em;
 `;
 
 export const HiddenInput = styled.input`
-  /* 숨겨진 파일 입력 */
   display: none;
 `;
 
 export const ProgressText = styled.p`
-  /* 진행 상태 텍스트 */
   text-align: center;
   font-size: 14px;
-  color: var(--primary);
+  color: #171717;
+  font-family: var(--font-sans);
 `;
 
 export const ContentTextarea = styled(Textarea)`
-  /* 내용 텍스트 영역 */
   flex: 1;
-  min-height: 120px;
+  min-height: 240px;
   resize: none;
   border: none;
   background-color: transparent;
-  font-size: 16px;
-  line-height: 1.6;
-
+  
+  font-family: var(--font-sans);
+  font-size: 18px;
+  line-height: 2.0rem;
+  
+  background-image: linear-gradient(transparent 95%, #f0f0f0 95%);
+  background-size: 100% 2.0rem;
+  background-attachment: local;
+  
+  padding: 0;
+  margin-top: 8px;
+  
   &:focus {
     outline: none;
     box-shadow: none;
   }
 
   &::placeholder {
-    color: var(--muted-foreground);
+    color: #d4d4d4;
+    font-style: italic;
   }
 
   &:disabled {

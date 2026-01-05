@@ -1,13 +1,7 @@
 import styled from "styled-components";
 import Link from "next/link";
 
-/* =============================================
-   Header 스타일
-   - 고정 헤더 레이아웃
-   ============================================= */
-
 export const HeaderContainer = styled.header`
-  /* 고정 헤더 */
   position: fixed;
   top: 0;
   left: 50%;
@@ -15,29 +9,26 @@ export const HeaderContainer = styled.header`
   width: 100%;
   max-width: 480px;
   height: 56px;
-  background-color: var(--background);
-  border-bottom: 1px solid var(--border);
+  background: #ffffff;
+  /* border-bottom: 1px solid #e5e5e5; */
   z-index: 100;
 `;
 
 export const HeaderContent = styled.div`
-  /* 헤더 내부 레이아웃 */
   display: flex;
   align-items: center;
   justify-content: space-between;
   height: 100%;
-  padding: 0 8px;
+  padding: 0 16px;
 `;
 
 export const LeftSection = styled.div`
-  /* 좌측 섹션 */
   display: flex;
   align-items: center;
   min-width: 48px;
 `;
 
 export const CenterSection = styled.div`
-  /* 중앙 섹션 */
   flex: 1;
   display: flex;
   justify-content: center;
@@ -45,7 +36,6 @@ export const CenterSection = styled.div`
 `;
 
 export const RightSection = styled.div`
-  /* 우측 섹션 */
   display: flex;
   align-items: center;
   justify-content: flex-end;
@@ -53,31 +43,24 @@ export const RightSection = styled.div`
 `;
 
 export const BackButton = styled(Link)`
-  /* 뒤로가기 버튼 */
   display: flex;
   align-items: center;
   justify-content: center;
   width: 40px;
   height: 40px;
   border-radius: 50%;
-  color: var(--foreground);
-  transition: background-color 0.2s;
+  color: #171717;
+  transition: all 0.2s ease;
 
   &:hover {
-    background-color: var(--accent);
+    background-color: #f5f5f5;
   }
 
   &:active {
-    background-color: var(--muted);
+    transform: scale(0.96);
   }
 `;
 
 export const Title = styled.h1`
-  /* 헤더 제목 */
-  font-size: 18px;
-  font-weight: 600;
-  color: var(--foreground);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  display: none;
 `;

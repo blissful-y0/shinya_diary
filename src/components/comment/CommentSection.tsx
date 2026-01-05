@@ -64,7 +64,7 @@ export default function CommentSection({
   /* 텍스트 영역 자동 높이 조절 */
   const adjustTextareaHeight = () => {
     if (textareaRef.current) {
-      textareaRef.current.style.height = "36px";
+      textareaRef.current.style.height = "44px";
       textareaRef.current.style.height = `${Math.min(
         textareaRef.current.scrollHeight,
         100
@@ -96,7 +96,7 @@ export default function CommentSection({
     setComments((prev) => [...prev, optimisticComment]);
     setNewComment("");
     if (textareaRef.current) {
-      textareaRef.current.style.height = "36px";
+      textareaRef.current.style.height = "44px";
     }
 
     setIsSubmitting(true);
