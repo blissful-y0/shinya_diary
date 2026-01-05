@@ -1,26 +1,6 @@
-import { createClient } from "@/lib/supabase/server";
-import { NextResponse } from "next/server";
+import { createEdgeClient } from "@/lib/supabase/edge";
+import { NextRequest, NextResponse } from "next/server";
 
-/**
- * 인증된 사용자 정보 반환
- */
-export async function getAuthUser() {
-  const supabase = await createClient();
-  const {
-    data: { user },
-    error,
-  } = await supabase.auth.getUser();
-
-  if (error || !user) {
-    return null;
-  }
-
-  return user;
-}
-
-/**
- * 성공 응답
- */
 export function apiResponse<T>(
   data: T,
   status = 200,
@@ -29,9 +9,6 @@ export function apiResponse<T>(
   return NextResponse.json({ success: true, data, ...meta }, { status });
 }
 
-/**
- * 에러 응답
- */
 export function apiError(error: string, status = 400, code?: string) {
   return NextResponse.json(
     { success: false, error, ...(code && { code }) },
@@ -39,13 +16,15 @@ export function apiError(error: string, status = 400, code?: string) {
   );
 }
 
-/**
- * 인증 필수 체크
- */
-export async function requireAuth() {
-  const user = await getAuthUser();
-  if (!user) {
-    return { user: null, error: apiError("인증이 필요합니다", 401, "UNAUTHORIZED") };
+export async function requireAuth(request: NextRequest) {
+  const supabase = createEdgeClient(request);
+  const {
+    data: { user },
+    error,
+  } = await supabase.auth.getUser();
+
+  if (error || !user) {
+    return { user: null, supabase, error: apiError("인증이 필요합니다", 401, "UNAUTHORIZED") };
   }
-  return { user, error: null };
+  return { user, supabase, error: null };
 }

@@ -1,14 +1,10 @@
-import { createClient } from "@/lib/supabase/server";
-import { NextResponse } from "next/server";
+import { createEdgeClient } from "@/lib/supabase/edge";
+import { NextRequest, NextResponse } from "next/server";
 
 export const runtime = "edge";
 
-/**
- * DELETE /api/auth/delete-account - 회원 탈퇴
- * 주의: 이 API는 사용자의 모든 데이터를 삭제합니다
- */
-export async function DELETE() {
-  const supabase = await createClient();
+export async function DELETE(request: NextRequest) {
+  const supabase = createEdgeClient(request);
 
   const { data: { user }, error: authError } = await supabase.auth.getUser();
   if (authError || !user) {
@@ -18,7 +14,6 @@ export async function DELETE() {
     );
   }
 
-  // 1. 사용자가 방장인 그룹들 삭제 (CASCADE로 관련 데이터 삭제됨)
   const { error: groupError } = await supabase
     .from("groups")
     .delete()
@@ -32,7 +27,6 @@ export async function DELETE() {
     );
   }
 
-  // 2. 그룹 멤버십 삭제 (본인이 멤버인 다른 그룹에서 탈퇴)
   const { error: memberError } = await supabase
     .from("group_members")
     .delete()
@@ -42,7 +36,6 @@ export async function DELETE() {
     console.error("멤버십 삭제 실패:", memberError);
   }
 
-  // 3. 프로필 삭제 (CASCADE로 다이어리, 코멘트 등 삭제됨)
   const { error: profileError } = await supabase
     .from("profiles")
     .delete()
@@ -56,7 +49,6 @@ export async function DELETE() {
     );
   }
 
-  // 4. 로그아웃
   await supabase.auth.signOut();
 
   return NextResponse.json({ success: true });

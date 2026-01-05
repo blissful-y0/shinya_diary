@@ -12,7 +12,7 @@ export const runtime = "edge";
  * 반환: { url: string } - CDN 공개 URL
  */
 export async function POST(request: NextRequest) {
-  const { user, error } = await requireAuth();
+  const { user, error } = await requireAuth(request);
   if (error) return error;
 
   try {

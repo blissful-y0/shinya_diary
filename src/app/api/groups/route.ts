@@ -1,19 +1,12 @@
-import { createClient } from "@/lib/supabase/server";
 import { apiResponse, apiError, requireAuth } from "@/lib/api/utils";
 import { NextRequest } from "next/server";
 
 export const runtime = "edge";
 
-/**
- * GET /api/groups - 내 그룹 목록 조회
- */
-export async function GET() {
-  const { user, error } = await requireAuth();
+export async function GET(request: NextRequest) {
+  const { user, supabase, error } = await requireAuth(request);
   if (error) return error;
 
-  const supabase = await createClient();
-
-  // 내가 속한 그룹 ID 조회
   const { data: memberships, error: memberError } = await supabase
     .from("group_members")
     .select("group_id")
@@ -29,7 +22,6 @@ export async function GET() {
 
   const groupIds = memberships.map((m) => m.group_id);
 
-  // 그룹 정보와 멤버 수를 병렬로 조회
   const [groupsResult, memberCountsResult] = await Promise.all([
     supabase
       .from("groups")
@@ -58,11 +50,8 @@ export async function GET() {
   return apiResponse(result);
 }
 
-/**
- * POST /api/groups - 그룹 생성
- */
 export async function POST(request: NextRequest) {
-  const { user, error } = await requireAuth();
+  const { user, supabase, error } = await requireAuth(request);
   if (error) return error;
 
   const body = await request.json();
@@ -72,15 +61,12 @@ export async function POST(request: NextRequest) {
     return apiError("그룹 이름과 닉네임은 필수입니다");
   }
 
-  const supabase = await createClient();
-
-  // 그룹 생성
   const { data: group, error: groupError } = await supabase
     .from("groups")
     .insert({
       name,
       owner_id: user!.id,
-      invite_code: "", // 트리거가 자동 생성
+      invite_code: "",
     })
     .select()
     .single();
@@ -89,7 +75,6 @@ export async function POST(request: NextRequest) {
     return apiError(groupError?.message || "그룹 생성 실패", 500);
   }
 
-  // 방장을 멤버로 추가
   const { error: memberError } = await supabase.from("group_members").insert({
     group_id: group.id,
     user_id: user!.id,
@@ -97,7 +82,6 @@ export async function POST(request: NextRequest) {
   });
 
   if (memberError) {
-    // 롤백
     await supabase.from("groups").delete().eq("id", group.id);
     return apiError(memberError.message, 500);
   }

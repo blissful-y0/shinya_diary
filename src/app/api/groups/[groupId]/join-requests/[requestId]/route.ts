@@ -1,4 +1,3 @@
-import { createClient } from "@/lib/supabase/server";
 import { apiResponse, apiError, requireAuth } from "@/lib/api/utils";
 import { NextRequest } from "next/server";
 
@@ -8,24 +7,18 @@ interface RouteParams {
   params: Promise<{ groupId: string; requestId: string }>;
 }
 
-/**
- * PATCH /api/groups/[groupId]/join-requests/[requestId] - 가입 요청 승인/거절
- */
 export async function PATCH(request: NextRequest, { params }: RouteParams) {
-  const { user, error } = await requireAuth();
+  const { user, supabase, error } = await requireAuth(request);
   if (error) return error;
 
   const { groupId, requestId } = await params;
   const body = await request.json();
-  const { action, nickname } = body; // action: 'approve' | 'reject'
+  const { action, nickname } = body;
 
   if (!action || !["approve", "reject"].includes(action)) {
     return apiError("유효하지 않은 액션입니다");
   }
 
-  const supabase = await createClient();
-
-  // 방장 확인 + 요청 정보 + 멤버 수를 병렬로 조회
   const [groupResult, requestResult, memberCountResult] = await Promise.all([
     supabase
       .from("groups")
@@ -65,7 +58,6 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
       return apiError("그룹 최대 인원(4명)을 초과했습니다", 400);
     }
 
-    // 요청 상태 변경 + 멤버 추가를 병렬로 처리
     const [, memberResult] = await Promise.all([
       supabase
         .from("join_requests")
@@ -82,7 +74,6 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
       return apiError(memberResult.error.message, 500);
     }
   } else {
-    // 거절
     await supabase
       .from("join_requests")
       .update({ status: "rejected" })

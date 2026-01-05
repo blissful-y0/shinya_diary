@@ -1,4 +1,3 @@
-import { createClient } from "@/lib/supabase/server";
 import { apiResponse, apiError, requireAuth } from "@/lib/api/utils";
 import { NextRequest } from "next/server";
 
@@ -8,17 +7,12 @@ interface RouteParams {
   params: Promise<{ groupId: string }>;
 }
 
-/**
- * GET /api/groups/[groupId]/join-requests - 가입 요청 목록 조회
- */
 export async function GET(request: NextRequest, { params }: RouteParams) {
-  const { user, error } = await requireAuth();
+  const { user, supabase, error } = await requireAuth(request);
   if (error) return error;
 
   const { groupId } = await params;
-  const supabase = await createClient();
 
-  // 방장 확인
   const { data: group } = await supabase
     .from("groups")
     .select("owner_id")
@@ -46,17 +40,12 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
   return apiResponse(data);
 }
 
-/**
- * POST /api/groups/[groupId]/join-requests - 가입 요청 생성
- */
 export async function POST(request: NextRequest, { params }: RouteParams) {
-  const { user, error } = await requireAuth();
+  const { user, supabase, error } = await requireAuth(request);
   if (error) return error;
 
   const { groupId } = await params;
-  const supabase = await createClient();
 
-  // 멤버 여부 + 기존 요청을 병렬로 확인
   const [memberResult, requestResult] = await Promise.all([
     supabase
       .from("group_members")
