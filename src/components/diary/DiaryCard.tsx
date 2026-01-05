@@ -3,16 +3,11 @@
 import { useState } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import CommentSection from "@/components/comment/CommentSection";
+import ImageLightbox from "@/components/common/ImageLightbox";
 import { formatDistanceToNow } from "@/lib/utils/date";
+import { getDiaryImageUrl, getOriginalImageUrl } from "@/lib/utils/image";
 import { MoreVertical, Pencil, Trash2, MessageCircle } from "lucide-react";
 import * as S from "./DiaryCard.styles";
-
-/* =============================================
-   다이어리 카드 컴포넌트
-   - 작성자 정보, 이미지, 내용 표시
-   - 본인 글: 수정/삭제 메뉴
-   - 코멘트 섹션
-   ============================================= */
 
 interface DiaryCardProps {
   id: string;
@@ -45,6 +40,10 @@ export default function DiaryCard({
 }: DiaryCardProps) {
   const [showMenu, setShowMenu] = useState(false);
   const [showComments, setShowComments] = useState(false);
+  const [showLightbox, setShowLightbox] = useState(false);
+
+  const optimizedImageUrl = getDiaryImageUrl(imageUrl);
+  const originalImageUrl = getOriginalImageUrl(imageUrl);
 
   const handleMenuToggle = () => {
     setShowMenu(!showMenu);
@@ -66,7 +65,6 @@ export default function DiaryCard({
 
   return (
     <S.CardContainer>
-      {/* 작성자 헤더 */}
       <S.CardHeader>
         <Avatar className="w-10 h-10">
           <AvatarImage src={avatarUrl || ""} alt={nickname} />
@@ -77,7 +75,6 @@ export default function DiaryCard({
           <S.PostTime>{formatDistanceToNow(createdAt)}</S.PostTime>
         </S.AuthorInfo>
 
-        {/* 본인 글: 더보기 메뉴 */}
         {isOwn && (
           <S.MenuWrapper>
             <S.MenuButton onClick={handleMenuToggle}>
@@ -103,23 +100,27 @@ export default function DiaryCard({
         )}
       </S.CardHeader>
 
-      {/* 이미지 */}
-      {imageUrl && (
-        <S.ImageContainer>
-          <S.DiaryImage src={imageUrl} alt="다이어리 이미지" />
+      {optimizedImageUrl && (
+        <S.ImageContainer onClick={() => setShowLightbox(true)}>
+          <S.DiaryImage src={optimizedImageUrl} alt="다이어리 이미지" />
         </S.ImageContainer>
       )}
 
-      {/* 내용 */}
+      {showLightbox && originalImageUrl && (
+        <ImageLightbox
+          src={originalImageUrl}
+          alt="다이어리 이미지"
+          onClose={() => setShowLightbox(false)}
+        />
+      )}
+
       {content && <S.ContentText>{content}</S.ContentText>}
 
-      {/* 코멘트 토글 버튼 */}
       <S.CommentToggle onClick={handleToggleComments}>
         <MessageCircle size={16} />
         {commentCount > 0 && <span>{commentCount}</span>}
       </S.CommentToggle>
 
-      {/* 코멘트 섹션 */}
       {showComments && (
         <CommentSection
           diaryId={id}
