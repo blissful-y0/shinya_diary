@@ -20,6 +20,7 @@ export async function GET(request: NextRequest) {
     .eq("group_id", groupId)
     .eq("user_id", user!.id)
     .eq("date", date)
+    .is("deleted_at", null)
     .single();
 
   if (queryError && queryError.code !== "PGRST116") {

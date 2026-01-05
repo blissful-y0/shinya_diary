@@ -16,7 +16,8 @@ export async function GET(request: NextRequest) {
   const { count, error: queryError } = await supabase
     .from("comments")
     .select("id", { count: "exact", head: true })
-    .eq("diary_id", diaryId);
+    .eq("diary_id", diaryId)
+    .is("deleted_at", null);
 
   if (queryError) {
     return apiError("댓글 수 조회 실패", 500);

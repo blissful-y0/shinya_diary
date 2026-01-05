@@ -29,6 +29,7 @@ export async function GET(request: NextRequest) {
     .from("comments")
     .select("id, diary_id, user_id, content, created_at, updated_at")
     .eq("diary_id", diaryId)
+    .is("deleted_at", null)
     .order("created_at", { ascending: true });
 
   if (queryError) {
@@ -72,6 +73,7 @@ export async function POST(request: NextRequest) {
     .from("diaries")
     .select("group_id")
     .eq("id", diaryId)
+    .is("deleted_at", null)
     .single();
 
   if (!diary) {

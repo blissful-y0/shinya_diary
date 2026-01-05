@@ -2,7 +2,7 @@
 
 export const runtime = "edge";
 
-import { use, useState, useEffect, useRef } from "react";
+import { use, useState, useEffect, useRef, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import MobileLayout from "@/components/layout/MobileLayout";
@@ -14,9 +14,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Camera, Copy, Check, Loader2, Trash2, Image } from "lucide-react";
 import { isValidImageFile } from "@/lib/utils/image";
 import {
-  getGroup,
-  getGroupMembers,
-  getJoinRequests,
   updateGroup,
   updateGroupProfile,
   deleteGroup,
@@ -27,6 +24,7 @@ import {
   type JoinRequest,
 } from "@/lib/api/client";
 import { useRequireAuth } from "@/lib/hooks/useAuth";
+import { useGroup, useGroupMembers, useJoinRequests } from "@/lib/swr/hooks";
 import * as S from "./styles/page.styles";
 
 /* =============================================
@@ -47,20 +45,19 @@ export default function GroupSettingsPage({ params }: SettingsPageProps) {
   const coverImageInputRef = useRef<HTMLInputElement>(null);
   const profileAvatarInputRef = useRef<HTMLInputElement>(null);
 
+  /* SWR Hooks - 자동 캐싱 및 중복 요청 방지 */
+  const { group, isLoading: groupLoading, isError: groupError, mutate: mutateGroup } = useGroup(groupId);
+  const { members: membersList, isLoading: membersLoading, mutate: mutateMembers } = useGroupMembers(groupId);
+  const { requests: joinRequestsList, isLoading: requestsLoading, mutate: mutateRequests } = useJoinRequests(
+    profile && group?.owner_id === profile.id ? groupId : null
+  );
+
   /* 그룹 설정 (방장용) */
-  const [isOwner, setIsOwner] = useState(false);
   const [groupName, setGroupName] = useState("");
   const [groupIconFile, setGroupIconFile] = useState<File | null>(null);
   const [groupIconPreview, setGroupIconPreview] = useState<string | null>(null);
   const [coverImageFile, setCoverImageFile] = useState<File | null>(null);
   const [coverImagePreview, setCoverImagePreview] = useState<string | null>(null);
-  const [inviteCode, setInviteCode] = useState("");
-  const [joinRequests, setJoinRequests] = useState<
-    { id: string; user: { nickname: string | null; avatar_url: string | null }; created_at: string }[]
-  >([]);
-  const [members, setMembers] = useState<
-    { id: string; nickname: string | null; avatar_url: string | null; joined_at: string; isOwner: boolean }[]
-  >([]);
 
   /* 내 그룹 프로필 */
   const [myNickname, setMyNickname] = useState("");
@@ -68,7 +65,6 @@ export default function GroupSettingsPage({ params }: SettingsPageProps) {
   const [myAvatarPreview, setMyAvatarPreview] = useState<string | null>(null);
 
   /* 상태 */
-  const [isLoading, setIsLoading] = useState(true);
   const [isSavingProfile, setIsSavingProfile] = useState(false);
   const [isSavingGroup, setIsSavingGroup] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -82,73 +78,63 @@ export default function GroupSettingsPage({ params }: SettingsPageProps) {
   }>({ open: false, memberId: "", nickname: "" });
   const [deleteGroupDialog, setDeleteGroupDialog] = useState(false);
 
-  /* 데이터 로드 */
+  /* 계산된 값들 - useMemo로 최적화 */
+  const isOwner = useMemo(() => {
+    return !!profile && !!group && group.owner_id === profile.id;
+  }, [profile, group]);
+
+  const members = useMemo(() => {
+    if (!membersList || !group) return [];
+    return membersList.map((m: GroupMember) => ({
+      id: m.user_id,
+      nickname: m.nickname,
+      avatar_url: m.avatar_url,
+      joined_at: m.joined_at,
+      isOwner: m.user_id === group.owner_id,
+    }));
+  }, [membersList, group]);
+
+  const joinRequests = useMemo(() => {
+    if (!joinRequestsList) return [];
+    return joinRequestsList.map((r: JoinRequest) => ({
+      id: r.id,
+      user: {
+        nickname: r.user.nickname,
+        avatar_url: r.user.avatar_url,
+      },
+      created_at: r.created_at,
+    }));
+  }, [joinRequestsList]);
+
+  const isLoading = authLoading || groupLoading || membersLoading;
+
+  /* 그룹 에러 처리 */
   useEffect(() => {
-    const loadData = async () => {
-      if (!profile || authLoading) return;
+    if (groupError) {
+      toast.error("그룹을 찾을 수 없습니다");
+      router.replace("/groups");
+    }
+  }, [groupError, router]);
 
-      setIsLoading(true);
-
-      /* 그룹 정보 */
-      const groupRes = await getGroup(groupId);
-      if (!groupRes.success || !groupRes.data) {
-        toast.error("그룹을 찾을 수 없습니다");
-        router.replace("/groups");
-        return;
-      }
-
-      const group = groupRes.data;
+  /* 그룹 정보 초기화 */
+  useEffect(() => {
+    if (group) {
       setGroupName(group.name);
       setGroupIconPreview(group.icon_url);
       setCoverImagePreview(group.cover_image_url);
-      setInviteCode(group.invite_code);
-      setIsOwner(group.owner_id === profile.id);
+    }
+  }, [group]);
 
-      /* 멤버 목록 */
-      const membersRes = await getGroupMembers(groupId);
-      if (membersRes.success && membersRes.data) {
-        setMembers(
-          membersRes.data.map((m: GroupMember) => ({
-            id: m.user_id,
-            nickname: m.nickname,
-            avatar_url: m.avatar_url,
-            joined_at: m.joined_at,
-            isOwner: m.user_id === group.owner_id,
-          }))
-        );
-
-        /* 내 프로필 찾기 */
-        const myProfile = membersRes.data.find(
-          (m: GroupMember) => m.user_id === profile.id
-        );
-        if (myProfile) {
-          setMyNickname(myProfile.nickname || "");
-          setMyAvatarPreview(myProfile.avatar_url);
-        }
+  /* 내 프로필 초기화 */
+  useEffect(() => {
+    if (membersList && profile) {
+      const myProfile = membersList.find((m: GroupMember) => m.user_id === profile.id);
+      if (myProfile) {
+        setMyNickname(myProfile.nickname || "");
+        setMyAvatarPreview(myProfile.avatar_url);
       }
-
-      /* 방장이면 가입 요청 목록 조회 */
-      if (group.owner_id === profile.id) {
-        const requestsRes = await getJoinRequests(groupId);
-        if (requestsRes.success && requestsRes.data) {
-          setJoinRequests(
-            requestsRes.data.map((r: JoinRequest) => ({
-              id: r.id,
-              user: {
-                nickname: r.user.nickname,
-                avatar_url: r.user.avatar_url,
-              },
-              created_at: r.created_at,
-            }))
-          );
-        }
-      }
-
-      setIsLoading(false);
-    };
-
-    loadData();
-  }, [groupId, router, profile, authLoading]);
+    }
+  }, [membersList, profile]);
 
   /* 프로필 아바타 선택 */
   const handleProfileAvatarSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -276,6 +262,8 @@ export default function GroupSettingsPage({ params }: SettingsPageProps) {
       });
 
       if (res.success) {
+        // SWR mutate로 자동 재검증
+        mutateGroup();
         toast.success("그룹 설정이 저장되었습니다.");
       } else {
         toast.error("저장에 실패했습니다.");
@@ -289,7 +277,8 @@ export default function GroupSettingsPage({ params }: SettingsPageProps) {
 
   /* 초대 코드 복사 */
   const handleCopyInviteCode = async () => {
-    await navigator.clipboard.writeText(inviteCode);
+    if (!group?.invite_code) return;
+    await navigator.clipboard.writeText(group.invite_code);
     setCodeCopied(true);
     toast.success("초대 코드가 복사되었습니다.");
     setTimeout(() => setCodeCopied(false), 2000);
@@ -302,22 +291,9 @@ export default function GroupSettingsPage({ params }: SettingsPageProps) {
 
     const res = await handleJoinRequest(groupId, requestId, "approve", nickname);
     if (res.success) {
-      setJoinRequests((prev) => prev.filter((r) => r.id !== requestId));
-      // 멤버 목록 다시 로드
-      const membersRes = await getGroupMembers(groupId);
-      if (membersRes.success && membersRes.data) {
-        const groupRes = await getGroup(groupId);
-        const ownerId = groupRes.data?.owner_id;
-        setMembers(
-          membersRes.data.map((m: GroupMember) => ({
-            id: m.user_id,
-            nickname: m.nickname,
-            avatar_url: m.avatar_url,
-            joined_at: m.joined_at,
-            isOwner: m.user_id === ownerId,
-          }))
-        );
-      }
+      // SWR mutate로 자동 재검증 (캐시 활용, 중복 요청 방지)
+      mutateRequests();
+      mutateMembers();
       toast.success("가입 요청을 승인했습니다.");
     }
   };
@@ -326,7 +302,8 @@ export default function GroupSettingsPage({ params }: SettingsPageProps) {
   const handleRejectRequest = async (requestId: string) => {
     const res = await handleJoinRequest(groupId, requestId, "reject");
     if (res.success) {
-      setJoinRequests((prev) => prev.filter((r) => r.id !== requestId));
+      // SWR mutate로 자동 재검증
+      mutateRequests();
       toast.success("가입 요청을 거절했습니다.");
     }
   };
@@ -340,10 +317,10 @@ export default function GroupSettingsPage({ params }: SettingsPageProps) {
   const handleRemoveMember = async () => {
     const res = await removeMember(groupId, removeMemberDialog.memberId);
     if (res.success) {
-      setMembers((prev) =>
-        prev.filter((m) => m.id !== removeMemberDialog.memberId)
-      );
+      // SWR mutate로 자동 재검증
+      mutateMembers();
       toast.success(`${removeMemberDialog.nickname}님을 강퇴했습니다.`);
+      setRemoveMemberDialog({ open: false, memberId: "", nickname: "" });
     } else {
       toast.error("강퇴에 실패했습니다.");
     }
@@ -437,7 +414,7 @@ export default function GroupSettingsPage({ params }: SettingsPageProps) {
               <S.Section>
                 <S.SectionTitle>초대 코드</S.SectionTitle>
                 <S.InviteCodeCard>
-                  <S.InviteCodeText>{inviteCode}</S.InviteCodeText>
+                  <S.InviteCodeText>{group?.invite_code || ""}</S.InviteCodeText>
                   <S.CopyButton
                     variant="outline"
                     size="sm"

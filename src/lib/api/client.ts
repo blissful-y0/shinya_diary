@@ -263,6 +263,12 @@ export async function updateDiary(
   });
 }
 
+export async function deleteDiary(diaryId: string) {
+  return fetchApi<{ success: boolean }>(`/api/diaries/${diaryId}`, {
+    method: "DELETE",
+  });
+}
+
 // ============================================
 // Comments API
 // ============================================
