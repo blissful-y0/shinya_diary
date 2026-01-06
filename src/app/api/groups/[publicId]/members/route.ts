@@ -1,4 +1,6 @@
 import { apiResponse, apiError, requireAuth } from "@/lib/api/utils";
+import { groupService } from "@/server/services";
+import { groupParamsSchema } from "@/server/validations";
 import { NextRequest } from "next/server";
 
 export const runtime = "edge";
@@ -11,44 +13,14 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
   const { user, supabase, error } = await requireAuth(request);
   if (error) return error;
 
-  const { publicId } = await params;
-
-  const [membershipResult, groupResult] = await Promise.all([
-    supabase
-      .from("group_members")
-      .select("id")
-      .eq("group_id", publicId)
-      .eq("user_id", user!.id)
-      .single(),
-    supabase
-      .from("groups")
-      .select("owner_id")
-      .eq("id", groupId)
-      .single(),
-  ]);
-
-  if (!membershipResult.data) {
-    return apiError("그룹 멤버가 아닙니다", 403);
+  try {
+    const { publicId } = groupParamsSchema.parse(await params);
+    const members = await groupService.getMembers(supabase, user!.id, publicId);
+    return apiResponse(members);
+  } catch (err) {
+    if (err instanceof Error && err.name === "ZodError") {
+      return apiError("유효하지 않은 ID 형식입니다", 400);
+    }
+    throw err;
   }
-
-  if (groupResult.error) {
-    return apiError("그룹 조회 실패", 500);
-  }
-
-  const { data: members, error: memberError } = await supabase
-    .from("group_members")
-    .select("id, user_id, group_id, nickname, avatar_url, joined_at")
-    .eq("group_id", publicId)
-    .order("joined_at", { ascending: true });
-
-  if (memberError) {
-    return apiError("멤버 조회 실패", 500);
-  }
-
-  const result = members?.map((m) => ({
-    ...m,
-    isOwner: m.user_id === groupResult.data?.owner_id,
-  }));
-
-  return apiResponse(result);
 }

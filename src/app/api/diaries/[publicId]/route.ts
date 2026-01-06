@@ -1,4 +1,6 @@
-import { apiResponse, apiError, requireAuth } from "@/lib/api/utils";
+import { apiResponse, apiError, requireAuth, parseBody } from "@/lib/api/utils";
+import { diaryService } from "@/server/services";
+import { updateDiarySchema, diaryParamsSchema } from "@/server/validations";
 import { NextRequest } from "next/server";
 
 export const runtime = "edge";
@@ -11,84 +13,47 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
   const { supabase, error } = await requireAuth(request);
   if (error) return error;
 
-  const { publicId } = await params;
-
-  const { data: diary, error: queryError } = await supabase
-    .from("diaries")
-    .select("id, public_id, group_id, user_id, content, image_url, date, created_at, sticker_data")
-    .eq("public_id", publicId)
-    .is("deleted_at", null)
-    .single();
-
-  if (queryError || !diary) {
-    return apiError("다이어리를 찾을 수 없습니다", 404);
+  try {
+    const { publicId } = diaryParamsSchema.parse(await params);
+    const diary = await diaryService.getDiaryByPublicId(supabase, publicId);
+    return apiResponse(diary);
+  } catch (err) {
+    if (err instanceof Error && err.name === "ZodError") {
+      return apiError("유효하지 않은 ID 형식입니다", 400);
+    }
+    throw err;
   }
-
-  const { data: member } = await supabase
-    .from("group_members")
-    .select("nickname, avatar_url")
-    .eq("group_id", diary.group_id)
-    .eq("user_id", diary.user_id)
-    .single();
-
-  return apiResponse({
-    ...diary,
-    author: member || null,
-  });
 }
 
 export async function PATCH(request: NextRequest, { params }: RouteParams) {
   const { user, supabase, error } = await requireAuth(request);
   if (error) return error;
 
-  const { publicId } = await params;
-  const body = await request.json();
-
-  const updateData: Record<string, unknown> = {};
-  if (body.content !== undefined) updateData.content = body.content;
-  if (body.imageUrl !== undefined) updateData.image_url = body.imageUrl;
-  if (body.stickerData !== undefined) updateData.sticker_data = body.stickerData;
-
-  const { data, error: updateError } = await supabase
-    .from("diaries")
-    .update(updateData)
-    .eq("public_id", publicId)
-    .eq("user_id", user!.id)
-    .select("id, public_id");
-
-  if (updateError) {
-    return apiError(updateError.message, 500);
+  try {
+    const { publicId } = diaryParamsSchema.parse(await params);
+    const input = await parseBody(request, updateDiarySchema);
+    const result = await diaryService.updateDiary(supabase, user!.id, publicId, input);
+    return apiResponse(result);
+  } catch (err) {
+    if (err instanceof Error && err.name === "ZodError") {
+      return apiError("입력값이 올바르지 않습니다", 400);
+    }
+    throw err;
   }
-
-  if (!data || data.length === 0) {
-    return apiError("권한이 없습니다", 403);
-  }
-
-  return apiResponse({ success: true });
 }
 
 export async function DELETE(request: NextRequest, { params }: RouteParams) {
   const { user, supabase, error } = await requireAuth(request);
   if (error) return error;
 
-  const { publicId } = await params;
-
-  // Soft delete (deleted_at 설정)
-  const { data, error: deleteError } = await supabase
-    .from("diaries")
-    .update({ deleted_at: new Date().toISOString() })
-    .eq("public_id", publicId)
-    .eq("user_id", user!.id)
-    .is("deleted_at", null)
-    .select("id, public_id");
-
-  if (deleteError) {
-    return apiError(deleteError.message, 500);
+  try {
+    const { publicId } = diaryParamsSchema.parse(await params);
+    const result = await diaryService.deleteDiary(supabase, user!.id, publicId);
+    return apiResponse(result);
+  } catch (err) {
+    if (err instanceof Error && err.name === "ZodError") {
+      return apiError("유효하지 않은 ID 형식입니다", 400);
+    }
+    throw err;
   }
-
-  if (!data || data.length === 0) {
-    return apiError("권한이 없습니다", 403);
-  }
-
-  return apiResponse({ success: true });
 }

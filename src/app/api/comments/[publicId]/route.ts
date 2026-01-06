@@ -1,4 +1,6 @@
-import { apiResponse, apiError, requireAuth } from "@/lib/api/utils";
+import { apiResponse, apiError, requireAuth, parseBody } from "@/lib/api/utils";
+import { commentService } from "@/server/services";
+import { updateCommentSchema, commentParamsSchema } from "@/server/validations";
 import { NextRequest } from "next/server";
 
 export const runtime = "edge";
@@ -11,54 +13,31 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
   const { user, supabase, error } = await requireAuth(request);
   if (error) return error;
 
-  const { publicId } = await params;
-  const body = await request.json();
-  const { content } = body;
-
-  if (!content) {
-    return apiError("content는 필수입니다");
+  try {
+    const { publicId } = commentParamsSchema.parse(await params);
+    const input = await parseBody(request, updateCommentSchema);
+    const result = await commentService.updateComment(supabase, user!.id, publicId, input);
+    return apiResponse(result);
+  } catch (err) {
+    if (err instanceof Error && err.name === "ZodError") {
+      return apiError("입력값이 올바르지 않습니다", 400);
+    }
+    throw err;
   }
-
-  const { data, error: updateError } = await supabase
-    .from("comments")
-    .update({ content })
-    .eq("public_id", publicId)
-    .eq("user_id", user!.id)
-    .is("deleted_at", null)
-    .select("id");
-
-  if (updateError) {
-    return apiError(updateError.message, 500);
-  }
-
-  if (!data || data.length === 0) {
-    return apiError("권한이 없습니다", 403);
-  }
-
-  return apiResponse({ success: true });
 }
 
 export async function DELETE(request: NextRequest, { params }: RouteParams) {
   const { user, supabase, error } = await requireAuth(request);
   if (error) return error;
 
-  const { publicId } = await params;
-
-  const { data, error: deleteError } = await supabase
-    .from("comments")
-    .update({ deleted_at: new Date().toISOString() })
-    .eq("public_id", publicId)
-    .eq("user_id", user!.id)
-    .is("deleted_at", null)
-    .select("id");
-
-  if (deleteError) {
-    return apiError(deleteError.message, 500);
+  try {
+    const { publicId } = commentParamsSchema.parse(await params);
+    const result = await commentService.deleteComment(supabase, user!.id, publicId);
+    return apiResponse(result);
+  } catch (err) {
+    if (err instanceof Error && err.name === "ZodError") {
+      return apiError("유효하지 않은 ID 형식입니다", 400);
+    }
+    throw err;
   }
-
-  if (!data || data.length === 0) {
-    return apiError("권한이 없습니다", 403);
-  }
-
-  return apiResponse({ success: true });
 }

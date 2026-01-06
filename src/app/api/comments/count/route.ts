@@ -1,4 +1,6 @@
-import { apiResponse, apiError, requireAuth } from "@/lib/api/utils";
+import { apiResponse, apiError, requireAuth, parseSearchParams } from "@/lib/api/utils";
+import { commentService } from "@/server/services";
+import { commentCountSchema } from "@/server/validations";
 import { NextRequest } from "next/server";
 
 export const runtime = "edge";
@@ -7,21 +9,14 @@ export async function GET(request: NextRequest) {
   const { supabase, error } = await requireAuth(request);
   if (error) return error;
 
-  const diaryId = request.nextUrl.searchParams.get("diaryId");
-
-  if (!diaryId) {
-    return apiError("diaryId는 필수입니다");
+  try {
+    const { diaryId } = parseSearchParams(request, commentCountSchema);
+    const result = await commentService.getCommentCount(supabase, diaryId);
+    return apiResponse(result);
+  } catch (err) {
+    if (err instanceof Error && err.name === "ZodError") {
+      return apiError("diaryId는 필수입니다", 400);
+    }
+    throw err;
   }
-
-  const { count, error: queryError } = await supabase
-    .from("comments")
-    .select("id", { count: "exact", head: true })
-    .eq("diary_id", diaryId)
-    .is("deleted_at", null);
-
-  if (queryError) {
-    return apiError("댓글 수 조회 실패", 500);
-  }
-
-  return apiResponse({ count: count || 0 });
 }

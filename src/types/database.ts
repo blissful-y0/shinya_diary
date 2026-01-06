@@ -24,12 +24,14 @@ export interface Database {
       profiles: {
         Row: {
           id: string;
+          public_id: string;
           email: string;
           nickname: string | null;
           avatar_url: string | null;
           provider: string;
           created_at: string;
           updated_at: string;
+          deleted_at: string | null;
         };
         Insert: {
           id: string;
@@ -37,61 +39,52 @@ export interface Database {
           nickname?: string | null;
           avatar_url?: string | null;
           provider?: string;
-          created_at?: string;
-          updated_at?: string;
         };
         Update: {
-          id?: string;
-          email?: string;
           nickname?: string | null;
           avatar_url?: string | null;
-          provider?: string;
-          updated_at?: string;
         };
       };
       groups: {
         Row: {
           id: string;
+          public_id: string;
           name: string;
           icon_url: string | null;
           cover_image_url: string | null;
           invite_code: string;
           owner_id: string;
           created_at: string;
+          deleted_at: string | null;
         };
         Insert: {
-          id?: string;
           name: string;
+          owner_id: string;
           icon_url?: string | null;
           cover_image_url?: string | null;
-          invite_code: string;
-          owner_id: string;
-          created_at?: string;
         };
         Update: {
           name?: string;
           icon_url?: string | null;
           cover_image_url?: string | null;
-          invite_code?: string;
-          owner_id?: string;
         };
       };
       group_members: {
         Row: {
           id: string;
+          public_id: string;
           group_id: string;
           user_id: string;
           nickname: string | null;
           avatar_url: string | null;
           joined_at: string;
+          deleted_at: string | null;
         };
         Insert: {
-          id?: string;
           group_id: string;
           user_id: string;
           nickname?: string | null;
           avatar_url?: string | null;
-          joined_at?: string;
         };
         Update: {
           nickname?: string | null;
@@ -101,22 +94,23 @@ export interface Database {
       diaries: {
         Row: {
           id: string;
+          public_id: string;
           group_id: string;
           user_id: string;
           content: string | null;
           image_url: string | null;
           sticker_data: StickerData[] | null;
-          created_at: string;
           date: string;
+          created_at: string;
+          deleted_at: string | null;
+          comment_count: number;
         };
         Insert: {
-          id?: string;
           group_id: string;
           user_id: string;
           content?: string | null;
           image_url?: string | null;
           sticker_data?: StickerData[] | null;
-          created_at?: string;
           date: string;
         };
         Update: {
@@ -128,23 +122,40 @@ export interface Database {
       comments: {
         Row: {
           id: string;
+          public_id: string;
           diary_id: string;
           user_id: string;
           content: string;
           created_at: string;
           updated_at: string;
+          deleted_at: string | null;
         };
         Insert: {
-          id?: string;
           diary_id: string;
           user_id: string;
           content: string;
-          created_at?: string;
-          updated_at?: string;
         };
         Update: {
           content?: string;
-          updated_at?: string;
+        };
+      };
+      join_requests: {
+        Row: {
+          id: string;
+          public_id: string;
+          group_id: string;
+          user_id: string;
+          status: "pending" | "approved" | "rejected";
+          created_at: string;
+          deleted_at: string | null;
+        };
+        Insert: {
+          group_id: string;
+          user_id: string;
+          status?: "pending" | "approved" | "rejected";
+        };
+        Update: {
+          status?: "pending" | "approved" | "rejected";
         };
       };
     };
@@ -156,3 +167,14 @@ export type Group = Database["public"]["Tables"]["groups"]["Row"];
 export type GroupMember = Database["public"]["Tables"]["group_members"]["Row"];
 export type Diary = Database["public"]["Tables"]["diaries"]["Row"];
 export type Comment = Database["public"]["Tables"]["comments"]["Row"];
+export type JoinRequest = Database["public"]["Tables"]["join_requests"]["Row"];
+
+export type ProfileInsert = Database["public"]["Tables"]["profiles"]["Insert"];
+export type GroupInsert = Database["public"]["Tables"]["groups"]["Insert"];
+export type DiaryInsert = Database["public"]["Tables"]["diaries"]["Insert"];
+export type CommentInsert = Database["public"]["Tables"]["comments"]["Insert"];
+
+export type ProfileUpdate = Database["public"]["Tables"]["profiles"]["Update"];
+export type GroupUpdate = Database["public"]["Tables"]["groups"]["Update"];
+export type DiaryUpdate = Database["public"]["Tables"]["diaries"]["Update"];
+export type CommentUpdate = Database["public"]["Tables"]["comments"]["Update"];
