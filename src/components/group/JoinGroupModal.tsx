@@ -60,11 +60,11 @@ export default function JoinGroupModal({
     }
 
     const group = res.data;
-    const membersRes = await getGroupMembers(group.id);
+    const membersRes = await getGroupMembers(group.public_id);
     const memberCount = membersRes.success && membersRes.data ? membersRes.data.length : 1;
 
     setFoundGroup({
-      id: group.id,
+      id: group.public_id,
       name: group.name,
       memberCount,
     });
