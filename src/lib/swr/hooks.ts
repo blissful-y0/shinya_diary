@@ -2,7 +2,7 @@
 
 import useSWR from "swr";
 import useSWRMutation from "swr/mutation";
-import type { Group, GroupMember, Diary, Comment, Profile, ProfileStats } from "@/lib/api/client";
+import type { Group, GroupMember, Diary, Comment, Profile, ProfileStats, UserStats, CalendarData, GroupStatus } from "@/lib/api/client";
 import { isToday } from "@/lib/utils/date";
 
 /**
@@ -200,6 +200,52 @@ export function useJoinRequests(groupId: string | null) {
 
   return {
     requests: data,
+    isLoading,
+    isError: !!error,
+    error,
+    mutate,
+  };
+}
+
+// ============================================
+// Stats & Dashboard
+// ============================================
+
+export function useStats(groupId: string | null) {
+  const { data, error, isLoading, mutate } = useSWR<UserStats>(
+    groupId ? `/api/groups/${groupId}/stats` : null
+  );
+
+  return {
+    stats: data,
+    isLoading,
+    isError: !!error,
+    error,
+    mutate,
+  };
+}
+
+export function useCalendar(groupId: string | null, year: number, month: number) {
+  const { data, error, isLoading, mutate } = useSWR<CalendarData>(
+    groupId ? `/api/groups/${groupId}/calendar?year=${year}&month=${month}` : null
+  );
+
+  return {
+    calendar: data,
+    isLoading,
+    isError: !!error,
+    error,
+    mutate,
+  };
+}
+
+export function useGroupStatus(groupId: string | null) {
+  const { data, error, isLoading, mutate } = useSWR<GroupStatus>(
+    groupId ? `/api/groups/${groupId}/status` : null
+  );
+
+  return {
+    status: data,
     isLoading,
     isError: !!error,
     error,

@@ -12,7 +12,11 @@ import DiaryCard from "@/components/diary/DiaryCard";
 import ConfirmDialog from "@/components/common/ConfirmDialog";
 import { Settings, PenSquare, Lock, Loader2 } from "lucide-react";
 import { formatDateISO, isToday } from "@/lib/utils/date";
-import { useGroup, useGroupMembers, useDiariesWithAuth } from "@/lib/swr/hooks";
+import { useGroup, useGroupMembers, useDiariesWithAuth, useStats, useCalendar, useGroupStatus } from "@/lib/swr/hooks";
+import StatsCard from "@/components/home/StatsCard";
+import CalendarHeatmap from "@/components/home/CalendarHeatmap";
+import TodayWritingCard from "@/components/home/TodayWritingCard";
+import GroupStatusCard from "@/components/home/GroupStatusCard";
 import { useRequireAuth } from "@/lib/hooks/useAuth";
 import { deleteDiary } from "@/lib/api/client";
 import * as S from "./styles/page.styles";
@@ -50,6 +54,19 @@ export default function GroupDetailPage({ params }: GroupDetailPageProps) {
     isError: groupError,
   } = useGroup(groupId);
   const { members } = useGroupMembers(groupId);
+
+  const [calendarYear, setCalendarYear] = useState(() => new Date().getFullYear());
+  const [calendarMonth, setCalendarMonth] = useState(() => new Date().getMonth() + 1);
+
+  const { stats, isLoading: statsLoading } = useStats(groupId);
+  const { calendar, isLoading: calendarLoading } = useCalendar(groupId, calendarYear, calendarMonth);
+  const { status, isLoading: statusLoading } = useGroupStatus(groupId);
+
+  const handleMonthChange = (year: number, month: number) => {
+    setCalendarYear(year);
+    setCalendarMonth(month);
+  };
+
   const {
     diaries,
     hasWritten: hasWrittenToday,
@@ -149,6 +166,17 @@ export default function GroupDetailPage({ params }: GroupDetailPageProps) {
           <S.CoverImage src={group.cover_image_url} alt="" />
         </S.CoverImageContainer>
       )}
+
+      <S.DashboardSection>
+        <TodayWritingCard hasWritten={hasWrittenToday} groupId={groupId} />
+        <StatsCard stats={stats} isLoading={statsLoading} />
+        <CalendarHeatmap 
+          calendar={calendar} 
+          isLoading={calendarLoading} 
+          onMonthChange={handleMonthChange}
+        />
+        <GroupStatusCard status={status} isLoading={statusLoading} />
+      </S.DashboardSection>
 
       <S.Container>
         {/* 오늘이고 아직 작성 안 한 경우: 글쓰기 유도 */}
