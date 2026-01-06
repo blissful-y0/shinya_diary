@@ -205,6 +205,7 @@ export async function handleJoinRequest(
 
 export interface Diary {
   id: string;
+  public_id: string;
   group_id: string;
   user_id: string | null;
   content: string | null;
@@ -256,17 +257,17 @@ export async function createDiary(data: {
 }
 
 export async function updateDiary(
-  diaryId: string,
+  publicId: string,
   data: { content?: string; imageUrl?: string | null }
 ) {
-  return fetchApi<{ success: boolean }>(`/api/diaries/${diaryId}`, {
+  return fetchApi<{ success: boolean }>(`/api/diaries/${publicId}`, {
     method: "PATCH",
     body: JSON.stringify(data),
   });
 }
 
-export async function deleteDiary(diaryId: string) {
-  return fetchApi<{ success: boolean }>(`/api/diaries/${diaryId}`, {
+export async function deleteDiary(publicId: string) {
+  return fetchApi<{ success: boolean }>(`/api/diaries/${publicId}`, {
     method: "DELETE",
   });
 }
@@ -277,6 +278,7 @@ export async function deleteDiary(diaryId: string) {
 
 export interface Comment {
   id: string;
+  public_id: string;
   diary_id: string;
   user_id: string;
   content: string;

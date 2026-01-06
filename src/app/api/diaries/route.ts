@@ -19,7 +19,7 @@ export async function GET(request: NextRequest) {
 
   const { data: allDiaries, error: queryError } = await supabase
     .from("diaries")
-    .select("id, group_id, user_id, content, image_url, date, created_at, sticker_data")
+    .select("id, public_id, group_id, user_id, content, image_url, date, created_at, sticker_data")
     .eq("group_id", groupId)
     .eq("date", date)
     .is("deleted_at", null)
@@ -47,7 +47,7 @@ export async function GET(request: NextRequest) {
   // 코멘트 조회
   const { data: comments } = await supabase
     .from("comments")
-    .select("id, diary_id, user_id, content, created_at, updated_at")
+    .select("id, public_id, diary_id, user_id, content, created_at, updated_at")
     .in("diary_id", diaryIds)
     .is("deleted_at", null)
     .order("created_at", { ascending: true });
