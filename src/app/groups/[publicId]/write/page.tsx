@@ -28,11 +28,11 @@ import * as S from "./styles/page.styles";
    ============================================= */
 
 interface WritePageProps {
-  params: Promise<{ id: string }>;
+  params: Promise<{ publicId: string }>;
 }
 
 export default function WritePage({ params }: WritePageProps) {
-  const { id: groupId } = use(params);
+  const { publicId: groupId } = use(params);
   const router = useRouter();
   const searchParams = useSearchParams();
   const { profile, isLoading: authLoading } = useRequireAuth();

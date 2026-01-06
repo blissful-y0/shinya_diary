@@ -133,7 +133,7 @@ export default function CommentSection({
   };
 
   /* 수정 저장 (Optimistic Update) */
-  const handleEditSave = async (commentId: string) => {
+  const handleEditSave = async (commentId: string, publicId: string) => {
     if (!editContent.trim()) {
       toast.error("내용을 입력해주세요.");
       return;
@@ -153,7 +153,7 @@ export default function CommentSection({
     setEditingId(null);
     setEditContent("");
 
-    const result = await apiUpdateComment(commentId, newContent);
+    const result = await apiUpdateComment(publicId, newContent);
 
     if (result.success) {
       toast.success("코멘트를 수정했습니다.");
@@ -171,12 +171,13 @@ export default function CommentSection({
   /* 삭제 실행 (Optimistic Update) */
   const handleDelete = async () => {
     const { commentId } = deleteDialog;
+    const comment = comments.find((c) => c.id === commentId);
     const originalComments = [...comments];
 
     // UI 먼저 업데이트
     setComments((prev) => prev.filter((c) => c.id !== commentId));
 
-    const result = await apiDeleteComment(commentId);
+    const result = await apiDeleteComment(comment?.public_id || commentId);
 
     if (result.success) {
       toast.success("코멘트를 삭제했습니다.");
@@ -235,7 +236,7 @@ export default function CommentSection({
                       </Button>
                       <Button
                         size="sm"
-                        onClick={() => handleEditSave(comment.id)}
+                        onClick={() => handleEditSave(comment.id, comment.public_id)}
                       >
                         저장
                       </Button>

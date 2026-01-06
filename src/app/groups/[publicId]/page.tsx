@@ -25,11 +25,11 @@ import * as S from "./styles/page.styles";
    ============================================= */
 
 interface GroupDetailPageProps {
-  params: Promise<{ id: string }>;
+  params: Promise<{ publicId: string }>;
 }
 
 export default function GroupDetailPage({ params }: GroupDetailPageProps) {
-  const { id: groupId } = use(params);
+  const { publicId: groupId } = use(params);
   const router = useRouter();
   const { profile, isLoading: authLoading } = useRequireAuth();
   const [selectedDate, setSelectedDate] = useState(new Date());
@@ -201,9 +201,9 @@ export default function GroupDetailPage({ params }: GroupDetailPageProps) {
                   commentCount={diary.commentCount}
                   currentUserAuthor={myGroupProfile}
                   onEdit={() =>
-                    (window.location.href = `/groups/${groupId}/write?edit=${diary.id}`)
+                    (window.location.href = `/groups/${groupId}/write?edit=${diary.public_id}`)
                   }
-                  onDelete={() => handleDeleteClick(diary.id)}
+                  onDelete={() => handleDeleteClick(diary.public_id)}
                 />
               ))
             ) : (

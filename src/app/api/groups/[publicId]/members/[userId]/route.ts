@@ -26,7 +26,7 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
   const { error: updateError } = await supabase
     .from("group_members")
     .update(updateData)
-    .eq("group_id", groupId)
+    .eq("group_id", publicId)
     .eq("user_id", userId);
 
   if (updateError) {
@@ -59,7 +59,7 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
   const { error: deleteError } = await supabase
     .from("group_members")
     .delete()
-    .eq("group_id", groupId)
+    .eq("group_id", publicId)
     .eq("user_id", userId);
 
   if (deleteError) {

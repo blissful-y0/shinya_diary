@@ -34,11 +34,11 @@ import * as S from "./styles/page.styles";
    ============================================= */
 
 interface SettingsPageProps {
-  params: Promise<{ id: string }>;
+  params: Promise<{ publicId: string }>;
 }
 
 export default function GroupSettingsPage({ params }: SettingsPageProps) {
-  const { id: groupId } = use(params);
+  const { publicId: groupId } = use(params);
   const router = useRouter();
   const { profile, isLoading: authLoading } = useRequireAuth();
   const groupIconInputRef = useRef<HTMLInputElement>(null);

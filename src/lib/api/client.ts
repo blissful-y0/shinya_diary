@@ -73,6 +73,7 @@ export async function deleteAccount() {
 
 export interface Group {
   id: string;
+  public_id: string;
   name: string;
   owner_id: string;
   icon_url: string | null;
@@ -96,33 +97,33 @@ export async function getMyGroups() {
   return fetchApi<Group[]>("/api/groups");
 }
 
-export async function getGroup(groupId: string) {
-  return fetchApi<Group>(`/api/groups/${groupId}`);
+export async function getGroup(publicId: string) {
+  return fetchApi<Group>(`/api/groups/${publicId}`);
 }
 
 export async function createGroup(name: string, nickname: string) {
-  return fetchApi<{ groupId: string }>("/api/groups", {
+  return fetchApi<{ groupId: string; publicId: string }>("/api/groups", {
     method: "POST",
     body: JSON.stringify({ name, nickname }),
   });
 }
 
 export async function updateGroup(
-  groupId: string,
+  publicId: string,
   data: {
     name?: string;
     iconUrl?: string | null;
     coverImageUrl?: string | null;
   }
 ) {
-  return fetchApi<{ success: boolean }>(`/api/groups/${groupId}`, {
+  return fetchApi<{ success: boolean }>(`/api/groups/${publicId}`, {
     method: "PATCH",
     body: JSON.stringify(data),
   });
 }
 
-export async function deleteGroup(groupId: string) {
-  return fetchApi<{ success: boolean }>(`/api/groups/${groupId}`, {
+export async function deleteGroup(publicId: string) {
+  return fetchApi<{ success: boolean }>(`/api/groups/${publicId}`, {
     method: "DELETE",
   });
 }
@@ -131,17 +132,17 @@ export async function findGroupByInviteCode(code: string) {
   return fetchApi<Group>(`/api/groups/invite?code=${encodeURIComponent(code)}`);
 }
 
-export async function getGroupMembers(groupId: string) {
-  return fetchApi<GroupMember[]>(`/api/groups/${groupId}/members`);
+export async function getGroupMembers(publicId: string) {
+  return fetchApi<GroupMember[]>(`/api/groups/${publicId}/members`);
 }
 
 export async function updateGroupProfile(
-  groupId: string,
+  publicId: string,
   userId: string,
   data: { nickname?: string; avatarUrl?: string | null }
 ) {
   return fetchApi<{ success: boolean }>(
-    `/api/groups/${groupId}/members/${userId}`,
+    `/api/groups/${publicId}/members/${userId}`,
     {
       method: "PATCH",
       body: JSON.stringify(data),
@@ -149,9 +150,9 @@ export async function updateGroupProfile(
   );
 }
 
-export async function removeMember(groupId: string, userId: string) {
+export async function removeMember(publicId: string, userId: string) {
   return fetchApi<{ success: boolean }>(
-    `/api/groups/${groupId}/members/${userId}`,
+    `/api/groups/${publicId}/members/${userId}`,
     {
       method: "DELETE",
     }
@@ -171,13 +172,13 @@ export interface JoinRequest {
   };
 }
 
-export async function getJoinRequests(groupId: string) {
-  return fetchApi<JoinRequest[]>(`/api/groups/${groupId}/join-requests`);
+export async function getJoinRequests(publicId: string) {
+  return fetchApi<JoinRequest[]>(`/api/groups/${publicId}/join-requests`);
 }
 
-export async function createJoinRequest(groupId: string) {
+export async function createJoinRequest(publicId: string) {
   return fetchApi<{ success: boolean }>(
-    `/api/groups/${groupId}/join-requests`,
+    `/api/groups/${publicId}/join-requests`,
     {
       method: "POST",
     }
@@ -185,13 +186,13 @@ export async function createJoinRequest(groupId: string) {
 }
 
 export async function handleJoinRequest(
-  groupId: string,
+  publicId: string,
   requestId: string,
   action: "approve" | "reject",
   nickname?: string
 ) {
   return fetchApi<{ success: boolean }>(
-    `/api/groups/${groupId}/join-requests/${requestId}`,
+    `/api/groups/${publicId}/join-requests/${requestId}`,
     {
       method: "PATCH",
       body: JSON.stringify({ action, nickname }),
@@ -312,15 +313,15 @@ export async function createComment(diaryId: string, content: string) {
   });
 }
 
-export async function updateComment(commentId: string, content: string) {
-  return fetchApi<{ success: boolean }>(`/api/comments/${commentId}`, {
+export async function updateComment(publicId: string, content: string) {
+  return fetchApi<{ success: boolean }>(`/api/comments/${publicId}`, {
     method: "PATCH",
     body: JSON.stringify({ content }),
   });
 }
 
-export async function deleteComment(commentId: string) {
-  return fetchApi<{ success: boolean }>(`/api/comments/${commentId}`, {
+export async function deleteComment(publicId: string) {
+  return fetchApi<{ success: boolean }>(`/api/comments/${publicId}`, {
     method: "DELETE",
   });
 }

@@ -4,14 +4,14 @@ import { NextRequest } from "next/server";
 export const runtime = "edge";
 
 interface RouteParams {
-  params: Promise<{ commentId: string }>;
+  params: Promise<{ publicId: string }>;
 }
 
 export async function PATCH(request: NextRequest, { params }: RouteParams) {
   const { user, supabase, error } = await requireAuth(request);
   if (error) return error;
 
-  const { commentId } = await params;
+  const { publicId } = await params;
   const body = await request.json();
   const { content } = body;
 
@@ -22,7 +22,7 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
   const { data, error: updateError } = await supabase
     .from("comments")
     .update({ content })
-    .eq("id", commentId)
+    .eq("public_id", publicId)
     .eq("user_id", user!.id)
     .is("deleted_at", null)
     .select("id");
@@ -42,12 +42,12 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
   const { user, supabase, error } = await requireAuth(request);
   if (error) return error;
 
-  const { commentId } = await params;
+  const { publicId } = await params;
 
   const { data, error: deleteError } = await supabase
     .from("comments")
     .update({ deleted_at: new Date().toISOString() })
-    .eq("id", commentId)
+    .eq("public_id", publicId)
     .eq("user_id", user!.id)
     .is("deleted_at", null)
     .select("id");
