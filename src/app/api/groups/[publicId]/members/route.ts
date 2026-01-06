@@ -4,20 +4,20 @@ import { NextRequest } from "next/server";
 export const runtime = "edge";
 
 interface RouteParams {
-  params: Promise<{ groupId: string }>;
+  params: Promise<{ publicId: string }>;
 }
 
 export async function GET(request: NextRequest, { params }: RouteParams) {
   const { user, supabase, error } = await requireAuth(request);
   if (error) return error;
 
-  const { groupId } = await params;
+  const { publicId } = await params;
 
   const [membershipResult, groupResult] = await Promise.all([
     supabase
       .from("group_members")
       .select("id")
-      .eq("group_id", groupId)
+      .eq("group_id", publicId)
       .eq("user_id", user!.id)
       .single(),
     supabase
@@ -38,7 +38,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
   const { data: members, error: memberError } = await supabase
     .from("group_members")
     .select("id, user_id, group_id, nickname, avatar_url, joined_at")
-    .eq("group_id", groupId)
+    .eq("group_id", publicId)
     .order("joined_at", { ascending: true });
 
   if (memberError) {

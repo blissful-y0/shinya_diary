@@ -4,14 +4,14 @@ import { NextRequest } from "next/server";
 export const runtime = "edge";
 
 interface RouteParams {
-  params: Promise<{ groupId: string }>;
+  params: Promise<{ publicId: string }>;
 }
 
 export async function GET(request: NextRequest, { params }: RouteParams) {
   const { user, supabase, error } = await requireAuth(request);
   if (error) return error;
 
-  const { groupId } = await params;
+  const { publicId } = await params;
 
   const { data: group } = await supabase
     .from("groups")
@@ -29,7 +29,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       *,
       user:profiles(nickname, avatar_url)
     `)
-    .eq("group_id", groupId)
+    .eq("group_id", publicId)
     .eq("status", "pending")
     .order("created_at", { ascending: false });
 
@@ -44,19 +44,19 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
   const { user, supabase, error } = await requireAuth(request);
   if (error) return error;
 
-  const { groupId } = await params;
+  const { publicId } = await params;
 
   const [memberResult, requestResult] = await Promise.all([
     supabase
       .from("group_members")
       .select("id")
-      .eq("group_id", groupId)
+      .eq("group_id", publicId)
       .eq("user_id", user!.id)
       .single(),
     supabase
       .from("join_requests")
       .select("id, status")
-      .eq("group_id", groupId)
+      .eq("group_id", publicId)
       .eq("user_id", user!.id)
       .eq("status", "pending")
       .single(),

@@ -4,19 +4,19 @@ import { NextRequest } from "next/server";
 export const runtime = "edge";
 
 interface RouteParams {
-  params: Promise<{ diaryId: string }>;
+  params: Promise<{ publicId: string }>;
 }
 
 export async function GET(request: NextRequest, { params }: RouteParams) {
   const { supabase, error } = await requireAuth(request);
   if (error) return error;
 
-  const { diaryId } = await params;
+  const { publicId } = await params;
 
   const { data: diary, error: queryError } = await supabase
     .from("diaries")
-    .select("id, group_id, user_id, content, image_url, date, created_at, sticker_data")
-    .eq("id", diaryId)
+    .select("id, public_id, group_id, user_id, content, image_url, date, created_at, sticker_data")
+    .eq("public_id", publicId)
     .is("deleted_at", null)
     .single();
 
@@ -41,7 +41,7 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
   const { user, supabase, error } = await requireAuth(request);
   if (error) return error;
 
-  const { diaryId } = await params;
+  const { publicId } = await params;
   const body = await request.json();
 
   const updateData: Record<string, unknown> = {};
@@ -52,9 +52,9 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
   const { data, error: updateError } = await supabase
     .from("diaries")
     .update(updateData)
-    .eq("id", diaryId)
+    .eq("public_id", publicId)
     .eq("user_id", user!.id)
-    .select("id");
+    .select("id, public_id");
 
   if (updateError) {
     return apiError(updateError.message, 500);
@@ -71,15 +71,16 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
   const { user, supabase, error } = await requireAuth(request);
   if (error) return error;
 
-  const { diaryId } = await params;
+  const { publicId } = await params;
 
+  // Soft delete (deleted_at 설정)
   const { data, error: deleteError } = await supabase
     .from("diaries")
     .update({ deleted_at: new Date().toISOString() })
-    .eq("id", diaryId)
+    .eq("public_id", publicId)
     .eq("user_id", user!.id)
     .is("deleted_at", null)
-    .select("id");
+    .select("id, public_id");
 
   if (deleteError) {
     return apiError(deleteError.message, 500);

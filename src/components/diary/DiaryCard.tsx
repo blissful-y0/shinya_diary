@@ -7,6 +7,7 @@ import ImageLightbox from "@/components/common/ImageLightbox";
 import { formatDistanceToNow } from "@/lib/utils/date";
 import { getDiaryImageUrl, getOriginalImageUrl } from "@/lib/utils/image";
 import { MoreVertical, Pencil, Trash2, MessageCircle } from "lucide-react";
+import { type Comment } from "@/lib/api/client";
 import * as S from "./DiaryCard.styles";
 
 interface DiaryCardProps {
@@ -18,6 +19,7 @@ interface DiaryCardProps {
   content?: string | null;
   createdAt: string;
   isOwn?: boolean;
+  comments?: Comment[];
   commentCount?: number;
   currentUserAuthor?: { nickname: string; avatar_url: string | null } | null;
   onEdit?: () => void;
@@ -33,6 +35,7 @@ export default function DiaryCard({
   content,
   createdAt,
   isOwn = false,
+  comments = [],
   commentCount = 0,
   currentUserAuthor,
   onEdit,
@@ -125,6 +128,7 @@ export default function DiaryCard({
         <CommentSection
           diaryId={id}
           groupId={groupId}
+          initialComments={comments}
           currentUserAuthor={currentUserAuthor}
         />
       )}

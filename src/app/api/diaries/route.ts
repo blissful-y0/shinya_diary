@@ -19,7 +19,7 @@ export async function GET(request: NextRequest) {
 
   const { data: allDiaries, error: queryError } = await supabase
     .from("diaries")
-    .select("id, group_id, user_id, content, image_url, date, created_at, sticker_data")
+    .select("id, public_id, group_id, user_id, content, image_url, date, created_at, sticker_data")
     .eq("group_id", groupId)
     .eq("date", date)
     .is("deleted_at", null)
@@ -36,23 +36,66 @@ export async function GET(request: NextRequest) {
     return apiResponse([], 200, { hasWrittenToday: false });
   }
 
-  const userIds = [...new Set(allDiaries?.map(d => d.user_id) || [])];
-
-  if (userIds.length === 0) {
+  if (!allDiaries || allDiaries.length === 0) {
     return apiResponse([], 200, { hasWrittenToday });
   }
 
+  // 다이어리 작성자 user_id 수집 (null 제외)
+  const diaryUserIds = [...new Set(allDiaries.map(d => d.user_id).filter(Boolean))];
+  const diaryIds = allDiaries.map(d => d.id);
+
+  // 코멘트 조회
+  const { data: comments } = await supabase
+    .from("comments")
+    .select("id, public_id, diary_id, user_id, content, created_at, updated_at")
+    .in("diary_id", diaryIds)
+    .is("deleted_at", null)
+    .order("created_at", { ascending: true });
+
+  // 코멘트 작성자 user_id 수집 (null 제외)
+  const commentUserIds = [...new Set(comments?.map(c => c.user_id).filter(Boolean) || [])];
+
+  // 모든 user_id 합치기
+  const allUserIds = [...new Set([...diaryUserIds, ...commentUserIds])];
+
+  // 그룹 멤버 정보 조회
   const { data: members } = await supabase
     .from("group_members")
     .select("user_id, nickname, avatar_url")
     .eq("group_id", groupId)
-    .in("user_id", userIds);
+    .in("user_id", allUserIds.length > 0 ? allUserIds : ["none"]);
 
   const memberMap = new Map(members?.map(m => [m.user_id, m]) || []);
 
-  const data = allDiaries?.map(diary => ({
+  // 코멘트를 다이어리별로 그룹화
+  const commentsByDiary = new Map<string, any[]>();
+  comments?.forEach(comment => {
+    if (!commentsByDiary.has(comment.diary_id)) {
+      commentsByDiary.set(comment.diary_id, []);
+    }
+    commentsByDiary.get(comment.diary_id)!.push({
+      ...comment,
+      author: comment.user_id
+        ? {
+            nickname: memberMap.get(comment.user_id)?.nickname || "탈퇴한 사용자",
+            avatar_url: memberMap.get(comment.user_id)?.avatar_url || null,
+          }
+        : {
+            nickname: "탈퇴한 사용자",
+            avatar_url: null,
+          },
+      isOwn: comment.user_id === user!.id,
+    });
+  });
+
+  // 다이어리에 작성자와 코멘트 정보 추가
+  const data = allDiaries.map(diary => ({
     ...diary,
-    author: memberMap.get(diary.user_id) || null,
+    author: diary.user_id
+      ? memberMap.get(diary.user_id) || null
+      : { nickname: "탈퇴한 사용자", avatar_url: null },
+    comments: commentsByDiary.get(diary.id) || [],
+    comment_count: commentsByDiary.get(diary.id)?.length || 0,
   }));
 
   return apiResponse(data, 200, { hasWrittenToday });

@@ -29,12 +29,12 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
       .from("join_requests")
       .select("user_id, status")
       .eq("id", requestId)
-      .eq("group_id", groupId)
+      .eq("group_id", publicId)
       .single(),
     supabase
       .from("group_members")
       .select("id", { count: "exact", head: true })
-      .eq("group_id", groupId),
+      .eq("group_id", publicId),
   ]);
 
   if (!groupResult.data || groupResult.data.owner_id !== user!.id) {
