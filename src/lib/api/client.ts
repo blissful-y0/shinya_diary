@@ -370,19 +370,6 @@ export interface CalendarData {
   };
 }
 
-export interface GroupMemberStatus {
-  oderId: string;
-  nickname: string;
-  avatarUrl: string | null;
-  hasWrittenToday: boolean;
-}
-
-export interface GroupStatus {
-  total: number;
-  written: number;
-  members: GroupMemberStatus[];
-}
-
 export interface GroupWritingStatus {
   id: string;
   name: string;

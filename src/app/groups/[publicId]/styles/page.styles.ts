@@ -27,14 +27,6 @@ export const CoverImage = styled.img`
   /* filter: grayscale(100%); */
 `;
 
-export const DashboardSection = styled.section`
-  padding: 20px;
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  background-color: #fafafa;
-`;
-
 export const Container = styled.div`
   padding: 0 20px 40px;
   display: flex;

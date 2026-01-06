@@ -9,7 +9,10 @@ interface AllGroupsStatusCardProps {
   isLoading: boolean;
 }
 
-export default function AllGroupsStatusCard({ status, isLoading }: AllGroupsStatusCardProps) {
+export default function AllGroupsStatusCard({
+  status,
+  isLoading,
+}: AllGroupsStatusCardProps) {
   if (isLoading) {
     return (
       <S.Container>
@@ -26,7 +29,6 @@ export default function AllGroupsStatusCard({ status, isLoading }: AllGroupsStat
       <S.Container>
         <S.Header>
           <S.Title>오늘 작성 현황</S.Title>
-          <S.Count>0/0 그룹</S.Count>
         </S.Header>
         <S.EmptyState>참여 중인 그룹이 없습니다</S.EmptyState>
       </S.Container>
@@ -37,12 +39,19 @@ export default function AllGroupsStatusCard({ status, isLoading }: AllGroupsStat
     <S.Container>
       <S.Header>
         <S.Title>오늘 작성 현황</S.Title>
-        <S.Count>{status.writtenGroups}/{status.totalGroups} 그룹</S.Count>
+        <S.Count>
+          {status.writtenGroups}/{status.totalGroups} 그룹
+        </S.Count>
       </S.Header>
-      
+
       <S.GroupList>
         {status.groups.map((group) => (
-          <Link key={group.id} href={`/groups/${group.id}`} passHref legacyBehavior>
+          <Link
+            key={group.id}
+            href={`/groups/${group.id}`}
+            passHref
+            legacyBehavior
+          >
             <S.GroupItem>
               <S.GroupInfo>
                 <S.GroupIcon>
@@ -54,7 +63,7 @@ export default function AllGroupsStatusCard({ status, isLoading }: AllGroupsStat
                 </S.GroupIcon>
                 <S.GroupName>{group.name}</S.GroupName>
               </S.GroupInfo>
-              
+
               <S.StatusIndicator $isComplete={group.hasWrittenToday}>
                 {group.hasWrittenToday ? (
                   <Check size={14} strokeWidth={3} />
