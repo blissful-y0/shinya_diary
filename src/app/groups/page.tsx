@@ -56,8 +56,8 @@ export default function GroupsPage() {
           ) : groups && groups.length > 0 ? (
             groups.map((group) => (
               <GroupCard
-                key={group.id}
-                id={group.id}
+                key={group.public_id}
+                id={group.public_id}
                 name={group.name}
                 iconUrl={group.icon_url}
                 coverImageUrl={group.cover_image_url}

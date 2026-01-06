@@ -53,17 +53,12 @@ export const CoverImagePreview = styled.div`
   position: relative;
   cursor: pointer;
   transition: all 0.2s ease;
-
-  &:hover {
-    border-color: #a3a3a3;
-  }
 `;
 
 export const CoverImage = styled.img`
   width: 100%;
   height: 100%;
   object-fit: cover;
-  filter: grayscale(100%);
 `;
 
 export const CoverImagePlaceholder = styled.div`
@@ -110,7 +105,7 @@ export const SectionTitle = styled.h3`
 export const IconPreview = styled.div`
   width: 80px;
   height: 80px;
-  border-radius: 4px;
+  border-radius: 50%;
   background-color: #fafafa;
   border: 1px solid #e5e5e5;
   display: flex;
@@ -119,7 +114,7 @@ export const IconPreview = styled.div`
   overflow: hidden;
   position: relative;
   cursor: pointer;
-  
+
   &:hover > div:last-of-type {
     opacity: 1;
   }
@@ -129,7 +124,7 @@ export const IconImage = styled.img`
   width: 100%;
   height: 100%;
   object-fit: cover;
-  filter: grayscale(100%);
+  border-radius: 50%;
 `;
 
 export const IconPlaceholder = styled.div`
@@ -159,7 +154,7 @@ export const NameInput = styled(Input)`
   font-size: 16px;
   border-radius: 4px;
   border-color: #e5e5e5;
-  
+
   &:focus {
     border-color: #171717;
   }
@@ -172,7 +167,7 @@ export const SaveButton = styled(Button)`
   background: #171717;
   color: #ffffff;
   border-radius: 4px;
-  
+
   &:hover {
     background: #000000;
   }
@@ -209,7 +204,7 @@ export const CopyButton = styled(Button)`
   background: white;
   color: #171717;
   border: 1px solid #e5e5e5;
-  
+
   &:hover {
     background: #fafafa;
     border-color: #d4d4d4;
@@ -277,7 +272,7 @@ export const DeleteButton = styled(Button)`
   background-color: #ffffff;
   color: #ef4444;
   border: 1px solid #ef4444;
-  
+
   &:hover {
     background-color: #fef2f2;
     color: #dc2626;

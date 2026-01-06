@@ -346,6 +346,41 @@ export interface ProfileStats {
   groupCount: number;
 }
 
+export interface UserStats {
+  streak: number;
+  weekWritten: number;
+  monthWritten: number;
+  recentComments: number;
+}
+
+export interface CalendarDate {
+  date: string;
+  hasWritten: boolean;
+}
+
+export interface CalendarData {
+  dates: CalendarDate[];
+  monthInfo: {
+    year: number;
+    month: number;
+    startDay: number;
+    totalDays: number;
+  };
+}
+
+export interface GroupWritingStatus {
+  id: string;
+  name: string;
+  iconUrl: string | null;
+  hasWrittenToday: boolean;
+}
+
+export interface AllGroupsStatus {
+  groups: GroupWritingStatus[];
+  totalGroups: number;
+  writtenGroups: number;
+}
+
 export async function getMyProfile() {
   return fetchApi<{ profile: Profile; stats: ProfileStats }>("/api/profile");
 }

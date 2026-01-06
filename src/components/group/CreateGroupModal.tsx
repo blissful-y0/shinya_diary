@@ -50,11 +50,10 @@ export default function CreateGroupModal({
     const res = await createGroup(groupName.trim(), nickname.trim());
 
     if (res.success && res.data) {
-      // 생성된 그룹 정보 조회하여 초대 코드 가져오기
-      const groupRes = await getGroup(res.data.groupId);
+      const groupRes = await getGroup(res.data.publicId);
       if (groupRes.success && groupRes.data) {
         const result = {
-          id: res.data.groupId,
+          id: res.data.publicId,
           name: groupName.trim(),
           inviteCode: groupRes.data.invite_code,
         };
