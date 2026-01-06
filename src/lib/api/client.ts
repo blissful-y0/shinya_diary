@@ -383,6 +383,19 @@ export interface GroupStatus {
   members: GroupMemberStatus[];
 }
 
+export interface GroupWritingStatus {
+  id: string;
+  name: string;
+  iconUrl: string | null;
+  hasWrittenToday: boolean;
+}
+
+export interface AllGroupsStatus {
+  groups: GroupWritingStatus[];
+  totalGroups: number;
+  writtenGroups: number;
+}
+
 export async function getMyProfile() {
   return fetchApi<{ profile: Profile; stats: ProfileStats }>("/api/profile");
 }
