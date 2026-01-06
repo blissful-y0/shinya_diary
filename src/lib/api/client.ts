@@ -214,6 +214,7 @@ export interface Diary {
   date: string;
   created_at: string;
   author?: {
+    user_id: string | null;
     nickname: string | null;
     avatar_url: string | null;
   } | null;
@@ -286,6 +287,7 @@ export interface Comment {
   created_at: string;
   updated_at: string;
   author: {
+    user_id: string | null;
     nickname: string | null;
     avatar_url: string | null;
   };

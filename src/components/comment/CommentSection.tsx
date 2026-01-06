@@ -71,12 +71,14 @@ export default function CommentSection({
     const tempId = `temp-${Date.now()}`;
     const optimisticComment: Comment = {
       id: tempId,
+      public_id: tempId,
       diary_id: diaryId,
       user_id: "",
       content,
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
       author: {
+        user_id: null,
         nickname: currentUserAuthor?.nickname || "나",
         avatar_url: currentUserAuthor?.avatar_url || null,
       },

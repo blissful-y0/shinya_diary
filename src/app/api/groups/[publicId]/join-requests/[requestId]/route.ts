@@ -1,84 +1,27 @@
-import { apiResponse, apiError, requireAuth } from "@/lib/api/utils";
+import { apiResponse, apiError, requireAuth, parseBody } from "@/lib/api/utils";
+import { groupService } from "@/server/services";
+import { joinRequestParamsSchema, handleJoinRequestSchema } from "@/server/validations";
 import { NextRequest } from "next/server";
 
 export const runtime = "edge";
 
 interface RouteParams {
-  params: Promise<{ groupId: string; requestId: string }>;
+  params: Promise<{ publicId: string; requestId: string }>;
 }
 
 export async function PATCH(request: NextRequest, { params }: RouteParams) {
   const { user, supabase, error } = await requireAuth(request);
   if (error) return error;
 
-  const { groupId, requestId } = await params;
-  const body = await request.json();
-  const { action, nickname } = body;
-
-  if (!action || !["approve", "reject"].includes(action)) {
-    return apiError("유효하지 않은 액션입니다");
-  }
-
-  const [groupResult, requestResult, memberCountResult] = await Promise.all([
-    supabase
-      .from("groups")
-      .select("owner_id")
-      .eq("id", groupId)
-      .single(),
-    supabase
-      .from("join_requests")
-      .select("user_id, status")
-      .eq("id", requestId)
-      .eq("group_id", publicId)
-      .single(),
-    supabase
-      .from("group_members")
-      .select("id", { count: "exact", head: true })
-      .eq("group_id", publicId),
-  ]);
-
-  if (!groupResult.data || groupResult.data.owner_id !== user!.id) {
-    return apiError("권한이 없습니다", 403);
-  }
-
-  if (!requestResult.data) {
-    return apiError("가입 요청을 찾을 수 없습니다", 404);
-  }
-
-  if (requestResult.data.status !== "pending") {
-    return apiError("이미 처리된 요청입니다", 400);
-  }
-
-  if (action === "approve") {
-    if (!nickname) {
-      return apiError("닉네임이 필요합니다");
+  try {
+    const { publicId, requestId } = joinRequestParamsSchema.parse(await params);
+    const input = await parseBody(request, handleJoinRequestSchema);
+    const result = await groupService.handleJoinRequest(supabase, user!.id, publicId, requestId, input);
+    return apiResponse(result);
+  } catch (err) {
+    if (err instanceof Error && err.name === "ZodError") {
+      return apiError("입력값이 올바르지 않습니다", 400);
     }
-
-    if (memberCountResult.count && memberCountResult.count >= 4) {
-      return apiError("그룹 최대 인원(4명)을 초과했습니다", 400);
-    }
-
-    const [, memberResult] = await Promise.all([
-      supabase
-        .from("join_requests")
-        .update({ status: "approved" })
-        .eq("id", requestId),
-      supabase.from("group_members").insert({
-        group_id: groupId,
-        user_id: requestResult.data.user_id,
-        nickname,
-      }),
-    ]);
-
-    if (memberResult.error) {
-      return apiError(memberResult.error.message, 500);
-    }
-  } else {
-    await supabase
-      .from("join_requests")
-      .update({ status: "rejected" })
-      .eq("id", requestId);
+    throw err;
   }
-
-  return apiResponse({ success: true });
 }

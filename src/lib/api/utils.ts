@@ -2,6 +2,7 @@ import { createEdgeClient } from "@/lib/supabase/edge";
 import { NextRequest, NextResponse } from "next/server";
 import { SupabaseClient } from "@supabase/supabase-js";
 import { User } from "@supabase/supabase-js";
+import { z } from "zod/v4";
 
 export type ApiHandler<T = unknown> = (params: {
   request: NextRequest;
@@ -51,16 +52,25 @@ export function withAuth(handler: ApiHandler) {
       
       return apiResponse(result);
     } catch (err) {
-      console.error("API Error:", err);
-      
-      if (err instanceof ApiException) {
-        return apiError(err.message, err.status, err.code);
-      }
-      
-      const message = err instanceof Error ? err.message : "알 수 없는 오류가 발생했습니다";
-      return apiError(message, 500, "INTERNAL_ERROR");
+      return handleApiError(err);
     }
   };
+}
+
+function handleApiError(err: unknown): NextResponse {
+  console.error("API Error:", err);
+
+  if (err instanceof z.ZodError) {
+    const firstError = err.issues[0];
+    return apiError(firstError.message, 400, "VALIDATION_ERROR");
+  }
+
+  if (err instanceof ApiException) {
+    return apiError(err.message, err.status, err.code);
+  }
+
+  const message = err instanceof Error ? err.message : "알 수 없는 오류가 발생했습니다";
+  return apiError(message, 500, "INTERNAL_ERROR");
 }
 
 export function withOptionalAuth(handler: (params: {
@@ -81,16 +91,28 @@ export function withOptionalAuth(handler: (params: {
       
       return apiResponse(result);
     } catch (err) {
-      console.error("API Error:", err);
-      
-      if (err instanceof ApiException) {
-        return apiError(err.message, err.status, err.code);
-      }
-      
-      const message = err instanceof Error ? err.message : "알 수 없는 오류가 발생했습니다";
-      return apiError(message, 500, "INTERNAL_ERROR");
+      return handleApiError(err);
     }
   };
+}
+
+export function parseSearchParams<T extends z.ZodRawShape>(
+  request: NextRequest,
+  schema: z.ZodObject<T>
+): z.infer<z.ZodObject<T>> {
+  const params: Record<string, string> = {};
+  request.nextUrl.searchParams.forEach((value, key) => {
+    params[key] = value;
+  });
+  return schema.parse(params);
+}
+
+export async function parseBody<T extends z.ZodRawShape>(
+  request: NextRequest,
+  schema: z.ZodObject<T>
+): Promise<z.infer<z.ZodObject<T>>> {
+  const body = await request.json();
+  return schema.parse(body);
 }
 
 export class ApiException extends Error {

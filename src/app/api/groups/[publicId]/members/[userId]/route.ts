@@ -1,70 +1,43 @@
-import { apiResponse, apiError, requireAuth } from "@/lib/api/utils";
+import { apiResponse, apiError, requireAuth, parseBody } from "@/lib/api/utils";
+import { groupService } from "@/server/services";
+import { memberParamsSchema, updateMemberSchema } from "@/server/validations";
 import { NextRequest } from "next/server";
 
 export const runtime = "edge";
 
 interface RouteParams {
-  params: Promise<{ groupId: string; userId: string }>;
+  params: Promise<{ publicId: string; userId: string }>;
 }
 
 export async function PATCH(request: NextRequest, { params }: RouteParams) {
   const { user, supabase, error } = await requireAuth(request);
   if (error) return error;
 
-  const { groupId, userId } = await params;
-
-  if (user!.id !== userId) {
-    return apiError("권한이 없습니다", 403);
+  try {
+    const { publicId, userId } = memberParamsSchema.parse(await params);
+    const input = await parseBody(request, updateMemberSchema);
+    const result = await groupService.updateMember(supabase, user!.id, publicId, userId, input);
+    return apiResponse(result);
+  } catch (err) {
+    if (err instanceof Error && err.name === "ZodError") {
+      return apiError("입력값이 올바르지 않습니다", 400);
+    }
+    throw err;
   }
-
-  const body = await request.json();
-
-  const updateData: Record<string, unknown> = {};
-  if (body.nickname !== undefined) updateData.nickname = body.nickname;
-  if (body.avatarUrl !== undefined) updateData.avatar_url = body.avatarUrl;
-
-  const { error: updateError } = await supabase
-    .from("group_members")
-    .update(updateData)
-    .eq("group_id", publicId)
-    .eq("user_id", userId);
-
-  if (updateError) {
-    return apiError(updateError.message, 500);
-  }
-
-  return apiResponse({ success: true });
 }
 
 export async function DELETE(request: NextRequest, { params }: RouteParams) {
   const { user, supabase, error } = await requireAuth(request);
   if (error) return error;
 
-  const { groupId, userId } = await params;
-
-  const { data: group } = await supabase
-    .from("groups")
-    .select("owner_id")
-    .eq("id", groupId)
-    .single();
-
-  if (!group || group.owner_id !== user!.id) {
-    return apiError("권한이 없습니다", 403);
+  try {
+    const { publicId, userId } = memberParamsSchema.parse(await params);
+    const result = await groupService.removeMember(supabase, user!.id, publicId, userId);
+    return apiResponse(result);
+  } catch (err) {
+    if (err instanceof Error && err.name === "ZodError") {
+      return apiError("유효하지 않은 ID 형식입니다", 400);
+    }
+    throw err;
   }
-
-  if (userId === user!.id) {
-    return apiError("방장은 강퇴할 수 없습니다", 400);
-  }
-
-  const { error: deleteError } = await supabase
-    .from("group_members")
-    .delete()
-    .eq("group_id", publicId)
-    .eq("user_id", userId);
-
-  if (deleteError) {
-    return apiError(deleteError.message, 500);
-  }
-
-  return apiResponse({ success: true });
 }
