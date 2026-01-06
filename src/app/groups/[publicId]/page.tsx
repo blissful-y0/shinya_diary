@@ -82,7 +82,9 @@ export default function GroupDetailPage({ params }: GroupDetailPageProps) {
     if (!diaries || !profile) return [];
     return diaries.map((d) => ({
       id: d.id,
-      nickname: d.author?.nickname || "탈퇴한 사용자",
+      nickname: d.author?.user_id
+        ? d.author.nickname || "익명"
+        : "탈퇴한 사용자",
       avatarUrl: d.author?.avatar_url || null,
       imageUrl: d.image_url,
       content: d.content,

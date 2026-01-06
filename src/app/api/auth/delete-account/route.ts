@@ -73,7 +73,7 @@ export const DELETE = withAuth(async ({ user, supabase }) => {
     console.error("멤버십 삭제 실패:", memberError);
   }
 
-  // 6. 프로필 삭제 (CASCADE로 인해 diaries, comments의 user_id가 NULL이 됨)
+  // 6. 프로필 삭제 (ON DELETE SET NULL로 인해 diaries, comments의 user_id가 NULL이 됨)
   const { error: profileError } = await supabase
     .from("profiles")
     .delete()

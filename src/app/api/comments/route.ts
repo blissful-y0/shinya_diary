@@ -40,20 +40,35 @@ export async function GET(request: NextRequest) {
   const userIds = [...new Set(comments?.map(c => c.user_id) || [])];
   const { data: members } = await supabase
     .from("group_members")
-    .select("user_id, nickname, avatar_url")
+    .select(`
+      user_id,
+      nickname,
+      avatar_url,
+      profiles!inner(public_id)
+    `)
     .eq("group_id", groupId)
     .in("user_id", userIds.length > 0 ? userIds : ["none"]);
 
   const memberMap = new Map(members?.map(m => [m.user_id, m]) || []);
 
-  const result = (comments || []).map((c) => ({
-    ...c,
-    author: {
-      nickname: memberMap.get(c.user_id)?.nickname || "익명",
-      avatar_url: memberMap.get(c.user_id)?.avatar_url || null,
-    },
-    isOwn: c.user_id === user!.id,
-  }));
+  const result = (comments || []).map((c) => {
+    const member = c.user_id ? memberMap.get(c.user_id) : null;
+    return {
+      ...c,
+      author: member
+        ? {
+            user_id: (member as any).profiles?.public_id || null,
+            nickname: member.nickname || "익명",
+            avatar_url: member.avatar_url || null,
+          }
+        : {
+            user_id: null,
+            nickname: "탈퇴한 사용자",
+            avatar_url: null,
+          },
+      isOwn: c.user_id === user!.id,
+    };
+  });
 
   return apiResponse(result);
 }

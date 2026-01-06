@@ -58,10 +58,15 @@ export async function GET(request: NextRequest) {
   // 모든 user_id 합치기
   const allUserIds = [...new Set([...diaryUserIds, ...commentUserIds])];
 
-  // 그룹 멤버 정보 조회
+  // 그룹 멤버 정보 조회 (profiles의 public_id 포함)
   const { data: members } = await supabase
     .from("group_members")
-    .select("user_id, nickname, avatar_url")
+    .select(`
+      user_id,
+      nickname,
+      avatar_url,
+      profiles!inner(public_id)
+    `)
     .eq("group_id", groupId)
     .in("user_id", allUserIds.length > 0 ? allUserIds : ["none"]);
 
@@ -73,14 +78,17 @@ export async function GET(request: NextRequest) {
     if (!commentsByDiary.has(comment.diary_id)) {
       commentsByDiary.set(comment.diary_id, []);
     }
+    const member = comment.user_id ? memberMap.get(comment.user_id) : null;
     commentsByDiary.get(comment.diary_id)!.push({
       ...comment,
-      author: comment.user_id
+      author: member
         ? {
-            nickname: memberMap.get(comment.user_id)?.nickname || "탈퇴한 사용자",
-            avatar_url: memberMap.get(comment.user_id)?.avatar_url || null,
+            user_id: (member as any).profiles?.public_id || null,
+            nickname: member.nickname || "익명",
+            avatar_url: member.avatar_url || null,
           }
         : {
+            user_id: null,
             nickname: "탈퇴한 사용자",
             avatar_url: null,
           },
@@ -89,14 +97,25 @@ export async function GET(request: NextRequest) {
   });
 
   // 다이어리에 작성자와 코멘트 정보 추가
-  const data = allDiaries.map(diary => ({
-    ...diary,
-    author: diary.user_id
-      ? memberMap.get(diary.user_id) || null
-      : { nickname: "탈퇴한 사용자", avatar_url: null },
-    comments: commentsByDiary.get(diary.id) || [],
-    comment_count: commentsByDiary.get(diary.id)?.length || 0,
-  }));
+  const data = allDiaries.map(diary => {
+    const member = diary.user_id ? memberMap.get(diary.user_id) : null;
+    return {
+      ...diary,
+      author: member
+        ? {
+            user_id: (member as any).profiles?.public_id || null,
+            nickname: member.nickname || "익명",
+            avatar_url: member.avatar_url || null,
+          }
+        : {
+            user_id: null,
+            nickname: "탈퇴한 사용자",
+            avatar_url: null,
+          },
+      comments: commentsByDiary.get(diary.id) || [],
+      comment_count: commentsByDiary.get(diary.id)?.length || 0,
+    };
+  });
 
   return apiResponse(data, 200, { hasWrittenToday });
 }
