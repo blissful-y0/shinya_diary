@@ -349,9 +349,7 @@ export interface ProfileStats {
 export interface UserStats {
   streak: number;
   weekWritten: number;
-  weekTotal: number;
   monthWritten: number;
-  monthTotal: number;
   recentComments: number;
 }
 

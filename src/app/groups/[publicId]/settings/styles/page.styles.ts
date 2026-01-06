@@ -105,9 +105,9 @@ export const SectionTitle = styled.h3`
 export const IconPreview = styled.div`
   width: 80px;
   height: 80px;
-  border-radius: 4px;
-  /* background-color: #fafafa; */
-  /* border: 1px solid #e5e5e5; */
+  border-radius: 50%;
+  background-color: #fafafa;
+  border: 1px solid #e5e5e5;
   display: flex;
   align-items: center;
   justify-content: center;

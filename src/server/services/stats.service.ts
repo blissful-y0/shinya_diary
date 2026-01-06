@@ -44,16 +44,6 @@ function calculateStreak(dates: string[]): number {
   return streak;
 }
 
-function getDaysInWeekSoFar(): number {
-  const today = new Date();
-  const day = today.getDay();
-  return day === 0 ? 7 : day;
-}
-
-function getDaysInMonthSoFar(): number {
-  return new Date().getDate();
-}
-
 export const statsService = {
   async getAggregatedStats(db: SupabaseClient, userId: string) {
     const today = new Date();
@@ -86,9 +76,7 @@ export const statsService = {
     return {
       streak,
       weekWritten: weeklyDates.size,
-      weekTotal: getDaysInWeekSoFar(),
       monthWritten: monthlyDates.size,
-      monthTotal: getDaysInMonthSoFar(),
       recentComments: commentsResult.count ?? 0,
     };
   },

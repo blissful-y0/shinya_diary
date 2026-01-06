@@ -1,8 +1,17 @@
 "use client";
 
 import { UserStats } from "@/lib/api/client";
-import { Loader2 } from "lucide-react";
+import { getDay, getDate } from "date-fns";
 import * as S from "./StatsCard.styles";
+
+function getDaysInWeekSoFar(): number {
+  const day = getDay(new Date());
+  return day === 0 ? 7 : day;
+}
+
+function getDaysInMonthSoFar(): number {
+  return getDate(new Date());
+}
 
 interface StatsCardProps {
   stats: UserStats | undefined;
@@ -36,14 +45,14 @@ export default function StatsCard({ stats, isLoading }: StatsCardProps) {
       <S.StatItem>
         <S.Label>Weekly</S.Label>
         <S.Value>
-          {stats?.weekWritten || 0}/{stats?.weekTotal || 7}
+          {stats?.weekWritten || 0}/{getDaysInWeekSoFar()}
         </S.Value>
       </S.StatItem>
 
       <S.StatItem>
         <S.Label>Monthly</S.Label>
         <S.Value>
-          {stats?.monthWritten || 0}/{stats?.monthTotal || 30}
+          {stats?.monthWritten || 0}/{getDaysInMonthSoFar()}
         </S.Value>
       </S.StatItem>
 
