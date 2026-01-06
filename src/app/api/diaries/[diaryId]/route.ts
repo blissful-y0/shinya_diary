@@ -73,6 +73,7 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
 
   const { diaryId } = await params;
 
+  // Soft delete (deleted_at 설정)
   const { data, error: deleteError } = await supabase
     .from("diaries")
     .update({ deleted_at: new Date().toISOString() })

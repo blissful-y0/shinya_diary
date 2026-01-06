@@ -44,7 +44,11 @@ export default function GroupDetailPage({ params }: GroupDetailPageProps) {
   const dateStr = formatDateISO(selectedDate);
 
   // SWR hooks
-  const { group, isLoading: groupLoading, isError: groupError } = useGroup(groupId);
+  const {
+    group,
+    isLoading: groupLoading,
+    isError: groupError,
+  } = useGroup(groupId);
   const { members } = useGroupMembers(groupId);
   const {
     diaries,
@@ -78,12 +82,14 @@ export default function GroupDetailPage({ params }: GroupDetailPageProps) {
     if (!diaries || !profile) return [];
     return diaries.map((d) => ({
       id: d.id,
-      nickname: d.author?.nickname || "익명",
+      nickname: d.author?.nickname || "탈퇴한 사용자",
       avatarUrl: d.author?.avatar_url || null,
       imageUrl: d.image_url,
       content: d.content,
       createdAt: d.created_at,
       isOwn: d.user_id === profile.id,
+      comments: d.comments || [],
+      commentCount: d.comment_count || 0,
     }));
   }, [diaries, profile]);
 
@@ -99,9 +105,10 @@ export default function GroupDetailPage({ params }: GroupDetailPageProps) {
     try {
       const result = await deleteDiary(deleteDialog.diaryId);
       if (result.success) {
-        mutateDiaries();
         toast.success("일기가 삭제되었습니다.");
         setDeleteDialog({ open: false, diaryId: "" });
+        // 삭제 후 홈으로 리디렉트 (다른 사람 일기를 볼 수 없도록)
+        router.push(`/groups/${groupId}`);
       } else {
         toast.error(result.error || "삭제에 실패했습니다.");
       }
@@ -190,6 +197,8 @@ export default function GroupDetailPage({ params }: GroupDetailPageProps) {
                   content={diary.content}
                   createdAt={diary.createdAt}
                   isOwn={diary.isOwn}
+                  comments={diary.comments}
+                  commentCount={diary.commentCount}
                   currentUserAuthor={myGroupProfile}
                   onEdit={() =>
                     (window.location.href = `/groups/${groupId}/write?edit=${diary.id}`)

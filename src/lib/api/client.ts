@@ -206,7 +206,7 @@ export async function handleJoinRequest(
 export interface Diary {
   id: string;
   group_id: string;
-  user_id: string;
+  user_id: string | null;
   content: string | null;
   image_url: string | null;
   date: string;
@@ -214,7 +214,9 @@ export interface Diary {
   author?: {
     nickname: string | null;
     avatar_url: string | null;
-  };
+  } | null;
+  comments?: Comment[];
+  comment_count?: number;
 }
 
 export async function getDiaries(groupId: string, date: string) {

@@ -7,7 +7,6 @@ import { Button } from "@/components/ui/button";
 import ConfirmDialog from "@/components/common/ConfirmDialog";
 import { formatDistanceToNow } from "@/lib/utils/date";
 import {
-  getComments,
   createComment as apiCreateComment,
   updateComment as apiUpdateComment,
   deleteComment as apiDeleteComment,
@@ -24,17 +23,18 @@ import * as S from "./CommentSection.styles";
 interface CommentSectionProps {
   diaryId: string;
   groupId: string;
+  initialComments: Comment[];
   currentUserAuthor?: { nickname: string; avatar_url: string | null } | null;
 }
 
 export default function CommentSection({
   diaryId,
   groupId,
+  initialComments,
   currentUserAuthor,
 }: CommentSectionProps) {
-  const [comments, setComments] = useState<Comment[]>([]);
+  const [comments, setComments] = useState<Comment[]>(initialComments);
   const [newComment, setNewComment] = useState("");
-  const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editContent, setEditContent] = useState("");
@@ -47,19 +47,10 @@ export default function CommentSection({
   });
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  /* 코멘트 목록 로드 */
-  const loadComments = async () => {
-    setIsLoading(true);
-    const result = await getComments(diaryId, groupId);
-    if (result.success && result.data) {
-      setComments(result.data);
-    }
-    setIsLoading(false);
-  };
-
+  /* initialComments가 변경되면 동기화 */
   useEffect(() => {
-    loadComments();
-  }, [diaryId, groupId]);
+    setComments(initialComments);
+  }, [initialComments]);
 
   /* 텍스트 영역 자동 높이 조절 */
   const adjustTextareaHeight = () => {
@@ -204,11 +195,7 @@ export default function CommentSection({
   return (
     <S.Container>
       {/* 코멘트 목록 */}
-      {isLoading ? (
-        <S.EmptyState>
-          <Loader2 size={16} className="animate-spin" />
-        </S.EmptyState>
-      ) : comments.length > 0 ? (
+      {comments.length > 0 ? (
         <S.CommentList>
           {comments.map((comment) => (
             <S.CommentItem key={comment.id}>
