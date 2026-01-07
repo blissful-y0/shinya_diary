@@ -48,6 +48,15 @@ export const Container = styled.div`
   animation: ${fadeIn} 0.5s ease-out;
 `;
 
+export const PageTitle = styled.h1`
+  /* 페이지 제목 */
+  font-size: 24px;
+  font-weight: 600;
+  color: var(--foreground);
+  letter-spacing: -0.02em;
+  animation: ${floatUp} 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+`;
+
 export const ProfileHeader = styled.div`
   /* 프로필 헤더 - 중앙 정렬 레이아웃 */
   display: flex;

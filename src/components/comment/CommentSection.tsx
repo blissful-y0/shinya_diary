@@ -25,6 +25,7 @@ interface CommentSectionProps {
   groupId: string;
   initialComments: Comment[];
   currentUserAuthor?: { nickname: string; avatar_url: string | null } | null;
+  onCommentCountChange?: (delta: number) => void;
 }
 
 export default function CommentSection({
@@ -32,6 +33,7 @@ export default function CommentSection({
   groupId,
   initialComments,
   currentUserAuthor,
+  onCommentCountChange,
 }: CommentSectionProps) {
   const [comments, setComments] = useState<Comment[]>(initialComments);
   const [newComment, setNewComment] = useState("");
@@ -95,7 +97,6 @@ export default function CommentSection({
     const result = await apiCreateComment(diaryId, content);
 
     if (result.success && result.data) {
-      // 실제 데이터로 교체 (author는 유지)
       setComments((prev) =>
         prev.map((c) =>
           c.id === tempId
@@ -103,9 +104,9 @@ export default function CommentSection({
             : c
         )
       );
+      onCommentCountChange?.(1);
       toast.success("코멘트를 작성했습니다.");
     } else {
-      // 롤백
       setComments((prev) => prev.filter((c) => c.id !== tempId));
       toast.error("코멘트 작성에 실패했습니다.");
     }
@@ -181,9 +182,9 @@ export default function CommentSection({
     const result = await apiDeleteComment(commentId);
 
     if (result.success) {
+      onCommentCountChange?.(-1);
       toast.success("코멘트를 삭제했습니다.");
     } else {
-      // 롤백
       setComments(originalComments);
       toast.error("삭제에 실패했습니다.");
     }

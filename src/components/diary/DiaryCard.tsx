@@ -44,26 +44,13 @@ export default function DiaryCard({
   const [showMenu, setShowMenu] = useState(false);
   const [showComments, setShowComments] = useState(false);
   const [showLightbox, setShowLightbox] = useState(false);
+  const [localCommentCount, setLocalCommentCount] = useState(commentCount);
 
   const optimizedImageUrl = getDiaryImageUrl(imageUrl);
   const originalImageUrl = getOriginalImageUrl(imageUrl);
 
-  const handleMenuToggle = () => {
-    setShowMenu(!showMenu);
-  };
-
-  const handleToggleComments = () => {
-    setShowComments(!showComments);
-  };
-
-  const handleEdit = () => {
-    setShowMenu(false);
-    onEdit?.();
-  };
-
-  const handleDelete = () => {
-    setShowMenu(false);
-    onDelete?.();
+  const handleCommentCountChange = (delta: number) => {
+    setLocalCommentCount((prev) => Math.max(0, prev + delta));
   };
 
   return (
@@ -80,7 +67,7 @@ export default function DiaryCard({
 
         {isOwn && (
           <S.MenuWrapper>
-            <S.MenuButton onClick={handleMenuToggle}>
+            <S.MenuButton onClick={() => setShowMenu(!showMenu)}>
               <MoreVertical size={20} />
             </S.MenuButton>
 
@@ -88,11 +75,11 @@ export default function DiaryCard({
               <>
                 <S.MenuOverlay onClick={() => setShowMenu(false)} />
                 <S.MenuDropdown>
-                  <S.MenuItem onClick={handleEdit}>
+                  <S.MenuItem onClick={() => { setShowMenu(false); onEdit?.(); }}>
                     <Pencil size={16} />
                     수정
                   </S.MenuItem>
-                  <S.MenuItemDanger onClick={handleDelete}>
+                  <S.MenuItemDanger onClick={() => { setShowMenu(false); onDelete?.(); }}>
                     <Trash2 size={16} />
                     삭제
                   </S.MenuItemDanger>
@@ -119,19 +106,24 @@ export default function DiaryCard({
 
       {content && <S.ContentText>{content}</S.ContentText>}
 
-      <S.CommentToggle onClick={handleToggleComments}>
-        <MessageCircle size={16} />
-        {commentCount > 0 && <span>{commentCount}</span>}
-      </S.CommentToggle>
+      <S.ActionBar>
+        <S.CommentToggle onClick={() => setShowComments(!showComments)}>
+          <MessageCircle />
+          {localCommentCount > 0 && (
+            <S.CommentCount>{localCommentCount}</S.CommentCount>
+          )}
+        </S.CommentToggle>
+      </S.ActionBar>
 
-      {showComments && (
+      <S.CommentSectionWrapper $visible={showComments}>
         <CommentSection
           diaryId={id}
           groupId={groupId}
           initialComments={comments}
           currentUserAuthor={currentUserAuthor}
+          onCommentCountChange={handleCommentCountChange}
         />
-      )}
+      </S.CommentSectionWrapper>
     </S.CardContainer>
   );
 }
