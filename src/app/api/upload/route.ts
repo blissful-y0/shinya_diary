@@ -83,7 +83,8 @@ export async function POST(request: NextRequest) {
     return apiError("지원하지 않는 Content-Type입니다", 400);
   } catch (err) {
     console.error("Upload error:", err);
-    return apiError("업로드 실패", 500);
+    const message = err instanceof Error ? err.message : "업로드 실패";
+    return apiError(message, 500);
   }
 }
 

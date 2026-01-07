@@ -10,6 +10,10 @@ export interface DirectUploadResponse {
 export async function createDirectUploadUrl(
   metadata?: Record<string, string>
 ): Promise<DirectUploadResponse> {
+  if (!CF_ACCOUNT_ID || !CF_IMAGES_TOKEN) {
+    throw new Error("Cloudflare credentials not configured");
+  }
+
   const formData = new FormData();
   formData.append("requireSignedURLs", "false");
   
@@ -27,6 +31,10 @@ export async function createDirectUploadUrl(
       body: formData,
     }
   );
+
+  if (!response.ok) {
+    throw new Error(`Cloudflare API error: ${response.status}`);
+  }
 
   const result = await response.json();
 
