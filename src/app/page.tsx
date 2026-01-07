@@ -42,7 +42,7 @@ export default function HomePage() {
 
   if (authLoading) {
     return (
-      <MobileLayout headerTitle="">
+      <MobileLayout showHeader={false}>
         <S.Container>
           <S.DateSection>
             <S.DateDisplay>{display}</S.DateDisplay>
@@ -57,7 +57,7 @@ export default function HomePage() {
   }
 
   return (
-    <MobileLayout headerTitle="">
+    <MobileLayout showHeader={false}>
       <S.Container>
         <S.DateSection>
           <S.DateDisplay>{display}</S.DateDisplay>

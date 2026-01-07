@@ -55,7 +55,7 @@ export default function ProfilePage() {
 
   if (isLoading) {
     return (
-      <MobileLayout headerTitle="프로필">
+      <MobileLayout showHeader={false}>
         <S.Container>
           <S.LoadingContainer>로딩 중...</S.LoadingContainer>
         </S.Container>
@@ -64,8 +64,10 @@ export default function ProfilePage() {
   }
 
   return (
-    <MobileLayout headerTitle="프로필">
+    <MobileLayout showHeader={false}>
       <S.Container>
+        <S.PageTitle>프로필</S.PageTitle>
+
         {/* 프로필 헤더 */}
         <S.ProfileHeader>
           <Avatar className="w-20 h-20">

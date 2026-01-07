@@ -33,8 +33,10 @@ export default function GroupsPage() {
   };
 
   return (
-    <MobileLayout headerTitle="내 그룹">
+    <MobileLayout showHeader={false}>
       <S.Container>
+        <S.PageTitle>내 그룹</S.PageTitle>
+
         {/* 그룹 생성/참여 버튼 */}
         <S.ActionButtons>
           <S.ActionButton variant="outline" onClick={() => setShowCreateModal(true)}>

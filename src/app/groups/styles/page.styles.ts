@@ -39,6 +39,14 @@ export const Container = styled.div`
   min-height: 100vh;
 `;
 
+export const PageTitle = styled.h1`
+  font-size: 24px;
+  font-weight: 600;
+  color: #171717;
+  letter-spacing: -0.02em;
+  animation: ${floatUp} 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+`;
+
 export const ActionButtons = styled.div`
   display: flex;
   gap: 12px;
