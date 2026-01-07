@@ -1,92 +1,36 @@
-import styled, { keyframes } from "styled-components";
-
-const fadeIn = keyframes`
-  from {
-    opacity: 0;
-    transform: translateY(8px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-`;
-
-const menuSlide = keyframes`
-  from {
-    opacity: 0;
-    transform: translateY(-4px) scale(0.98);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
-`;
+import styled from "styled-components";
 
 export const CardContainer = styled.article`
   background-color: #ffffff;
-  border: 1px solid #e5e5e5;
-  border-radius: 2px;
+  border-radius: 16px;
   overflow: hidden;
-  animation: ${fadeIn} 0.6s ease-out;
-  transition: box-shadow 0.3s ease;
-  margin-bottom: 24px;
-  position: relative;
-  
-  box-shadow: 
-    0 1px 2px rgba(0, 0, 0, 0.05),
-    0 2px 8px rgba(0, 0, 0, 0.02);
-
-  &:hover {
-    box-shadow: 
-      0 4px 12px rgba(0, 0, 0, 0.08),
-      0 2px 4px rgba(0, 0, 0, 0.04);
-  }
-
-  &::before {
-    content: '';
-    position: absolute;
-    left: 24px;
-    top: 0;
-    bottom: 0;
-    width: 1px;
-    background-color: #f0f0f0;
-    z-index: 1;
-    pointer-events: none;
-  }
+  margin: 0 16px 16px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
 `;
 
 export const CardHeader = styled.header`
   display: flex;
   align-items: center;
-  gap: 14px;
-  padding: 24px 24px 16px 40px;
-  border-bottom: 1px solid transparent;
-  position: relative;
-  z-index: 2;
+  gap: 12px;
+  padding: 16px;
 `;
 
 export const AuthorInfo = styled.div`
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 2px;
 `;
 
 export const AuthorName = styled.span`
-  font-family: var(--font-sans);
   font-size: 15px;
-  font-weight: 700;
-  color: var(--foreground);
-  letter-spacing: 0.02em;
+  font-weight: 600;
+  color: #171717;
 `;
 
 export const PostTime = styled.span`
-  font-family: var(--font-sans);
-  font-size: 11px;
-  font-weight: 400;
-  color: #a3a3a3;
-  letter-spacing: 0.03em;
-  text-transform: uppercase;
+  font-size: 12px;
+  color: #737373;
 `;
 
 export const MenuWrapper = styled.div`
@@ -104,12 +48,8 @@ export const MenuButton = styled.button`
   transition: all 0.2s ease;
   
   &:hover {
-    color: var(--foreground);
+    color: #171717;
     background-color: #f5f5f5;
-  }
-
-  &:active {
-    transform: scale(0.95);
   }
 `;
 
@@ -127,118 +67,102 @@ export const MenuDropdown = styled.div`
   top: calc(100% + 4px);
   right: 0;
   z-index: 1001;
-  min-width: 140px;
+  min-width: 120px;
   background-color: #ffffff;
-  border: 1px solid #e5e5e5;
-  border-radius: 4px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
   overflow: hidden;
-  animation: ${menuSlide} 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 `;
 
 export const MenuItem = styled.button`
   width: 100%;
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
   padding: 12px 16px;
-  font-size: 13px;
-  font-family: var(--font-sans);
-  color: var(--foreground);
-  letter-spacing: 0.01em;
+  font-size: 14px;
+  color: #171717;
   transition: background-color 0.15s ease;
   
   &:hover {
-    background-color: #f9f9f9;
+    background-color: #f5f5f5;
   }
 
   svg {
-    opacity: 0.5;
-    width: 14px;
-    height: 14px;
+    width: 16px;
+    height: 16px;
+    opacity: 0.6;
   }
 `;
 
 export const MenuItemDanger = styled(MenuItem)`
-  color: #737373;
+  color: #ef4444;
 
   &:hover {
-    color: #171717;
-    background-color: #fff1f2;
+    background-color: #fef2f2;
   }
 `;
 
 export const ImageContainer = styled.div`
   width: 100%;
-  max-height: 520px;
-  background-color: #fafafa;
-  overflow: hidden;
+  background-color: #f5f5f5;
   cursor: pointer;
-  margin: 8px 0 24px;
-  border-top: 1px solid transparent;
-  border-bottom: 1px solid transparent;
-  position: relative;
-  z-index: 2;
-  
-  padding: 0; 
   
   &:active {
-    opacity: 0.98;
+    opacity: 0.95;
   }
 `;
 
 export const DiaryImage = styled.img`
   width: 100%;
   height: auto;
-  max-height: 520px;
-  object-fit: contain;
+  max-height: 480px;
+  object-fit: cover;
   display: block;
 `;
 
 export const ContentText = styled.p`
-  padding: 0 32px 32px 40px;
-  font-family: var(--font-sans);
-  font-size: 16px;
-  font-weight: 400;
-  line-height: 1.85;
-  letter-spacing: 0.01em;
+  padding: 16px;
+  font-size: 15px;
+  line-height: 1.6;
   color: #262626;
   white-space: pre-wrap;
   word-break: break-word;
-  position: relative;
-  z-index: 2;
+`;
 
-  font-feature-settings: "kern" 1, "liga" 1;
+export const ActionBar = styled.div`
+  display: flex;
+  align-items: center;
+  padding: 12px 16px;
+  border-top: 1px solid #f0f0f0;
 `;
 
 export const CommentToggle = styled.button`
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 16px 24px 16px 40px;
-  font-size: 12px;
-  font-family: var(--font-sans);
-  color: #737373;
-  border-top: 1px solid #f5f5f5;
+  gap: 6px;
+  padding: 8px 12px;
+  font-size: 14px;
+  color: #525252;
+  border-radius: 20px;
   transition: all 0.2s ease;
-  width: 100%;
-  letter-spacing: 0.03em;
-  position: relative;
-  z-index: 2;
 
   &:hover {
-    color: var(--foreground);
-    background-color: #fafafa;
+    background-color: #f5f5f5;
   }
 
   svg {
-    opacity: 0.6;
-    width: 16px;
-    height: 16px;
+    width: 18px;
+    height: 18px;
   }
+`;
 
-  span {
-    font-weight: 500;
-    color: var(--foreground);
-  }
+export const CommentCount = styled.span`
+  font-weight: 600;
+  color: #171717;
+`;
+
+export const CommentSectionWrapper = styled.div<{ $visible: boolean }>`
+  display: ${({ $visible }) => ($visible ? "block" : "none")};
+  border-top: 1px solid #f0f0f0;
 `;
