@@ -59,14 +59,14 @@ export const MenuOverlay = styled.div`
   left: 0;
   right: 0;
   bottom: 0;
-  z-index: 1000;
+  z-index: 9998;
 `;
 
 export const MenuDropdown = styled.div`
   position: absolute;
   top: calc(100% + 4px);
   right: 0;
-  z-index: 1001;
+  z-index: 9999;
   min-width: 120px;
   background-color: #ffffff;
   border-radius: 12px;
