@@ -3,13 +3,6 @@
 import { SWRConfig } from "swr";
 import { ReactNode } from "react";
 
-/**
- * SWR 기본 설정
- * - fetcher: API 응답에서 data 추출
- * - 에러 재시도 설정
- * - 캐시 설정
- */
-
 const fetcher = async (url: string) => {
   const res = await fetch(url, {
     headers: { "Content-Type": "application/json" },
@@ -33,11 +26,13 @@ export function SWRProvider({ children }: SWRProviderProps) {
     <SWRConfig
       value={{
         fetcher,
-        revalidateOnFocus: false, // 포커스 시 재검증 비활성화
-        revalidateOnReconnect: true, // 재연결 시 재검증
-        dedupingInterval: 5000, // 5초 내 중복 요청 방지
-        errorRetryCount: 2, // 에러 시 2번까지 재시도
-        keepPreviousData: true, // 날짜 변경 시 이전 데이터 유지 (UX 개선)
+        revalidateOnFocus: false,
+        revalidateOnReconnect: false,
+        dedupingInterval: 10000,
+        errorRetryCount: 1,
+        errorRetryInterval: 3000,
+        keepPreviousData: true,
+        revalidateIfStale: false,
       }}
     >
       {children}

@@ -92,11 +92,7 @@ export function useDiariesWithAuth(groupId: string | null, date: string | null, 
   const canView = isPastDate || hasWritten;
 
   const { data, error, isLoading, mutate } = useSWR<Diary[]>(
-    groupId && date && canView ? `/api/diaries?groupId=${groupId}&date=${date}` : null,
-    {
-      revalidateOnMount: !isPastDate,
-      revalidateIfStale: !isPastDate,
-    }
+    groupId && date && canView ? `/api/diaries?groupId=${groupId}&date=${date}` : null
   );
 
   const myDiary = data?.find((d) => d.user_id === userId) ?? null;
