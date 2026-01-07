@@ -1,0 +1,1 @@
+ALTER TABLE public.group_members DISABLE ROW LEVEL SECURITY;
