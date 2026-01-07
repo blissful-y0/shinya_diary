@@ -51,14 +51,32 @@ export async function GET(request: NextRequest) {
     const avatarUrl = metadata?.avatar_url || metadata?.picture || null;
     const nickname = metadata?.full_name || metadata?.name || null;
 
-    await supabase
+    const { data: existingProfile } = await supabase
       .from("profiles")
-      .update({
-        avatar_url: avatarUrl,
-        nickname: nickname,
-      })
+      .select("id, avatar_url")
       .eq("id", user.id)
-      .is("avatar_url", null);
+      .single();
+
+    const isNewUser = !existingProfile;
+    const needsAvatarUpdate = existingProfile && !existingProfile.avatar_url;
+
+    if (isNewUser) {
+      await supabase.from("profiles").insert({
+        id: user.id,
+        email: user.email,
+        nickname: nickname,
+        avatar_url: avatarUrl,
+        provider: "google",
+      });
+    } else if (needsAvatarUpdate) {
+      await supabase
+        .from("profiles")
+        .update({
+          avatar_url: avatarUrl,
+          nickname: nickname,
+        })
+        .eq("id", user.id);
+    }
   }
 
   return response;

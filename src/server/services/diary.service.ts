@@ -1,5 +1,5 @@
 import { SupabaseClient } from "@supabase/supabase-js";
-import { diaryRepo, memberRepo, commentRepo } from "../repositories";
+import { diaryRepo, memberRepo, commentRepo, groupRepo } from "../repositories";
 import { ApiException } from "@/lib/api/utils";
 import type { CreateDiaryInput, UpdateDiaryInput } from "../validations";
 
@@ -28,8 +28,17 @@ function formatAuthor(member: MemberWithProfile | null | undefined): AuthorInfo 
   };
 }
 
+async function resolveGroupId(db: SupabaseClient, groupPublicId: string): Promise<string> {
+  const { data: group, error } = await groupRepo.findByPublicId(db, groupPublicId);
+  if (error || !group) {
+    throw new ApiException("그룹을 찾을 수 없습니다", 404);
+  }
+  return group.id;
+}
+
 export const diaryService = {
-  async getDiariesForDate(db: SupabaseClient, userId: string, groupId: string, date: string) {
+  async getDiariesForDate(db: SupabaseClient, userId: string, groupPublicId: string, date: string) {
+    const groupId = await resolveGroupId(db, groupPublicId);
     const today = new Date().toISOString().split("T")[0];
     const isToday = date === today;
 
@@ -110,29 +119,33 @@ export const diaryService = {
     };
   },
 
-  async getMyDiary(db: SupabaseClient, userId: string, groupId: string, date: string) {
+  async getMyDiary(db: SupabaseClient, userId: string, groupPublicId: string, date: string) {
+    const groupId = await resolveGroupId(db, groupPublicId);
     const { data } = await diaryRepo.findUserDiaryForDate(db, groupId, userId, date);
     return data;
   },
 
-  async checkHasWritten(db: SupabaseClient, userId: string, groupId: string, date: string) {
+  async checkHasWritten(db: SupabaseClient, userId: string, groupPublicId: string, date: string) {
+    const groupId = await resolveGroupId(db, groupPublicId);
     const { data } = await diaryRepo.findUserDiaryForDate(db, groupId, userId, date);
     return { hasWritten: !!data };
   },
 
   async createDiary(db: SupabaseClient, userId: string, input: CreateDiaryInput) {
-    const isMember = await memberRepo.isMember(db, input.groupId, userId);
+    const groupId = await resolveGroupId(db, input.groupId);
+    
+    const isMember = await memberRepo.isMember(db, groupId, userId);
     if (!isMember) {
       throw new ApiException("그룹 멤버가 아닙니다", 403);
     }
 
-    const { data: existing } = await diaryRepo.findUserDiaryForDate(db, input.groupId, userId, input.date);
+    const { data: existing } = await diaryRepo.findUserDiaryForDate(db, groupId, userId, input.date);
     if (existing) {
       throw new ApiException("이미 오늘의 다이어리를 작성했습니다", 400);
     }
 
     const { data, error } = await diaryRepo.create(db, {
-      groupId: input.groupId,
+      groupId,
       userId,
       content: input.content,
       imageUrl: input.imageUrl,
