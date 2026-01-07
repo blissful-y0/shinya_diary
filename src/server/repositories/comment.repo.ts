@@ -4,7 +4,7 @@ export const commentRepo = {
   async findByDiaryId(db: SupabaseClient, diaryId: string) {
     return db
       .from("comments")
-      .select("id, public_id, diary_id, user_id, content, created_at, updated_at")
+      .select("id, diary_id, user_id, content, created_at, updated_at")
       .eq("diary_id", diaryId)
       .is("deleted_at", null)
       .order("created_at", { ascending: true });
@@ -15,17 +15,17 @@ export const commentRepo = {
 
     return db
       .from("comments")
-      .select("id, public_id, diary_id, user_id, content, created_at, updated_at")
+      .select("id, diary_id, user_id, content, created_at, updated_at")
       .in("diary_id", diaryIds)
       .is("deleted_at", null)
       .order("created_at", { ascending: true });
   },
 
-  async findByPublicId(db: SupabaseClient, publicId: string) {
+  async findById(db: SupabaseClient, commentId: string) {
     return db
       .from("comments")
-      .select("id, public_id, diary_id, user_id, content, created_at, updated_at")
-      .eq("public_id", publicId)
+      .select("id, diary_id, user_id, content, created_at, updated_at")
+      .eq("id", commentId)
       .is("deleted_at", null)
       .single();
   },
@@ -46,27 +46,27 @@ export const commentRepo = {
         user_id: data.userId,
         content: data.content,
       })
-      .select("id, public_id, diary_id, user_id, content, created_at, updated_at")
+      .select("id, diary_id, user_id, content, created_at, updated_at")
       .single();
   },
 
-  async update(db: SupabaseClient, publicId: string, userId: string, content: string) {
+  async update(db: SupabaseClient, commentId: string, userId: string, content: string) {
     return db
       .from("comments")
       .update({ content, updated_at: new Date().toISOString() })
-      .eq("public_id", publicId)
+      .eq("id", commentId)
       .eq("user_id", userId)
       .is("deleted_at", null)
-      .select("id, public_id");
+      .select("id");
   },
 
-  async softDelete(db: SupabaseClient, publicId: string, userId: string) {
+  async softDelete(db: SupabaseClient, commentId: string, userId: string) {
     return db
       .from("comments")
       .update({ deleted_at: new Date().toISOString() })
-      .eq("public_id", publicId)
+      .eq("id", commentId)
       .eq("user_id", userId)
       .is("deleted_at", null)
-      .select("id, public_id");
+      .select("id");
   },
 };

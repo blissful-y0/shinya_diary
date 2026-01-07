@@ -206,7 +206,6 @@ export async function handleJoinRequest(
 
 export interface Diary {
   id: string;
-  public_id: string;
   group_id: string;
   user_id: string | null;
   content: string | null;
@@ -259,17 +258,17 @@ export async function createDiary(data: {
 }
 
 export async function updateDiary(
-  publicId: string,
+  diaryId: string,
   data: { content?: string; imageUrl?: string | null }
 ) {
-  return fetchApi<{ success: boolean }>(`/api/diaries/${publicId}`, {
+  return fetchApi<{ success: boolean }>(`/api/diaries/${diaryId}`, {
     method: "PATCH",
     body: JSON.stringify(data),
   });
 }
 
-export async function deleteDiary(publicId: string) {
-  return fetchApi<{ success: boolean }>(`/api/diaries/${publicId}`, {
+export async function deleteDiary(diaryId: string) {
+  return fetchApi<{ success: boolean }>(`/api/diaries/${diaryId}`, {
     method: "DELETE",
   });
 }
@@ -280,7 +279,6 @@ export async function deleteDiary(publicId: string) {
 
 export interface Comment {
   id: string;
-  public_id: string;
   diary_id: string;
   user_id: string;
   content: string;
@@ -315,15 +313,15 @@ export async function createComment(diaryId: string, content: string) {
   });
 }
 
-export async function updateComment(publicId: string, content: string) {
-  return fetchApi<{ success: boolean }>(`/api/comments/${publicId}`, {
+export async function updateComment(commentId: string, content: string) {
+  return fetchApi<{ success: boolean }>(`/api/comments/${commentId}`, {
     method: "PATCH",
     body: JSON.stringify({ content }),
   });
 }
 
-export async function deleteComment(publicId: string) {
-  return fetchApi<{ success: boolean }>(`/api/comments/${publicId}`, {
+export async function deleteComment(commentId: string) {
+  return fetchApi<{ success: boolean }>(`/api/comments/${commentId}`, {
     method: "DELETE",
   });
 }

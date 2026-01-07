@@ -37,7 +37,7 @@ export const memberRepo = {
         user_id,
         nickname,
         avatar_url,
-        profiles!inner(public_id)
+        profiles!inner(id)
       `)
       .eq("group_id", groupId)
       .in("user_id", userIds);

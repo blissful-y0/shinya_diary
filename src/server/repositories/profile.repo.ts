@@ -4,16 +4,8 @@ export const profileRepo = {
   async findById(db: SupabaseClient, userId: string) {
     return db
       .from("profiles")
-      .select("id, public_id, email, nickname, avatar_url, provider, created_at, updated_at")
+      .select("id, email, nickname, avatar_url, provider, created_at, updated_at")
       .eq("id", userId)
-      .single();
-  },
-
-  async findByPublicId(db: SupabaseClient, publicId: string) {
-    return db
-      .from("profiles")
-      .select("id, public_id, email, nickname, avatar_url, provider, created_at, updated_at")
-      .eq("public_id", publicId)
       .single();
   },
 
@@ -26,7 +18,7 @@ export const profileRepo = {
       .from("profiles")
       .update(updateData)
       .eq("id", userId)
-      .select("id, public_id, email, nickname, avatar_url, provider, created_at, updated_at")
+      .select("id, email, nickname, avatar_url, provider, created_at, updated_at")
       .single();
   },
 };

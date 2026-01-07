@@ -24,7 +24,7 @@ export const updateDiarySchema = z.object({
 });
 
 export const diaryParamsSchema = z.object({
-  publicId: publicId,
+  id: z.string().uuid("유효하지 않은 ID 형식입니다"),
 });
 
 export type GetDiariesInput = z.infer<typeof getDiariesSchema>;

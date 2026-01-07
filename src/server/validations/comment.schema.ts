@@ -20,7 +20,7 @@ export const updateCommentSchema = z.object({
 });
 
 export const commentParamsSchema = z.object({
-  publicId: publicId,
+  id: z.string().uuid("유효하지 않은 ID 형식입니다"),
 });
 
 export const commentCountSchema = z.object({

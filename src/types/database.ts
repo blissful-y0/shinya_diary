@@ -24,7 +24,6 @@ export interface Database {
       profiles: {
         Row: {
           id: string;
-          public_id: string;
           email: string;
           nickname: string | null;
           avatar_url: string | null;
@@ -72,7 +71,6 @@ export interface Database {
       group_members: {
         Row: {
           id: string;
-          public_id: string;
           group_id: string;
           user_id: string;
           nickname: string | null;
@@ -94,7 +92,6 @@ export interface Database {
       diaries: {
         Row: {
           id: string;
-          public_id: string;
           group_id: string;
           user_id: string;
           content: string | null;
@@ -122,7 +119,6 @@ export interface Database {
       comments: {
         Row: {
           id: string;
-          public_id: string;
           diary_id: string;
           user_id: string;
           content: string;
@@ -142,7 +138,6 @@ export interface Database {
       join_requests: {
         Row: {
           id: string;
-          public_id: string;
           group_id: string;
           user_id: string;
           status: "pending" | "approved" | "rejected";

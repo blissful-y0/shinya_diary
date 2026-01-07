@@ -32,7 +32,7 @@ export const updateMemberSchema = z.object({
 
 export const memberParamsSchema = z.object({
   publicId: publicId,
-  userId: publicId,
+  userId: uuid,
 });
 
 export const handleJoinRequestSchema = z.object({
@@ -42,7 +42,7 @@ export const handleJoinRequestSchema = z.object({
 
 export const joinRequestParamsSchema = z.object({
   publicId: publicId,
-  requestId: publicId,
+  requestId: uuid,
 });
 
 export type CreateGroupInput = z.infer<typeof createGroupSchema>;

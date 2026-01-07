@@ -13,7 +13,7 @@ interface MemberWithProfile {
   user_id: string;
   nickname: string | null;
   avatar_url: string | null;
-  profiles: { public_id: string } | { public_id: string }[];
+  profiles: { id: string } | { id: string }[];
 }
 
 function formatAuthor(member: MemberWithProfile | null | undefined): AuthorInfo {
@@ -22,7 +22,7 @@ function formatAuthor(member: MemberWithProfile | null | undefined): AuthorInfo 
   }
   const profile = Array.isArray(member.profiles) ? member.profiles[0] : member.profiles;
   return {
-    user_id: profile?.public_id ?? null,
+    user_id: profile?.id ?? null,
     nickname: member.nickname || "익명",
     avatar_url: member.avatar_url,
   };
@@ -105,8 +105,8 @@ export const diaryService = {
     return { diaries, hasWrittenToday };
   },
 
-  async getDiaryByPublicId(db: SupabaseClient, publicId: string) {
-    const { data: diary, error } = await diaryRepo.findByPublicId(db, publicId);
+  async getDiaryById(db: SupabaseClient, diaryId: string) {
+    const { data: diary, error } = await diaryRepo.findById(db, diaryId);
     if (error || !diary) {
       throw new ApiException("다이어리를 찾을 수 없습니다", 404);
     }
@@ -159,8 +159,8 @@ export const diaryService = {
     return data;
   },
 
-  async updateDiary(db: SupabaseClient, userId: string, publicId: string, input: UpdateDiaryInput) {
-    const { data, error } = await diaryRepo.update(db, publicId, userId, {
+  async updateDiary(db: SupabaseClient, userId: string, diaryId: string, input: UpdateDiaryInput) {
+    const { data, error } = await diaryRepo.update(db, diaryId, userId, {
       content: input.content,
       imageUrl: input.imageUrl,
     });
@@ -176,8 +176,8 @@ export const diaryService = {
     return { success: true };
   },
 
-  async deleteDiary(db: SupabaseClient, userId: string, publicId: string) {
-    const { data, error } = await diaryRepo.softDelete(db, publicId, userId);
+  async deleteDiary(db: SupabaseClient, userId: string, diaryId: string) {
+    const { data, error } = await diaryRepo.softDelete(db, diaryId, userId);
 
     if (error) {
       throw new ApiException(error.message, 500);

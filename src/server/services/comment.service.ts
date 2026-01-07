@@ -13,7 +13,7 @@ interface MemberWithProfile {
   user_id: string;
   nickname: string | null;
   avatar_url: string | null;
-  profiles: { public_id: string } | { public_id: string }[];
+  profiles: { id: string } | { id: string }[];
 }
 
 function formatAuthor(member: MemberWithProfile | null | undefined): AuthorInfo {
@@ -22,7 +22,7 @@ function formatAuthor(member: MemberWithProfile | null | undefined): AuthorInfo 
   }
   const profile = Array.isArray(member.profiles) ? member.profiles[0] : member.profiles;
   return {
-    user_id: profile?.public_id ?? null,
+    user_id: profile?.id ?? null,
     nickname: member.nickname || "익명",
     avatar_url: member.avatar_url,
   };
@@ -94,8 +94,8 @@ export const commentService = {
     return data;
   },
 
-  async updateComment(db: SupabaseClient, userId: string, publicId: string, input: UpdateCommentInput) {
-    const { data, error } = await commentRepo.update(db, publicId, userId, input.content);
+  async updateComment(db: SupabaseClient, userId: string, commentId: string, input: UpdateCommentInput) {
+    const { data, error } = await commentRepo.update(db, commentId, userId, input.content);
 
     if (error) {
       throw new ApiException(error.message, 500);
@@ -108,8 +108,8 @@ export const commentService = {
     return { success: true };
   },
 
-  async deleteComment(db: SupabaseClient, userId: string, publicId: string) {
-    const { data, error } = await commentRepo.softDelete(db, publicId, userId);
+  async deleteComment(db: SupabaseClient, userId: string, commentId: string) {
+    const { data, error } = await commentRepo.softDelete(db, commentId, userId);
 
     if (error) {
       throw new ApiException(error.message, 500);

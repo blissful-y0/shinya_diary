@@ -150,7 +150,7 @@ export const groupService = {
     db: SupabaseClient,
     currentUserId: string,
     groupPublicId: string,
-    targetUserPublicId: string,
+    targetUserId: string,
     input: UpdateMemberInput
   ) {
     const { data: group, error } = await groupRepo.findByPublicId(db, groupPublicId);
@@ -158,21 +158,11 @@ export const groupService = {
       throw new ApiException("그룹을 찾을 수 없습니다", 404);
     }
 
-    const { data: targetProfile } = await db
-      .from("profiles")
-      .select("id")
-      .eq("public_id", targetUserPublicId)
-      .single();
-
-    if (!targetProfile) {
-      throw new ApiException("사용자를 찾을 수 없습니다", 404);
-    }
-
-    if (targetProfile.id !== currentUserId && group.owner_id !== currentUserId) {
+    if (targetUserId !== currentUserId && group.owner_id !== currentUserId) {
       throw new ApiException("권한이 없습니다", 403);
     }
 
-    const { error: updateError } = await memberRepo.update(db, group.id, targetProfile.id, {
+    const { error: updateError } = await memberRepo.update(db, group.id, targetUserId, {
       nickname: input.nickname,
       avatarUrl: input.avatarUrl,
     });
@@ -184,34 +174,24 @@ export const groupService = {
     return { success: true };
   },
 
-  async removeMember(db: SupabaseClient, currentUserId: string, groupPublicId: string, targetUserPublicId: string) {
+  async removeMember(db: SupabaseClient, currentUserId: string, groupPublicId: string, targetUserId: string) {
     const { data: group, error } = await groupRepo.findByPublicId(db, groupPublicId);
     if (error || !group) {
       throw new ApiException("그룹을 찾을 수 없습니다", 404);
     }
 
-    const { data: targetProfile } = await db
-      .from("profiles")
-      .select("id")
-      .eq("public_id", targetUserPublicId)
-      .single();
-
-    if (!targetProfile) {
-      throw new ApiException("사용자를 찾을 수 없습니다", 404);
-    }
-
-    const isSelf = targetProfile.id === currentUserId;
+    const isSelf = targetUserId === currentUserId;
     const isOwner = group.owner_id === currentUserId;
 
     if (!isSelf && !isOwner) {
       throw new ApiException("권한이 없습니다", 403);
     }
 
-    if (targetProfile.id === group.owner_id) {
+    if (targetUserId === group.owner_id) {
       throw new ApiException("방장은 탈퇴할 수 없습니다", 400);
     }
 
-    const { error: deleteError } = await memberRepo.delete(db, group.id, targetProfile.id);
+    const { error: deleteError } = await memberRepo.delete(db, group.id, targetUserId);
     if (deleteError) {
       throw new ApiException(deleteError.message, 500);
     }
@@ -235,7 +215,7 @@ export const groupService = {
     }
 
     return data?.map((r) => ({
-      id: r.public_id,
+      id: r.id,
       user_id: r.user_id,
       group_id: r.group_id,
       status: r.status,
@@ -276,7 +256,7 @@ export const groupService = {
     db: SupabaseClient,
     userId: string,
     groupPublicId: string,
-    requestPublicId: string,
+    requestId: string,
     input: HandleJoinRequestInput
   ) {
     const { data: group, error } = await groupRepo.findByPublicId(db, groupPublicId);
@@ -288,7 +268,7 @@ export const groupService = {
       throw new ApiException("권한이 없습니다", 403);
     }
 
-    const { data: request, error: requestError } = await joinRequestRepo.findByPublicId(db, requestPublicId);
+    const { data: request, error: requestError } = await joinRequestRepo.findById(db, requestId);
     if (requestError || !request) {
       throw new ApiException("가입 요청을 찾을 수 없습니다", 404);
     }

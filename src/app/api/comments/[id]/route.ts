@@ -6,7 +6,7 @@ import { NextRequest } from "next/server";
 export const runtime = "edge";
 
 interface RouteParams {
-  params: Promise<{ publicId: string }>;
+  params: Promise<{ id: string }>;
 }
 
 export async function PATCH(request: NextRequest, { params }: RouteParams) {
@@ -14,9 +14,9 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
   if (error) return error;
 
   try {
-    const { publicId } = commentParamsSchema.parse(await params);
+    const { id } = commentParamsSchema.parse(await params);
     const input = await parseBody(request, updateCommentSchema);
-    const result = await commentService.updateComment(supabase, user!.id, publicId, input);
+    const result = await commentService.updateComment(supabase, user!.id, id, input);
     return apiResponse(result);
   } catch (err) {
     if (err instanceof Error && err.name === "ZodError") {
@@ -31,8 +31,8 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
   if (error) return error;
 
   try {
-    const { publicId } = commentParamsSchema.parse(await params);
-    const result = await commentService.deleteComment(supabase, user!.id, publicId);
+    const { id } = commentParamsSchema.parse(await params);
+    const result = await commentService.deleteComment(supabase, user!.id, id);
     return apiResponse(result);
   } catch (err) {
     if (err instanceof Error && err.name === "ZodError") {

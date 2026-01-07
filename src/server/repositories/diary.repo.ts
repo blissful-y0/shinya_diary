@@ -4,18 +4,18 @@ export const diaryRepo = {
   async findByGroupAndDate(db: SupabaseClient, groupId: string, date: string) {
     return db
       .from("diaries")
-      .select("id, public_id, group_id, user_id, content, image_url, date, created_at, sticker_data")
+      .select("id, group_id, user_id, content, image_url, date, created_at, sticker_data")
       .eq("group_id", groupId)
       .eq("date", date)
       .is("deleted_at", null)
       .order("created_at", { ascending: false });
   },
 
-  async findByPublicId(db: SupabaseClient, publicId: string) {
+  async findById(db: SupabaseClient, diaryId: string) {
     return db
       .from("diaries")
-      .select("id, public_id, group_id, user_id, content, image_url, date, created_at, sticker_data")
-      .eq("public_id", publicId)
+      .select("id, group_id, user_id, content, image_url, date, created_at, sticker_data")
+      .eq("id", diaryId)
       .is("deleted_at", null)
       .single();
   },
@@ -44,13 +44,13 @@ export const diaryRepo = {
         image_url: data.imageUrl || null,
         date: data.date,
       })
-      .select("id, public_id")
+      .select("id")
       .single();
   },
 
   async update(
     db: SupabaseClient,
-    publicId: string,
+    diaryId: string,
     userId: string,
     data: { content?: string; imageUrl?: string | null; stickerData?: unknown }
   ) {
@@ -62,19 +62,19 @@ export const diaryRepo = {
     return db
       .from("diaries")
       .update(updateData)
-      .eq("public_id", publicId)
+      .eq("id", diaryId)
       .eq("user_id", userId)
       .is("deleted_at", null)
-      .select("id, public_id");
+      .select("id");
   },
 
-  async softDelete(db: SupabaseClient, publicId: string, userId: string) {
+  async softDelete(db: SupabaseClient, diaryId: string, userId: string) {
     return db
       .from("diaries")
       .update({ deleted_at: new Date().toISOString() })
-      .eq("public_id", publicId)
+      .eq("id", diaryId)
       .eq("user_id", userId)
       .is("deleted_at", null)
-      .select("id, public_id");
+      .select("id");
   },
 };

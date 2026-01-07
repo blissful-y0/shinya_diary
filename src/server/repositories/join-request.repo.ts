@@ -6,7 +6,6 @@ export const joinRequestRepo = {
       .from("join_requests")
       .select(`
         id,
-        public_id,
         user_id,
         group_id,
         status,
@@ -18,11 +17,11 @@ export const joinRequestRepo = {
       .order("created_at", { ascending: true });
   },
 
-  async findByPublicId(db: SupabaseClient, publicId: string) {
+  async findById(db: SupabaseClient, requestId: string) {
     return db
       .from("join_requests")
-      .select("id, public_id, user_id, group_id, status, created_at")
-      .eq("public_id", publicId)
+      .select("id, user_id, group_id, status, created_at")
+      .eq("id", requestId)
       .single();
   },
 
@@ -43,7 +42,7 @@ export const joinRequestRepo = {
         user_id: data.userId,
         status: "pending",
       })
-      .select("id, public_id")
+      .select("id")
       .single();
   },
 

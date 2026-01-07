@@ -70,7 +70,6 @@ export default function GroupDetailPage({ params }: GroupDetailPageProps) {
     if (!diaries || !profile) return [];
     return diaries.map((d) => ({
       id: d.id,
-      public_id: d.public_id,
       nickname: d.author?.user_id
         ? d.author.nickname || "익명"
         : "탈퇴한 사용자",
@@ -181,9 +180,9 @@ export default function GroupDetailPage({ params }: GroupDetailPageProps) {
                   commentCount={diary.commentCount}
                   currentUserAuthor={myGroupProfile}
                   onEdit={() =>
-                    (window.location.href = `/groups/${groupId}/write?edit=${diary.public_id}`)
+                    (window.location.href = `/groups/${groupId}/write?edit=${diary.id}`)
                   }
-                  onDelete={() => handleDeleteClick(diary.public_id)}
+                  onDelete={() => handleDeleteClick(diary.id)}
                 />
               ))
             ) : (
